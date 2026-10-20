@@ -1,6 +1,6 @@
 -- Migration: Create function to get patients/encounters for clinical engine processing
 -- Description: This function identifies patients with clinical transcripts but minimal existing clinical results
--- Please note that the actual database schema is in /scripts/schema.sql. This file is a one-off script to update certain field in the database, not the real schema
+-- The tables it reads are made by 20241201000000_base_schema.sql.
 CREATE OR REPLACE FUNCTION get_patients_for_clinical_engine()
 RETURNS TABLE (
   patient_id TEXT,

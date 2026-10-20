@@ -84,7 +84,8 @@ CREATE INDEX IF NOT EXISTS idx_alerts_active_alerts ON public.alerts(patient_id,
 CREATE INDEX IF NOT EXISTS idx_alerts_patient_status_created ON public.alerts(patient_id, status, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_alerts_encounter_type ON public.alerts(encounter_id, alert_type) WHERE encounter_id IS NOT NULL;
 
--- Add trigger for updated_at
+-- Add trigger for updated_at (the base schema may have made it already)
+DROP TRIGGER IF EXISTS set_alerts_updated_at ON public.alerts;
 CREATE TRIGGER set_alerts_updated_at
     BEFORE UPDATE ON public.alerts
     FOR EACH ROW
