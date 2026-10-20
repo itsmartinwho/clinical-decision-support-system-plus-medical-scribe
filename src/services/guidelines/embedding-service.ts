@@ -173,8 +173,13 @@ export class EmbeddingService {
     }
 
     try {
+      // text-embedding-3-large (it replaced ada-002 on 2026-10-20), shortened
+      // to the 1536 dimensions guideline_vectors holds. Documents and queries
+      // must share a model: after changing it, re-embed every document with
+      // `pnpm run setup:guidelines --embed-only`.
       const response = await this.openai.embeddings.create({
-        model: 'text-embedding-ada-002',
+        model: 'text-embedding-3-large',
+        dimensions: 1536,
         input: texts
       });
 

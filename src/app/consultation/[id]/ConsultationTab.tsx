@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea'; // Assuming Textarea was us
 import { RichTextEditor, RichTextEditorRef } from '@/components/ui/rich-text-editor';
 import { FloppyDisk as Save, PauseCircle, PlayCircle } from '@phosphor-icons/react';
 import { AudioWaveform } from '@/components/ui/AudioWaveform';
+import { openDeepgramSocket } from '@/lib/deepgram';
 import { getSupabaseClient } from '@/lib/supabaseClient'; // Corrected import path
 import { Encounter, Patient, ClinicalOutputPackage, DifferentialDiagnosis } from '@/lib/types'; // Renamed Admission to Encounter
 import { supabaseDataService } from '@/lib/supabaseDataService'; // Import supabaseDataService
@@ -278,11 +279,6 @@ const ConsultationTab: React.FC<ConsultationTabProps> = ({
   };
 
   const startTranscription = useCallback(async () => {
-    const apiKey = process.env.NEXT_PUBLIC_DEEPGRAM_API_KEY;
-    if (!apiKey) {
-      alert('Deepgram API key not configured');
-      return;
-    }
     if (isTranscribing && !isPaused) return;
 
     const currentCursor = getCursorPosition();
@@ -341,7 +337,7 @@ const ConsultationTab: React.FC<ConsultationTabProps> = ({
         vad_events: 'true' // Enable voice activity detection events
       }).toString();
       
-      const wsInstance = new WebSocket(wsUrl, ['token', apiKey]);
+      const wsInstance = await openDeepgramSocket(wsUrl);
       socketRef.current = wsInstance;
       mediaRecorderRef.current = mediaRecorder;
 

@@ -2,14 +2,14 @@
 // Defines types for integrating with OpenAI models for alert processing
 
 // Every OpenAI model the app calls. Each value must be unique: the configs
-// below are keyed by it. gpt-4o and gpt-4o-mini shut down on 2027-01-14
-// (OpenAI suggests gpt-6-luna); change them here when they do.
+// below are keyed by it.
+// Since 2026-10-20 that is one model, gpt-6-astra, OpenAI's "most capable model
+// for the most demanding work". It replaced gpt-4o and gpt-4o-mini (shut down
+// on 2027-01-14) and gpt-5.6-sol. Its model page lists what the app needs: the
+// Responses API and Chat Completions, structured outputs, and Code Interpreter
+// (the advisor's charts). It always reasons (effort low to max, no temperature).
 export enum AIModelType {
-  GPT_4O = 'gpt-4o',
-  GPT_4O_MINI = 'gpt-4o-mini',
-  // Post-consultation analysis. Was o1-preview, which OpenAI shut down on
-  // 2025-07-28; gpt-5.6-sol is the replacement it names for o1 and o3.
-  REASONING = 'gpt-5.6-sol'
+  GPT_6_ASTRA = 'gpt-6-astra'
 }
 
 export interface AIModelConfig {
@@ -146,7 +146,7 @@ export interface AIProcessingResponse {
 
 // Real-time specific configurations
 export interface RealTimeAIConfig extends AIModelConfig {
-  model: AIModelType.GPT_4O_MINI;
+  model: AIModelType;
   processingInterval: number; // in seconds (60 for minute-by-minute)
   maxContextTokens: number;
   priorityThreshold: number; // Confidence threshold for immediate alerts
@@ -154,7 +154,7 @@ export interface RealTimeAIConfig extends AIModelConfig {
 
 // Post-consultation specific configurations
 export interface PostConsultationAIConfig extends AIModelConfig {
-  model: AIModelType.REASONING;
+  model: AIModelType;
   comprehensiveAnalysis: boolean;
   includeRealTimeAlerts: boolean;
   alertRefreshLogic: boolean;
@@ -209,53 +209,29 @@ export interface PromptBuilder {
 
 // Model configuration presets
 export const AI_MODEL_CONFIGS: Record<AIModelType, AIModelConfig> = {
-  [AIModelType.GPT_4O]: {
-    name: 'gpt-4o',
-    displayName: 'GPT-4o',
-    maxTokens: 128000,
-    costPer1000Tokens: 2.5,
+  [AIModelType.GPT_6_ASTRA]: {
+    name: 'gpt-6-astra',
+    displayName: 'GPT-6 Astra',
+    maxTokens: 1050000,
+    costPer1000Tokens: 10, // as the earlier entries had it: USD per 1M input tokens
     capabilities: [
       AIModelCapability.TEXT_GENERATION,
-      AIModelCapability.MULTIMODAL,
-      AIModelCapability.FUNCTION_CALLING,
-      AIModelCapability.CODE_GENERATION
-    ],
-    description: 'Advanced multimodal model with enhanced reasoning'
-  },
-  [AIModelType.GPT_4O_MINI]: {
-    name: 'gpt-4o-mini',
-    displayName: 'GPT-4o Mini',
-    maxTokens: 128000,
-    costPer1000Tokens: 0.15,
-    capabilities: [
-      AIModelCapability.TEXT_GENERATION,
+      AIModelCapability.REASONING,
       AIModelCapability.CODE_GENERATION,
       AIModelCapability.MULTIMODAL,
       AIModelCapability.FUNCTION_CALLING
     ],
-    description: 'Fast and cost-effective model for general tasks'
-  },
-  [AIModelType.REASONING]: {
-    name: 'gpt-5.6-sol',
-    displayName: 'GPT-5.6 Sol',
-    maxTokens: 1050000,
-    costPer1000Tokens: 4.0,
-    capabilities: [
-      AIModelCapability.TEXT_GENERATION,
-      AIModelCapability.REASONING,
-      AIModelCapability.CODE_GENERATION
-    ],
-    description: 'Reasoning model for the post-consultation analysis'
+    description: "OpenAI's most capable model, for every feature of the app"
   }
 };
 
 // Default model selections for different use cases
 export const AI_MODEL_PRESETS = {
-  FAST_RESPONSE: AIModelType.GPT_4O_MINI, // Real-time alerts
-  BALANCED: AIModelType.GPT_4O,
-  REASONING: AIModelType.GPT_4O, // Post-consultation analysis - using GPT-4o since o1 doesn't support code interpreter
-  COST_EFFECTIVE: AIModelType.GPT_4O_MINI,
-  ADVANCED_REASONING: AIModelType.GPT_4O // Using GPT-4o since o1 doesn't support Assistants API with code interpreter
+  FAST_RESPONSE: AIModelType.GPT_6_ASTRA, // Real-time alerts
+  BALANCED: AIModelType.GPT_6_ASTRA,
+  REASONING: AIModelType.GPT_6_ASTRA, // Post-consultation analysis
+  COST_EFFECTIVE: AIModelType.GPT_6_ASTRA,
+  ADVANCED_REASONING: AIModelType.GPT_6_ASTRA
 };
 
 export type AIModel = keyof typeof AI_MODEL_CONFIGS;

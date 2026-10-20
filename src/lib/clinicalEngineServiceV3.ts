@@ -18,7 +18,13 @@ import { getSupabaseClient } from './supabaseClient';
 import { UnifiedAlertsService } from './unifiedAlertsService';
 import { AlertStatus } from '@/types/alerts';
 import OpenAI from 'openai';
-import { GPT_4O_MINI } from './ai/gpt-models';
+import { GPT_6_ASTRA } from './ai/gpt-models';
+
+// gpt-6-astra always reasons before it answers, and max_completion_tokens covers
+// the reasoning as well as the answer, so each call keeps its old answer budget
+// plus room to reason. It takes no temperature.
+const REASONING_EFFORT = 'low' as const;
+const withReasoning = (answerTokens: number) => answerTokens + 8000;
 import { getDiagnosisPrompt, getTreatmentPrompt, getTreatmentGuidelinesPrompt } from './ai/prompt-templates';
 
 /**
@@ -88,7 +94,7 @@ export class ClinicalEngineServiceV3 {
       
       const finalTranscript = transcript || currentEncounter?.encounter.transcript || '';
       
-      // Stage 2: Generate differential diagnoses using GPT-4.1-mini
+      // Stage 2: Generate differential diagnoses
       const differentialDiagnoses = await this.generateDifferentialDiagnoses(patientData, finalTranscript);
       
       // Stage 3a: Generate primary diagnosis
@@ -112,7 +118,7 @@ export class ClinicalEngineServiceV3 {
         clinicalTrialMatches: treatmentResult.clinicalTrialMatches || []
       } as DiagnosticResult;
       
-      // Stage 4: Generate additional clinical fields using o4-mini
+      // Stage 4: Generate additional clinical fields
       await this.generateAdditionalFields(patientData, finalTranscript, diagnosticResult, actualEncounterId);
       
       // Stage 5: Generate SOAP note
@@ -160,7 +166,7 @@ export class ClinicalEngineServiceV3 {
   }
 
   /**
-   * Stage 2: Generate differential diagnoses using GPT-4.1-mini
+   * Stage 2: Generate differential diagnoses
    */
   private async generateDifferentialDiagnoses(
     patientData: any,
@@ -195,19 +201,19 @@ Latest Encounter Transcript: ${transcript}
 Please generate differential diagnoses based on this information.`;
 
       const completion = await this.openai.chat.completions.create({
-        model: GPT_4O_MINI,
+        model: GPT_6_ASTRA,
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt }
         ],
-        temperature: 1, // Set to 1 as requested
-        max_tokens: 2000,
+        reasoning_effort: REASONING_EFFORT,
+        max_completion_tokens: withReasoning(2000),
       });
 
       const response = completion.choices[0].message.content;
       
       if (!response) {
-        throw new Error('No response from GPT-4.1-mini for differential diagnoses');
+        throw new Error('No response from AI for differential diagnoses');
       }
 
       // Parse JSON response
@@ -256,7 +262,7 @@ Please generate differential diagnoses based on this information.`;
   }
 
   /**
-   * Stage 3: Generate primary diagnosis and treatment plan using o4-mini
+   * Stage 3: Generate primary diagnosis and treatment plan
    */
   /**
    * Generate diagnosis only (separated from treatment generation)
@@ -278,13 +284,13 @@ Differential Diagnoses from Colleague: ${JSON.stringify(differentialDiagnoses, n
 Please provide your primary diagnosis.`;
 
       const completion = await this.openai.chat.completions.create({
-        model: GPT_4O_MINI,
+        model: GPT_6_ASTRA,
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt }
         ],
-        temperature: 1,
-        max_completion_tokens: 1500,
+        reasoning_effort: REASONING_EFFORT,
+        max_completion_tokens: withReasoning(1500),
       });
 
       const response = completion.choices[0].message.content;
@@ -342,13 +348,13 @@ Clinical Guidelines Recommendations: ${guidelinesRecommendations}
 Please provide a comprehensive treatment plan with decision tree.`;
 
       const completion = await this.openai.chat.completions.create({
-        model: GPT_4O_MINI,
+        model: GPT_6_ASTRA,
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt }
         ],
-        temperature: 1,
-        max_completion_tokens: 3000,
+        reasoning_effort: REASONING_EFFORT,
+        max_completion_tokens: withReasoning(3000),
       });
 
       const response = completion.choices[0].message.content;
@@ -516,13 +522,13 @@ Patient Context: ${JSON.stringify({
 Please provide evidence-based treatment recommendations from clinical guidelines.`;
 
       const completion = await this.openai.chat.completions.create({
-        model: GPT_4O_MINI,
+        model: GPT_6_ASTRA,
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt }
         ],
-        temperature: 0.3, // Lower temperature for guidelines-based recommendations
-        max_completion_tokens: 1500,
+        reasoning_effort: REASONING_EFFORT,
+        max_completion_tokens: withReasoning(1500),
       });
 
       return completion.choices[0].message.content || 'No specific guidelines found for this diagnosis.';
@@ -534,7 +540,7 @@ Please provide evidence-based treatment recommendations from clinical guidelines
   }
 
   /**
-   * Stage 4: Generate additional clinical fields using o4-mini
+   * Stage 4: Generate additional clinical fields
    */
   private async generateAdditionalFields(
     patientData: any,
@@ -589,7 +595,7 @@ Please provide evidence-based treatment recommendations from clinical guidelines
   }
 
   /**
-   * Extract a single field using o4-mini
+   * Extract a single field
    */
   private async extractSingleField(
     patientData: any,
@@ -599,7 +605,7 @@ Please provide evidence-based treatment recommendations from clinical guidelines
   ): Promise<string> {
     try {
       const completion = await this.openai.chat.completions.create({
-        model: GPT_4O_MINI,
+        model: GPT_6_ASTRA,
         messages: [
           { 
             role: "system", 
@@ -614,8 +620,8 @@ Diagnosis: ${diagnosticResult.diagnosisName}
 Please extract the requested information.`
           }
         ],
-        temperature: 1, // Set to 1 as requested
-        max_completion_tokens: 100, // Fixed: o4-mini uses max_completion_tokens instead of max_tokens
+        reasoning_effort: REASONING_EFFORT,
+        max_completion_tokens: withReasoning(100),
       });
 
       return completion.choices[0].message.content?.trim() || '';
@@ -711,10 +717,10 @@ Generate a concise, professional Subjective section (2-4 sentences) that capture
 
     try {
       const response = await this.openai.chat.completions.create({
-        model: GPT_4O_MINI,
+        model: GPT_6_ASTRA,
         messages: [{ role: 'user', content: prompt }],
-        max_tokens: 300,
-        temperature: 0.3
+        reasoning_effort: REASONING_EFFORT,
+        max_completion_tokens: withReasoning(300)
       });
 
       return response.choices[0]?.message?.content?.trim() || 
@@ -782,10 +788,10 @@ Generate a concise, professional Objective section (2-4 sentences) that captures
 
     try {
       const response = await this.openai.chat.completions.create({
-        model: GPT_4O_MINI,
+        model: GPT_6_ASTRA,
         messages: [{ role: 'user', content: prompt }],
-        max_tokens: 300,
-        temperature: 0.3
+        reasoning_effort: REASONING_EFFORT,
+        max_completion_tokens: withReasoning(300)
       });
 
       return response.choices[0]?.message?.content?.trim() || 

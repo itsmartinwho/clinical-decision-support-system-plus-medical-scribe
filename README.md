@@ -12,7 +12,7 @@ The video narrates it as "ForSight". Live demo: [foresight-cdss-mvp.vercel.app](
 
 - **Scribe and notes.** A consultation is transcribed live with Deepgram's medical model, speakers separated. From the transcript it drafts a SOAP note, a diagnosis and a treatment plan, each editable in place, and drafts referral and prior authorization forms.
 - **Clinical engine.** The pipeline behind those drafts. From the transcript and the chart it ranks differential diagnoses by likelihood, settles on a primary diagnosis with a confidence, plans treatment with a decision tree, writes the SOAP note, and drafts a referral or prior authorization when one is needed. Results are stored in FHIR-shaped tables (conditions, differentials, encounters).
-- **Alerts.** While the consultation runs, each new stretch of transcript is picked up every ten seconds to be checked for drug interactions, missing labs, comorbidities, questions worth asking and diagnostic gaps, and when it ends the whole consultation goes to a reasoning model for review. The step that turns those passes into model calls (`OpenAIClient.processAlerts` in `src/lib/ai/gpt-models.ts`) was left a placeholder in June 2025, so the alerts you see come from the seed and the guided demo.
+- **Alerts.** While the consultation runs, each new stretch of transcript is picked up every ten seconds to be checked for drug interactions, missing labs, comorbidities, questions worth asking and diagnostic gaps, and when it ends the whole consultation goes to a reasoning model for review. Each pass is one call to OpenAI's Responses API (`OpenAIClient.processAlerts` in `src/lib/ai/gpt-models.ts`) with the patient's chart, its answer held to a schema of those alert types, and the alerts it raises are saved to the alerts table, where the alerts dashboard reads them. The ten-second timer, and the sessions it serves, live in the server's memory, so the passes during a consultation suit one long-running server (`pnpm start`) better than serverless functions.
 - **Advisor.** A chat for clinical questions that can take a patient's chart as context, and writes and runs Python (OpenAI's Code Interpreter) to draw charts.
 - **Pseudo-EMR.** A dashboard of upcoming consultations, a patient list, and a workspace per patient with encounters, diagnoses, labs and everything else in one view. There is also a searchable library of clinical guidelines (USPSTF, NICE, NCI PDQ, RxNorm).
 
@@ -39,7 +39,7 @@ Fill in `.env.local`:
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Its anon key, for reads and writes from the app |
 | `SUPABASE_SERVICE_ROLE_KEY` | Its service role key, for the server routes, the guideline ingestion and the data scripts |
 | `OPENAI_API_KEY` | The advisor, the clinical engine, the alerts and the guideline embeddings |
-| `NEXT_PUBLIC_DEEPGRAM_API_KEY` | Live transcription. It is sent to the browser, so use a key with a low limit |
+| `DEEPGRAM_API_KEY` | Live transcription. It stays on the server, which trades it for a 30-second token each time the browser opens a transcription socket; the key needs Member permissions |
 | `API_BASE_URL` | Only for `scripts/batch_clinical_engine_processing.ts`; defaults to `http://localhost:3000` |
 
 The app was built with Supabase's anon and service role keys. Supabase is retiring those by the end of 2026 in favour of publishable and secret keys, which may need a newer `@supabase/supabase-js`.
@@ -67,7 +67,7 @@ The guidelines library starts empty. `pnpm run setup:guidelines` ingests and emb
 
 ## Models
 
-The model names are in `src/types/ai-models.ts`. The advisor uses `gpt-4o-mini`, or `gpt-4o` in think mode, through the Responses API; the clinical engine uses `gpt-4o-mini`; the alerts are set to `gpt-4o-mini` during the consultation and `gpt-5.6-sol` after it; the guideline search embeds with `text-embedding-ada-002`. OpenAI shuts `gpt-4o` and `gpt-4o-mini` down on 14 January 2027 and suggests `gpt-6-luna` in their place. Transcription is Deepgram's `nova-3-medical`.
+The model names are in `src/types/ai-models.ts`. Everything runs on `gpt-6-astra`, OpenAI's most capable model, which always reasons: the advisor through the Responses API with Code Interpreter (low reasoning effort, high in think mode), the clinical engine through Chat Completions, and the alerts during and after the consultation (low effort). The guideline search embeds with `text-embedding-3-large`, shortened to 1536 dimensions; documents and queries must share that model, so after changing it re-embed every document with `pnpm run setup:guidelines --embed-only`. Transcription is Deepgram's `nova-3-medical`, its newest medical model.
 
 ## Where things are
 

@@ -12,6 +12,7 @@ import { TreatmentRenderer } from '@/components/advisor/streaming-markdown/treat
 import { useRichContentEditor } from '@/hooks/useRichContentEditor';
 import { X, Brain, CircleNotch, PauseCircle, PlayCircle, FloppyDisk, Bell } from '@phosphor-icons/react';
 import { AudioWaveform } from '@/components/ui/AudioWaveform';
+import { openDeepgramSocket, TranscriptionUnavailableError } from '@/lib/deepgram';
 import { DemoAudioWaveform } from '@/components/ui/DemoAudioWaveform';
 import { RealTimeAlertManager } from '@/components/alerts/RealTimeAlertManager';
 import { AlertToast } from '@/components/alerts/AlertToast';
@@ -810,11 +811,6 @@ export default function ConsultationPanel({
 
   const startVoiceInput = useCallback(async () => {
     console.log("ConsultationPanel startVoiceInput called - current states:", { isTranscribing: isTranscribingRef.current, isPaused: isPausedRef.current });
-    const apiKey = process.env.NEXT_PUBLIC_DEEPGRAM_API_KEY;
-    if (!apiKey) {
-      console.error("ConsultationPanel startVoiceInput: No API key");
-      return toast({ title: "Error", description: "Deepgram API key not configured.", variant: "destructive" });
-    }
     if (isTranscribingRef.current) {
       console.log("ConsultationPanel startVoiceInput: Already transcribing, returning early");
       return;
@@ -842,7 +838,7 @@ export default function ConsultationPanel({
         vad_events: 'true' // Enable voice activity detection events
       }).toString();
       
-      const ws = new WebSocket(wsUrl, ['token', apiKey]);
+      const ws = await openDeepgramSocket(wsUrl);
       socketRef.current = ws;
 
       // KeepAlive mechanism to prevent connection timeouts during silence
@@ -966,7 +962,12 @@ export default function ConsultationPanel({
         cleanupAllAudioResources();
       };
     } catch (err) {
-      toast({ title: "Microphone Error", description: "Could not access microphone.", variant: "destructive" });
+      cleanupAllAudioResources();
+      if (err instanceof TranscriptionUnavailableError) {
+        toast({ title: "Error", description: err.message, variant: "destructive" });
+      } else {
+        toast({ title: "Microphone Error", description: "Could not access microphone.", variant: "destructive" });
+      }
     }
   }, [isOpen, toast, cleanupAllAudioResources]);
 
@@ -1259,15 +1260,6 @@ export default function ConsultationPanel({
         if (isTranscribingRef.current) {
           console.log('[ConsultationPanel] Already transcribing, skipping auto-start');
           setStarted(true);
-          return;
-        }
-        
-        const apiKey = process.env.NEXT_PUBLIC_DEEPGRAM_API_KEY;
-        console.log('[ConsultationPanel] Checking API key availability:', !!apiKey);
-        if (!apiKey) {
-          console.error('[ConsultationPanel] Missing Deepgram API key, cannot auto-start');
-          toast({ title: "Error", description: "Deepgram API key not configured.", variant: "destructive" });
-          setStarted(true); // Set started to true to prevent infinite retry
           return;
         }
         

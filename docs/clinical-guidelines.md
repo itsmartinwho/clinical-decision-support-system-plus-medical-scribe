@@ -86,9 +86,16 @@ pnpm run setup:guidelines
 
 This script will:
 1. Ingest sample guidelines from configured sources
-2. Process vector embeddings
+2. Process vector embeddings (`text-embedding-3-large` at 1536 dimensions)
 3. Verify the installation
 4. Test search functionality
+
+Documents and search queries must be embedded by the same model. After the
+embedding model changes, re-embed every stored document without ingesting again:
+
+```bash
+pnpm run setup:guidelines --embed-only
+```
 
 ## API Endpoints
 
