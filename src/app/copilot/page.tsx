@@ -1,7 +1,7 @@
 // src/app/copilot/page.tsx
 'use client'; // Required for useState and event handlers
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -28,6 +28,14 @@ import AlertDashboard from '@/components/alerts/AlertDashboard';
 import { UnifiedAlertsService } from '@/lib/unifiedAlertsService';
 import { UnifiedAlert } from '@/types/alerts';
 
+// Lines the "Simulate Transcript Update" button adds to the consultation's
+// transcript, one a press, so the real-time pass has something to read
+const SAMPLE_TRANSCRIPT_LINES = [
+  'Patient reports chest pain and shortness of breath. No previous cardiac history.',
+  'She takes warfarin for atrial fibrillation and started ibuprofen last week for knee pain.',
+  'Blood pressure today is 172 over 104, and she says the chest pain comes on when she climbs stairs.'
+];
+
 export default function CopilotPage() {
   // Legacy state for backward compatibility
   const [legacyAlerts, setLegacyAlerts] = useState<CopilotAlert[]>([]);
@@ -38,6 +46,8 @@ export default function CopilotPage() {
   const [consultationId, setConsultationId] = useState<string>('');
   const [patientId, setPatientId] = useState<string>('test-patient-123');
   const [alertHistory, setAlertHistory] = useState<UnifiedAlert[]>([]);
+  const [transcript, setTranscript] = useState('');
+  const sampleLineRef = useRef(0);
   const [alertsService] = useState(() => new UnifiedAlertsService());
 
   // Auto-start real-time processing when consultation begins
@@ -50,6 +60,8 @@ export default function CopilotPage() {
 
   const startConsultation = () => {
     const newConsultationId = `consultation-${Date.now()}`;
+    setTranscript('');
+    sampleLineRef.current = 0;
     setConsultationId(newConsultationId);
     setIsInConsultation(true);
     console.log('Starting consultation:', newConsultationId);
@@ -73,8 +85,10 @@ export default function CopilotPage() {
   };
 
   const simulateTranscriptUpdate = () => {
-    // This would be called when transcript is updated in real system
-    console.log('Transcript updated - real-time processing will trigger automatically');
+    // In a real consultation the transcript comes from the scribe
+    const line = SAMPLE_TRANSCRIPT_LINES[sampleLineRef.current % SAMPLE_TRANSCRIPT_LINES.length];
+    sampleLineRef.current += 1;
+    setTranscript(prev => (prev ? `${prev} ${line}` : line));
   };
 
   const handleNewAlert = (alert: UnifiedAlert) => {
@@ -192,10 +206,14 @@ export default function CopilotPage() {
               <div className="flex items-center gap-2 text-ok">
                 <CheckCircle className="h-4 w-4" />
                 <span className="text-sm font-medium">
-                  Real-time alerts active - Processing every minute automatically
+                  Real-time alerts active - New transcript is checked every 10 seconds
                 </span>
               </div>
             </div>
+          )}
+
+          {transcript && (
+            <p className="text-sm text-gray-600">Transcript: {transcript}</p>
           )}
         </CardContent>
       </Card>
@@ -239,7 +257,9 @@ export default function CopilotPage() {
             <CardContent>
               <RealTimeAlertManager
                 isActive={isInConsultation}
+                patientId={patientId}
                 consultationId={consultationId || undefined}
+                transcript={transcript}
                 onAlert={handleNewAlert}
                 maxToasts={3}
               />

@@ -1,5 +1,10 @@
 // Real-time Alert Processor
-// Handles minute-by-minute transcript analysis during active consultations
+// Keeps the consultations under way in this server's memory. It runs no passes
+// of its own: on serverless functions that memory does not last between
+// requests, so the client (useRealTimeAlerts) asks for each pass itself, with
+// action 'process'. What is kept here serves start_session, end_session,
+// update_transcript and the status and force_process reads, and only holds
+// while one server process lives (pnpm start).
 
 import { 
   UnifiedAlert, 
@@ -12,7 +17,6 @@ import { alertEngine } from './alert-engine';
 import { UnifiedAlertsService } from '../unifiedAlertsService';
 
 export interface RealTimeProcessorConfig {
-  intervalMs: number; // Processing interval (default: 60000ms = 1 minute)
   maxAlertsPerCycle: number; // Maximum alerts per processing cycle
   confidenceThreshold: number; // Minimum confidence for real-time alerts
   batchSize: number; // Transcript segment size for processing
@@ -31,13 +35,10 @@ export interface ConsultationSession {
 export class RealTimeProcessor {
   private config: RealTimeProcessorConfig;
   private activeSessions: Map<string, ConsultationSession> = new Map();
-  private processingInterval: NodeJS.Timeout | null = null;
   private alertsService: UnifiedAlertsService;
-  private onAlertCallback?: (alert: UnifiedAlert) => void;
 
   constructor(config: Partial<RealTimeProcessorConfig> = {}) {
     this.config = {
-      intervalMs: config.intervalMs || 10000, // Process every 10 seconds for more responsive alerts (was 60000)
       maxAlertsPerCycle: config.maxAlertsPerCycle || 3,
       confidenceThreshold: config.confidenceThreshold || 0.8,
       batchSize: config.batchSize || 200 // Reduced batch size for more frequent processing (was 500)
@@ -71,11 +72,6 @@ export class RealTimeProcessor {
 
     // Initialize transcript tracking in the unified alerts service
     this.alertsService.resetTranscriptTracking(patientId, encounterId);
-
-    // Start processing if this is the first session
-    if (this.activeSessions.size === 1) {
-      this.startProcessing();
-    }
   }
 
   endSession(patientId: string, encounterId: string): void {
@@ -90,11 +86,6 @@ export class RealTimeProcessor {
     session.isActive = false;
     this.activeSessions.delete(sessionKey);
     console.log(`Ended real-time processing session: ${sessionKey}`);
-
-    // Stop processing if no active sessions remain
-    if (this.activeSessions.size === 0) {
-      this.stopProcessing();
-    }
   }
 
   async updateTranscript(patientId: string, encounterId: string, transcript: string): Promise<void> {
@@ -110,45 +101,6 @@ export class RealTimeProcessor {
     
     // Update transcript in the unified alerts service
     await this.alertsService.updateTranscript(patientId, encounterId, transcript);
-  }
-
-  // ==================== PROCESSING CONTROL ====================
-
-  private startProcessing(): void {
-    if (this.processingInterval) {
-      return; // Already running
-    }
-
-    console.log('Starting real-time alert processing...');
-    this.processingInterval = setInterval(() => {
-      this.processAllSessions();
-    }, this.config.intervalMs);
-
-    // Process immediately for the first cycle
-    this.processAllSessions();
-  }
-
-  private stopProcessing(): void {
-    if (this.processingInterval) {
-      clearInterval(this.processingInterval);
-      this.processingInterval = null;
-      console.log('Stopped real-time alert processing');
-    }
-  }
-
-  private async processAllSessions(): Promise<void> {
-    const sessions = Array.from(this.activeSessions.values()).filter(s => s.isActive);
-    
-    if (sessions.length === 0) {
-      return;
-    }
-
-    console.log(`Processing ${sessions.length} active consultation sessions`);
-
-    // Process sessions in parallel for efficiency
-    await Promise.allSettled(
-      sessions.map(session => this.processSession(session))
-    );
   }
 
   // ==================== INDIVIDUAL SESSION PROCESSING ====================
@@ -182,11 +134,6 @@ export class RealTimeProcessor {
       session.lastProcessedIndex = session.currentTranscript.length;
       session.accumulatedAlerts.push(...newAlerts);
 
-      // Trigger callbacks for new alerts
-      newAlerts.forEach(alert => {
-        this.onAlertCallback?.(alert);
-      });
-
       // Limit accumulated alerts to prevent memory issues
       if (session.accumulatedAlerts.length > 50) {
         session.accumulatedAlerts = session.accumulatedAlerts.slice(-30);
@@ -217,10 +164,6 @@ export class RealTimeProcessor {
 
   // ==================== UTILITY METHODS ====================
 
-  setAlertCallback(callback: (alert: UnifiedAlert) => void): void {
-    this.onAlertCallback = callback;
-  }
-
   getActiveSessions(): string[] {
     return Array.from(this.activeSessions.keys());
   }
@@ -246,12 +189,10 @@ export class RealTimeProcessor {
   // Get processing statistics
   getStats(): {
     activeSessions: number;
-    isProcessing: boolean;
     config: RealTimeProcessorConfig;
   } {
     return {
       activeSessions: this.activeSessions.size,
-      isProcessing: !!this.processingInterval,
       config: this.config
     };
   }
@@ -284,7 +225,6 @@ export class RealTimeProcessor {
 
   // Clean up all sessions (for testing)
   cleanup(): void {
-    this.stopProcessing();
     this.activeSessions.clear();
     console.log('Real-time processor cleaned up');
   }

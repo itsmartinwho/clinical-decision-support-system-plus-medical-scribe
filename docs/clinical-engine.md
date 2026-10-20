@@ -60,7 +60,7 @@ Rich versions contain the same core clinical information as non-rich versions bu
 
 ### AI Models Used
 
-- **gpt-4o-mini**, through Chat Completions, for every step: differentials,
+- **gpt-6-astra**, through Chat Completions, for every step: differentials,
   the primary diagnosis, the treatment plan, the SOAP note and the documents
 
 ## Database Schema Integration
@@ -144,10 +144,10 @@ POST /api/clinical-engine/treatments
 ## Configuration
 
 ### Model Selection
-- Model: gpt-4o-mini (`GPT_4O_MINI` in `src/lib/ai/gpt-models.ts`); OpenAI
-  shuts it down on 2027-01-14 and suggests gpt-6-luna
-- Temperature: 1 for the diagnosis steps, 0.3 for guideline-based treatments
-  and single fields
+- Model: gpt-6-astra (`GPT_6_ASTRA` in `src/lib/ai/gpt-models.ts`)
+- Reasoning effort: low. Astra takes no temperature, and `max_completion_tokens`
+  covers its reasoning as well as its answer, so each step's budget has 8,000
+  tokens added for the reasoning
 
 ### FHIR Compliance Settings
 - Clinical status threshold: 0.6 confidence

@@ -58,7 +58,7 @@ export interface UnifiedAlert {
   // AI and processing metadata
   confidenceScore?: number; // 0.0 to 1.0
   sourceReasoning?: string;
-  processingModel?: string; // 'gpt-4.1-mini', 'gpt-o3', etc.
+  processingModel?: string; // the model's id as OpenAI returns it, e.g. 'gpt-6-astra'
   contextData?: Record<string, any>;
   
   // Alert lifecycle
