@@ -49,7 +49,7 @@ export const DraggableModalWrapper: React.FC<DraggableModalWrapperProps> = ({
     <div 
       {...containerProps}
       className={cn(
-        "modal-glass rounded-lg shadow-xl overflow-hidden flex flex-col",
+        "draggable-modal-container modal-glass rounded-xl overflow-hidden flex flex-col",
         isDragging && "modal-dragging",
         className
       )}

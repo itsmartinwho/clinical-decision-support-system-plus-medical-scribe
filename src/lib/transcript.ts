@@ -60,8 +60,24 @@ function nameOf(label: string): { speaker: string; aside?: string } {
 
 const words = (s: string) => (s.match(/\S+/g) ?? []).length;
 
-export function parseTranscript(text: string | null | undefined): TranscriptTurn[] {
-  if (!text || !text.trim()) return [];
+/** The transcript editor saves HTML; read it as lines of text. */
+export function toPlainText(text: string): string {
+  if (!/<(p|br|div|li)[\s>/]/i.test(text)) return text;
+  return text
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/(p|div|li|h\d)>/gi, '\n')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'");
+}
+
+export function parseTranscript(input: string | null | undefined): TranscriptTurn[] {
+  if (!input || !input.trim()) return [];
+  const text = toPlainText(input);
   const turns: TranscriptTurn[] = [];
   let clock = 0;
   let current: TranscriptTurn | null = null;

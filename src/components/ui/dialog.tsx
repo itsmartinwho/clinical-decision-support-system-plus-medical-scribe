@@ -215,11 +215,11 @@ const DraggablePositionedContent = React.forwardRef<
   // Memoize props to prevent infinite re-renders - always call useMemo
   const stableContainerProps = React.useMemo(() => {
     if (!draggableConfig || !modalDragResult.containerProps) {
-      return { className: "fixed", style: {} };
+      return { className: "fixed draggable-modal-container", style: {} };
     }
     return {
       ...modalDragResult.containerProps,
-      className: "fixed",
+      className: "fixed draggable-modal-container",
       style: { ...modalDragResult.containerProps.style }
     };
   }, [draggableConfig, modalDragResult.containerProps]);

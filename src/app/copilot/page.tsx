@@ -213,7 +213,7 @@ export default function CopilotPage() {
           )}
 
           {transcript && (
-            <p className="text-sm text-gray-600">Transcript: {transcript}</p>
+            <p className="text-sm text-ink-2">Transcript: {transcript}</p>
           )}
         </CardContent>
       </Card>

@@ -330,18 +330,19 @@
 
 /* On a phone a dragged dialog is just a sheet: pinned to the edges. */
 @media (max-width: 640px) {
-  .modal-draggable,
-  .modal-dragging {
+  .draggable-modal-container {
     left: 0.5rem !important;
     right: 0.5rem !important;
     top: 0.5rem !important;
     width: auto !important;
+    min-width: 0 !important;
     max-width: none !important;
-    max-height: calc(100svh - 1rem);
+    max-height: calc(100svh - 1rem) !important;
   }
-  .modal-draggable > [role="dialog"],
-  .modal-draggable > div {
+  .draggable-modal-container > [role="dialog"] {
+    width: 100% !important;
     min-width: 0 !important;
     max-width: 100% !important;
+    max-height: calc(100svh - 1rem) !important;
   }
 }

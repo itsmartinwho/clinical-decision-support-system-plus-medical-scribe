@@ -24,6 +24,11 @@ describe('parseTranscript', () => {
     expect(turns[2].text).toBe('General: Alert\nHEENT: Dry mucous membranes');
   });
 
+  it('reads the HTML the transcript editor saves', () => {
+    const turns = parseTranscript('<p>Speaker 0: Any allergies?</p><p>Speaker 1: Penicillin &amp; latex.</p>');
+    expect(turns.map((t) => t.text)).toEqual(['Any allergies?', 'Penicillin & latex.']);
+  });
+
   it('uses timestamps the transcript gives', () => {
     const turns = parseTranscript('[01:05] Patient: Since Monday.');
     expect(turns[0]).toMatchObject({ at: 65, estimated: false });
