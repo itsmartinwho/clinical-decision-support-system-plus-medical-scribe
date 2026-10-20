@@ -282,12 +282,9 @@ export class EmbeddingService {
   async searchSimilar(
     query: string, 
     specialty?: string, 
-    matchCount: number = 5,
-    /** Throw instead of returning [] when the search fails, so callers can fall back. */
-    strict: boolean = false
+    matchCount: number = 5
   ): Promise<GuidelineSearchResult[]> {
     if (!this.supabase || !this.openai) {
-      if (strict) throw new Error('Embeddings are not available here');
       console.warn('EmbeddingService not properly initialized, returning empty results');
       return [];
     }
@@ -312,7 +309,6 @@ export class EmbeddingService {
 
       return data || [];
     } catch (error) {
-      if (strict) throw error;
       console.error('Similarity search error:', error);
       return [];
     }

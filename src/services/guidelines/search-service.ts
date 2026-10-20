@@ -1,5 +1,4 @@
 import { getSupabaseClient } from '@/lib/supabaseClient';
-import { hasOpenAIKey } from '@/lib/ai/keys';
 import { EmbeddingService } from './embedding-service';
 import { 
   GuidelineSearchResult, 
@@ -7,20 +6,6 @@ import {
   GuidelineDoc,
   Specialty 
 } from '@/types/guidelines';
-
-export interface SemanticSearchOutcome {
-  results: GuidelineSearchResult[];
-  /** Set when embeddings were unavailable and the results come from text search. */
-  fallback?: 'text';
-  reason?: string;
-}
-
-const textToSearchResult = (r: GuidelineTextSearchResult): GuidelineSearchResult => ({
-  id: r.id,
-  content: r.content,
-  metadata: { title: r.title, source: r.source, specialty: r.specialty },
-  similarity: r.similarity,
-} as GuidelineSearchResult);
 
 export interface CombinedSearchResult {
   semanticResults: GuidelineSearchResult[];
@@ -48,30 +33,7 @@ export class GuidelineSearchService {
     specialty?: Specialty,
     limit: number = 5
   ): Promise<GuidelineSearchResult[]> {
-    return (await this.semanticSearchWithFallback(query, specialty, limit)).results;
-  }
-
-  /**
-   * Semantic search when the query can be embedded; otherwise (no
-   * OPENAI_API_KEY, or the embedding call fails, e.g. out of credit) the text
-   * search, in the same shape, saying so.
-   */
-  async semanticSearchWithFallback(
-    query: string,
-    specialty?: Specialty,
-    limit: number = 5
-  ): Promise<SemanticSearchOutcome> {
-    let reason = 'OPENAI_API_KEY is not set';
-    if (hasOpenAIKey()) {
-      try {
-        return { results: await this.embeddingService.searchSimilar(query, specialty, limit, true) };
-      } catch (error) {
-        reason = `the embedding search failed: ${error instanceof Error ? error.message : String(error)}`;
-        console.warn(`Semantic search fell back to text search: ${reason}`);
-      }
-    }
-    const text = await this.textSearch(query, specialty, limit);
-    return { results: text.map(textToSearchResult), fallback: 'text', reason };
+    return await this.embeddingService.searchSimilar(query, specialty, limit);
   }
 
   /**
@@ -120,16 +82,10 @@ export class GuidelineSearchService {
     textLimit: number = 5
   ): Promise<CombinedSearchResult> {
     try {
-      // Text search does not need embeddings; when they are unavailable the
-      // semantic half is empty rather than a copy of the text results.
-      const [semantic, text] = await Promise.allSettled([
-        hasOpenAIKey()
-          ? this.embeddingService.searchSimilar(query, specialty, semanticLimit, true)
-          : Promise.resolve([] as GuidelineSearchResult[]),
-        this.textSearch(query, specialty, textLimit),
+      const [semanticResults, textResults] = await Promise.all([
+        this.semanticSearch(query, specialty, semanticLimit),
+        this.textSearch(query, specialty, textLimit)
       ]);
-      const semanticResults = semantic.status === 'fulfilled' ? semantic.value : [];
-      const textResults = text.status === 'fulfilled' ? text.value : [];
 
       return {
         semanticResults,

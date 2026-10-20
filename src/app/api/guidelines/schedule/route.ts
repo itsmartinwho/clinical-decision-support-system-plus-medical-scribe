@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getScheduler } from '@/services/guidelines/scheduler';
 import { GuidelineSource } from '@/types/guidelines';
-import { adminSecretRequiredResponse, databaseRequiredResponse } from '@/lib/serverGuards';
+import { databaseRequiredResponse } from '@/lib/serverGuards';
 
 export async function GET() {
   const noDatabase = await databaseRequiredResponse('The guideline refresh schedule');
@@ -30,9 +30,6 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
-  // Setting up or triggering a refresh ingests and embeds: only with the admin secret.
-  const refused = adminSecretRequiredResponse(request, 'The guideline refresh');
-  if (refused) return refused;
   const noDatabase = await databaseRequiredResponse('The guideline refresh schedule');
   if (noDatabase) return noDatabase;
   try {

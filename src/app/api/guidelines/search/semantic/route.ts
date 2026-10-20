@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { GuidelineSearchService } from '@/services/guidelines/search-service';
+import { EmbeddingService } from '@/services/guidelines/embedding-service';
+import { openAIKeyMissingResponse } from '@/lib/serverGuards';
 
 export async function POST(request: NextRequest) {
+  const noKey = openAIKeyMissingResponse();
+  if (noKey) return noKey;
   try {
     const body = await request.json();
     const { query, specialty, matchCount = 5 } = body;
@@ -13,16 +16,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Falls back to text search when the query cannot be embedded.
-    const outcome = await new GuidelineSearchService().semanticSearchWithFallback(query, specialty, matchCount);
-
-    return NextResponse.json({
+    // Create embedding service (this will run on server side)
+    const embeddingService = new EmbeddingService();
+    
+    // Perform similarity search
+    const results = await embeddingService.searchSimilar(query, specialty, matchCount);
+    
+    return NextResponse.json({ 
       success: true,
-      results: outcome.results,
+      results,
       query,
       specialty,
-      matchCount,
-      ...(outcome.fallback ? { fallback: outcome.fallback, reason: outcome.reason } : {}),
+      matchCount 
     });
   } catch (error) {
     console.error('Semantic search API error:', error);
