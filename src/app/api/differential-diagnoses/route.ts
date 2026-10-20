@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSupabaseServiceClient } from '@/lib/supabaseClient';
+import { getSupabaseClient } from '@/lib/supabaseClient';
 import { supabaseDataService } from '@/lib/supabaseDataService';
+
+// The browser edits differentials through this route, so it runs as the anon
+// role like the rest of the client: row level security decides what it may do
+// (see the differential_diagnoses policies). It must not use the service role,
+// which would let anyone who can reach the route bypass them.
 
 // GET: Fetch differential diagnoses for a specific encounter
 export async function GET(request: NextRequest) {
@@ -26,7 +31,7 @@ export async function GET(request: NextRequest) {
 
       // Fallback: if cache not yet loaded or empty, query Supabase directly
       if (!filteredDiagnoses || filteredDiagnoses.length === 0) {
-        const { data: directDiffs, error: diffErr } = await getSupabaseServiceClient()
+        const { data: directDiffs, error: diffErr } = await getSupabaseClient()
           .from('differential_diagnoses')
           .select('*')
           .eq('encounter_id', encounterId);
@@ -127,7 +132,7 @@ export async function PUT(request: NextRequest) {
     if (keyFactors !== undefined) updateData.key_factors = keyFactors;
     if (rankOrder !== undefined) updateData.rank_order = rankOrder;
 
-    const { data: updatedDiagnosis, error } = await getSupabaseServiceClient()
+    const { data: updatedDiagnosis, error } = await getSupabaseClient()
       .from('differential_diagnoses')
       .update(updateData)
       .eq('id', id)
@@ -175,7 +180,7 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const { error } = await getSupabaseServiceClient()
+    const { error } = await getSupabaseClient()
       .from('differential_diagnoses')
       .delete()
       .eq('id', id);

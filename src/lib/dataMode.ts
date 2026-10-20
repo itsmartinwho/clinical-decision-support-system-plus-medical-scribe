@@ -29,12 +29,20 @@ export const REQUEST_TIMEOUT_MS = 12000;
 
 const isServer = () => typeof window === 'undefined';
 
-/** The project URL and the key this runtime should use, or null when either is missing. */
-export function readSupabaseConfig(): SupabaseConfig | null {
+export type SupabaseRole = 'anon' | 'service';
+
+/**
+ * The project URL and a key, or null when either is missing. `anon` is the
+ * public key the browser uses, which row level security governs, and it is
+ * what every query gets unless it asks for more. `service` is
+ * SUPABASE_SERVICE_ROLE_KEY, which bypasses RLS: only on the server, and only
+ * for code that asks for it by name; without it, the anon key.
+ */
+export function readSupabaseConfig(role: SupabaseRole = 'anon'): SupabaseConfig | null {
   // Spelled out in full so Next inlines the public values into the browser bundle.
   const url = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim();
   const anon = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim();
-  const service = isServer() ? (process.env.SUPABASE_SERVICE_ROLE_KEY || '').trim() : '';
+  const service = role === 'service' && isServer() ? (process.env.SUPABASE_SERVICE_ROLE_KEY || '').trim() : '';
   const key = service || anon;
   if (!url || !key || !/^https?:\/\//.test(url)) return null;
   return { url: url.replace(/\/+$/, ''), key };
