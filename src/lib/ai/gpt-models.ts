@@ -14,28 +14,26 @@ import {
 } from '@/types/ai-models';
 
 // Export individual model types for easy import
-export const GPT_4O = AIModelType.GPT_4O;
-export const GPT_4O_MINI = AIModelType.GPT_4O_MINI;
-export const REASONING = AIModelType.REASONING;
+export const GPT_6_ASTRA = AIModelType.GPT_6_ASTRA;
 
-// Default model for real-time alerts processing - using gpt-4o-mini for speed and efficiency
-export const DEFAULT_REALTIME_MODEL = GPT_4O_MINI;
+// Real-time alerts. Astra at low effort; if its passes lag behind the
+// consultation, gpt-6-luna (reasoning effort none) is the faster one to try.
+export const DEFAULT_REALTIME_MODEL = GPT_6_ASTRA;
 
-// Default model for post-consultation alerts processing - a reasoning model
-export const DEFAULT_POST_CONSULTATION_MODEL = REASONING;
+// Default model for post-consultation alerts processing
+export const DEFAULT_POST_CONSULTATION_MODEL = GPT_6_ASTRA;
 
-// Use GPT-4o-mini as the generic low-cost fallback
-export const FALLBACK_ALERTS_MODEL = GPT_4O_MINI;
+export const FALLBACK_ALERTS_MODEL = GPT_6_ASTRA;
 
 // Model selection based on use case
 export const getModelForUseCase = (useCase: 'real-time' | 'post-consultation' | 'demo'): AIModelType => {
   switch (useCase) {
     case 'real-time':
-      return DEFAULT_REALTIME_MODEL; // gpt-4o-mini for fast response
+      return DEFAULT_REALTIME_MODEL;
     case 'post-consultation':
-      return DEFAULT_POST_CONSULTATION_MODEL; // reasoning model
+      return DEFAULT_POST_CONSULTATION_MODEL;
     case 'demo':
-      return GPT_4O_MINI; // Cost-effective for demos
+      return GPT_6_ASTRA;
     default:
       return FALLBACK_ALERTS_MODEL;
   }
@@ -103,9 +101,9 @@ export const AVAILABLE_MODELS = Object.values(AIModelType);
 export const MODEL_RECOMMENDATIONS = {
   REAL_TIME_ALERTS: DEFAULT_REALTIME_MODEL,
   POST_CONSULTATION_ANALYSIS: DEFAULT_POST_CONSULTATION_MODEL,
-  COST_OPTIMIZATION: GPT_4O_MINI,
-  ADVANCED_REASONING: REASONING,
-  MULTIMODAL_ANALYSIS: GPT_4O,
+  COST_OPTIMIZATION: GPT_6_ASTRA,
+  ADVANCED_REASONING: GPT_6_ASTRA,
+  MULTIMODAL_ANALYSIS: GPT_6_ASTRA,
   FALLBACK: FALLBACK_ALERTS_MODEL
 } as const;
 

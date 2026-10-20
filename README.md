@@ -67,7 +67,7 @@ The guidelines library starts empty. `pnpm run setup:guidelines` ingests and emb
 
 ## Models
 
-The model names are in `src/types/ai-models.ts`. The advisor uses `gpt-4o-mini`, or `gpt-4o` in think mode, through the Responses API; the clinical engine uses `gpt-4o-mini`; the alerts are set to `gpt-4o-mini` during the consultation and `gpt-5.6-sol` after it; the guideline search embeds with `text-embedding-ada-002`. OpenAI shuts `gpt-4o` and `gpt-4o-mini` down on 14 January 2027 and suggests `gpt-6-luna` in their place. Transcription is Deepgram's `nova-3-medical`.
+The model names are in `src/types/ai-models.ts`. Everything runs on `gpt-6-astra`, OpenAI's most capable model, which always reasons: the advisor through the Responses API with Code Interpreter (low reasoning effort, high in think mode), the clinical engine through Chat Completions, and the alerts during and after the consultation (low effort). The guideline search embeds with `text-embedding-3-large`, shortened to 1536 dimensions; documents and queries must share that model, so after changing it re-embed every document with `pnpm run setup:guidelines --embed-only`. Transcription is Deepgram's `nova-3-medical`, its newest medical model.
 
 ## Where things are
 

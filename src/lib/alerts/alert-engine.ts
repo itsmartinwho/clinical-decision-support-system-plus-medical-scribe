@@ -25,7 +25,7 @@ import { getRealTimeTemplate } from '../ai/prompt-templates';
 import { UnifiedAlertsService } from '../unifiedAlertsService';
 import { supabaseDataService } from '../supabaseDataService';
 import type { PatientDataPayload } from '../types';
-import { GPT_4O_MINI, REASONING } from '../ai/gpt-models';
+import { DEFAULT_REALTIME_MODEL, DEFAULT_POST_CONSULTATION_MODEL } from '../ai/gpt-models';
 
 export class AlertEngine {
   private alertsService: UnifiedAlertsService;
@@ -43,20 +43,21 @@ export class AlertEngine {
 
   private async initializeAIClients(): Promise<void> {
     try {
-      // Real-time client for minute-by-minute processing
+      // Real-time client for minute-by-minute processing. Astra always
+      // reasons, so its budget and timeout leave room for that.
       this.realTimeClient = new OpenAIClient({
-        model: GPT_4O_MINI,
-        maxTokens: 1500,
-        temperature: 0.1,
-        retryAttempts: 2,
-        timeout: 15000, // 15 seconds for real-time
+        model: DEFAULT_REALTIME_MODEL,
+        maxTokens: 8000,
+        reasoningEffort: 'low',
+        retryAttempts: 1,
+        timeout: 30000,
       });
 
       // Post-consultation client for comprehensive analysis. Its output budget
       // includes the reasoning, and two attempts fit inside Vercel's default
       // 300-second function limit.
       this.postConsultationClient = new OpenAIClient({
-        model: REASONING,
+        model: DEFAULT_POST_CONSULTATION_MODEL,
         maxTokens: 16000,
         reasoningEffort: 'low',
         retryAttempts: 1,
@@ -192,7 +193,7 @@ export class AlertEngine {
     try {
       const aiContext = this.buildAIProcessingContext(context);
       const request: AIProcessingRequest = {
-        model: isRealTime ? GPT_4O_MINI : REASONING,
+        model: isRealTime ? DEFAULT_REALTIME_MODEL : DEFAULT_POST_CONSULTATION_MODEL,
         context: aiContext,
         promptTemplate: getRealTimeTemplate(),
         isRealTime,

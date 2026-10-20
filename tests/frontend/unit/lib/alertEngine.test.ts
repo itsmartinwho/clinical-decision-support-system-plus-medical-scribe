@@ -94,10 +94,10 @@ describe('AlertEngine', () => {
     vi.unstubAllEnvs();
   });
 
-  it('turns a stretch of transcript into alerts from the fast model, told about the real patient', async () => {
+  it('turns a stretch of transcript into alerts, telling the model about the real patient', async () => {
     mocks.getAlerts.mockResolvedValue({ alerts: [] });
     mocks.getPatientData.mockResolvedValue(patientData());
-    mocks.create.mockResolvedValue(modelAnswer('gpt-4o-mini-2024-07-18'));
+    mocks.create.mockResolvedValue(modelAnswer('gpt-6-astra'));
 
     const alerts = await new AlertEngine().processRealTimeAlerts(
       'patient-1',
@@ -108,7 +108,9 @@ describe('AlertEngine', () => {
 
     expect(mocks.create).toHaveBeenCalledTimes(1);
     const params = mocks.create.mock.calls[0][0];
-    expect(params.model).toBe('gpt-4o-mini');
+    expect(params.model).toBe('gpt-6-astra');
+    expect(params.reasoning).toEqual({ effort: 'low' });
+    expect(params.temperature).toBeUndefined();
     expect(params.input).toContain('1958-03-02');
     expect(params.input).toContain('Rheumatoid arthritis');
     expect(params.input).toContain('Methotrexate 15mg weekly');
@@ -124,7 +126,7 @@ describe('AlertEngine', () => {
       suggestion: 'Check AST and ALT.',
       confidenceScore: 0.9,
       sourceReasoning: 'Both are hepatotoxic, and her ALT is already high.',
-      processingModel: 'gpt-4o-mini-2024-07-18',
+      processingModel: 'gpt-6-astra',
       isRealTime: true,
       category: AlertCategory.REAL_TIME
     }));
@@ -141,7 +143,7 @@ describe('AlertEngine', () => {
       }]
     });
     mocks.getPatientData.mockResolvedValue(patientData());
-    mocks.create.mockResolvedValue(modelAnswer('gpt-4o-mini-2024-07-18'));
+    mocks.create.mockResolvedValue(modelAnswer('gpt-6-astra'));
 
     const alerts = await new AlertEngine().processRealTimeAlerts('patient-1', 'encounter-1', 'Speaker 1: Paracetamol.');
 
@@ -149,18 +151,19 @@ describe('AlertEngine', () => {
     expect(alerts).toEqual([]);
   });
 
-  it('reviews the saved consultation with the reasoning model after it ends', async () => {
+  it('reviews the saved consultation after it ends', async () => {
     mocks.getAlerts.mockResolvedValue({
       alerts: [{ id: 'rt-1', alertType: 'ASSESSMENT_QUESTION', message: 'Ask about alcohol.', status: AlertStatus.ACTIVE, createdAt: '2025-06-01T09:05:00Z' }]
     });
     mocks.getPatientData.mockResolvedValue(patientData('Speaker 0: How is the pain? Speaker 1: I take paracetamol most days now.'));
-    mocks.create.mockResolvedValue(modelAnswer('gpt-5.6-sol'));
+    mocks.create.mockResolvedValue(modelAnswer('gpt-6-astra'));
 
     const alerts = await new AlertEngine().processPostConsultationAlerts('patient-1', 'encounter-1');
 
     expect(mocks.clearPatientCache).toHaveBeenCalledWith('patient-1');
     const params = mocks.create.mock.calls[0][0];
-    expect(params.model).toBe('gpt-5.6-sol');
+    expect(params.model).toBe('gpt-6-astra');
+    expect(params.max_output_tokens).toBe(16000);
     expect(params.reasoning).toEqual({ effort: 'low' });
     expect(params.input).toContain('I take paracetamol most days now.');
     expect(params.input).toContain('S: Joint pain.');
@@ -169,7 +172,7 @@ describe('AlertEngine', () => {
     expect(mocks.updateAlert).toHaveBeenCalledWith('rt-1', { status: AlertStatus.RESOLVED });
     expect(mocks.createAlert).toHaveBeenCalledWith(expect.objectContaining({
       alertType: 'DRUG_INTERACTION',
-      processingModel: 'gpt-5.6-sol',
+      processingModel: 'gpt-6-astra',
       isPostConsultation: true,
       category: AlertCategory.POST_CONSULTATION
     }));

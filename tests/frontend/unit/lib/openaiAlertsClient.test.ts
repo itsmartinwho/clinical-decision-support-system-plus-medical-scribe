@@ -26,7 +26,7 @@ const context: AIProcessingRequest['context'] = {
 };
 
 const request = (overrides: Partial<AIProcessingRequest> = {}): AIProcessingRequest => ({
-  model: AIModelType.GPT_4O_MINI,
+  model: AIModelType.GPT_6_ASTRA,
   context,
   promptTemplate: getRealTimeTemplate(),
   isRealTime: true,
@@ -48,7 +48,7 @@ const alert = (overrides: Record<string, unknown> = {}) => ({
 
 const completed = (alerts: unknown[]) => ({
   status: 'completed',
-  model: 'gpt-4o-mini-2024-07-18',
+  model: 'gpt-6-astra',
   output_text: JSON.stringify({ alerts }),
   usage: { input_tokens: 900, output_tokens: 120, total_tokens: 1020 }
 });
@@ -70,16 +70,14 @@ describe('OpenAIClient.processAlerts', () => {
 
   it('sends one Responses API request, held to a strict schema of the template alert types', async () => {
     const { create, client } = mockClient(completed([alert()]));
-    await new OpenAIClient({ model: AIModelType.GPT_4O_MINI, maxTokens: 1500, temperature: 0.1 }, client)
+    await new OpenAIClient({ model: AIModelType.GPT_6_ASTRA, maxTokens: 8000, reasoningEffort: 'low' }, client)
       .processAlerts(request());
 
     expect(create).toHaveBeenCalledTimes(1);
     const params = create.mock.calls[0][0];
-    expect(params.model).toBe('gpt-4o-mini');
-    expect(params.max_output_tokens).toBe(1500);
+    expect(params.model).toBe('gpt-6-astra');
+    expect(params.max_output_tokens).toBe(8000);
     expect(params.store).toBe(false);
-    expect(params.temperature).toBe(0.1);
-    expect(params.reasoning).toBeUndefined();
 
     const format = params.text.format;
     expect(format.type).toBe('json_schema');
@@ -94,7 +92,7 @@ describe('OpenAIClient.processAlerts', () => {
 
   it('puts the patient, the transcript, the new segment and the existing alerts in the prompt', async () => {
     const { create, client } = mockClient(completed([]));
-    await new OpenAIClient({ model: AIModelType.GPT_4O_MINI }, client).processAlerts(request());
+    await new OpenAIClient({ model: AIModelType.GPT_6_ASTRA }, client).processAlerts(request());
 
     const { instructions, input } = create.mock.calls[0][0];
     expect(instructions).toContain('HIGH CONFIDENCE (≥0.8)');
@@ -109,14 +107,14 @@ describe('OpenAIClient.processAlerts', () => {
     expect(input).not.toMatch(/\{[A-Z_]+\}/);
   });
 
-  it('sets a reasoning effort, and no temperature, for the reasoning model', async () => {
+  it('sets a reasoning effort, and no temperature, for gpt-6-astra (it always reasons)', async () => {
     const { create, client } = mockClient(completed([]));
-    await new OpenAIClient({ model: AIModelType.REASONING, maxTokens: 16000, reasoningEffort: 'low', temperature: 0.05 }, client)
-      .processAlerts(request({ model: AIModelType.REASONING, isRealTime: false, maxAlerts: 10, confidenceThreshold: 0.7 }));
+    await new OpenAIClient({ model: AIModelType.GPT_6_ASTRA, maxTokens: 16000, reasoningEffort: 'medium', temperature: 0.05 }, client)
+      .processAlerts(request({ isRealTime: false, maxAlerts: 10, confidenceThreshold: 0.7 }));
 
     const params = create.mock.calls[0][0];
-    expect(params.model).toBe('gpt-5.6-sol');
-    expect(params.reasoning).toEqual({ effort: 'low' });
+    expect(params.model).toBe('gpt-6-astra');
+    expect(params.reasoning).toEqual({ effort: 'medium' });
     expect(params.temperature).toBeUndefined();
     expect(params.instructions).toContain('reviews the whole consultation');
     expect(params.input).not.toContain('NEW TRANSCRIPT SEGMENT');
@@ -131,11 +129,11 @@ describe('OpenAIClient.processAlerts', () => {
       alert({ type: 'MISSING_LAB_RESULT', title: 'One too many', confidence: 0.95 })
     ]));
 
-    const response = await new OpenAIClient({ model: AIModelType.GPT_4O_MINI }, client)
+    const response = await new OpenAIClient({ model: AIModelType.GPT_6_ASTRA }, client)
       .processAlerts(request({ maxAlerts: 2 }));
 
     expect(response.success).toBe(true);
-    expect(response.model).toBe('gpt-4o-mini-2024-07-18');
+    expect(response.model).toBe('gpt-6-astra');
     expect(response.tokensUsed).toEqual({ prompt: 900, completion: 120, total: 1020 });
     expect(response.alerts).toEqual([
       {
@@ -163,13 +161,13 @@ describe('OpenAIClient.processAlerts', () => {
     const { client } = mockClient({
       status: 'incomplete',
       incomplete_details: { reason: 'max_output_tokens' },
-      model: 'gpt-5.6-sol',
+      model: 'gpt-6-astra',
       output_text: '{"alerts": [',
       usage: { input_tokens: 1, output_tokens: 1, total_tokens: 2 }
     });
 
-    const response = await new OpenAIClient({ model: AIModelType.REASONING }, client)
-      .processAlerts(request({ model: AIModelType.REASONING, isRealTime: false }));
+    const response = await new OpenAIClient({ model: AIModelType.GPT_6_ASTRA }, client)
+      .processAlerts(request({ isRealTime: false }));
 
     expect(response.success).toBe(false);
     expect(response.alerts).toEqual([]);
@@ -178,14 +176,14 @@ describe('OpenAIClient.processAlerts', () => {
 
   it('fails without alerts when the output does not match the schema', async () => {
     const { client } = mockClient(completed([alert({ type: 'NOT_A_TYPE' })]));
-    const response = await new OpenAIClient({ model: AIModelType.GPT_4O_MINI }, client).processAlerts(request());
+    const response = await new OpenAIClient({ model: AIModelType.GPT_6_ASTRA }, client).processAlerts(request());
     expect(response.success).toBe(false);
     expect(response.alerts).toEqual([]);
   });
 
   it('fails without alerts when the API call throws', async () => {
     const create = vi.fn().mockRejectedValue(new Error('429 Rate limit reached'));
-    const response = await new OpenAIClient({ model: AIModelType.GPT_4O_MINI }, { responses: { create } } as any)
+    const response = await new OpenAIClient({ model: AIModelType.GPT_6_ASTRA }, { responses: { create } } as any)
       .processAlerts(request());
     expect(response.success).toBe(false);
     expect(response.error).toBe('429 Rate limit reached');
@@ -193,7 +191,7 @@ describe('OpenAIClient.processAlerts', () => {
 
   it('makes no call without an OpenAI key', async () => {
     vi.stubEnv('OPENAI_API_KEY', '');
-    const response = await new OpenAIClient({ model: AIModelType.GPT_4O_MINI }).processAlerts(request());
+    const response = await new OpenAIClient({ model: AIModelType.GPT_6_ASTRA }).processAlerts(request());
     expect(response.success).toBe(false);
     expect(response.error).toBe('OPENAI_API_KEY is not set');
   });

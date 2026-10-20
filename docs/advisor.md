@@ -11,9 +11,9 @@ server-sent events. It sends one request to OpenAI's Responses API, with the
 conversation and, when a patient is selected, a summary of their chart:
 demographics, each encounter's SOAP content, lab results and alerts.
 
-- Standard mode uses `gpt-4o-mini`; think mode uses `gpt-4o`. The model names are
-  in `src/types/ai-models.ts`. OpenAI shuts both down on 2027-01-14 and suggests
-  `gpt-6-luna`.
+- Both modes use `gpt-6-astra`, OpenAI's most capable model; its model page lists
+  Code Interpreter among its tools. Standard mode reasons at low effort, think
+  mode at high. The model name is in `src/types/ai-models.ts`.
 - The advisor used the Assistants API until OpenAI shut it down on 2026-08-26.
 
 ## Query parameters

@@ -23,7 +23,7 @@ import {
   AIModelType
 } from '@/types/ai-models';
 
-import { getModelForUseCase, isReasoningModel, DEFAULT_REALTIME_MODEL, DEFAULT_POST_CONSULTATION_MODEL, GPT_4O_MINI } from './ai/gpt-models';
+import { getModelForUseCase, isReasoningModel, DEFAULT_REALTIME_MODEL, DEFAULT_POST_CONSULTATION_MODEL } from './ai/gpt-models';
 import { getRealTimeTemplate } from './ai/prompt-templates';
 import { getSupabaseClient } from './supabaseClient';
 import { supabaseDataService } from '@/lib/supabaseDataService';

@@ -95,9 +95,11 @@ interface UnifiedAlert {
 ## AI Models and Processing
 
 ### Models Used
-- **gpt-4o-mini**: real-time alerts during the consultation
-- **gpt-5.6-sol**: the post-consultation analysis (a reasoning model; it replaced
-  o1-preview, which OpenAI shut down in 2025)
+- **gpt-6-astra**, through the Responses API with structured output, for both
+  the real-time alerts during the consultation and the post-consultation
+  analysis, at low reasoning effort. If the real-time passes lag behind a
+  consultation, `gpt-6-luna` at reasoning effort `none` is the faster model to
+  try (`DEFAULT_REALTIME_MODEL` in `src/lib/ai/gpt-models.ts`).
 - **Clinical Pattern Recognition**: Rule-based patterns for well-established criteria
 
 ### Confidence Scoring

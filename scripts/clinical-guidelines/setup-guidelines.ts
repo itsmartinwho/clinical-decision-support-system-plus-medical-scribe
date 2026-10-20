@@ -7,31 +7,39 @@ import { GuidelineSearchService } from '../../src/services/guidelines/search-ser
 async function setupGuidelines() {
   console.log('🚀 Starting Clinical Guidelines Setup...\n');
 
+  // --embed-only skips ingestion and re-embeds every stored document, as is
+  // needed after the embedding model changes.
+  const embedOnly = process.argv.includes('--embed-only');
+
   try {
     // Step 1: Run ingestion for available sources
-    console.log('📥 Step 1: Ingesting guideline data...');
-    const orchestrator = new IngestionOrchestrator();
+    if (embedOnly) {
+      console.log('📥 Step 1: Skipped (--embed-only)\n');
+    } else {
+      console.log('📥 Step 1: Ingesting guideline data...');
+      const orchestrator = new IngestionOrchestrator();
     
-    // Show available sources
-    const sources = orchestrator.getAvailableSources();
-    console.log('Available sources:');
-    sources.forEach(({ source, configured }) => {
-      console.log(`  - ${source}: ${configured ? '✅ Configured' : '❌ Not configured'}`);
-    });
-    console.log();
+      // Show available sources
+      const sources = orchestrator.getAvailableSources();
+      console.log('Available sources:');
+      sources.forEach(({ source, configured }) => {
+        console.log(`  - ${source}: ${configured ? '✅ Configured' : '❌ Not configured'}`);
+      });
+      console.log();
 
-    // Run ingestion for configured sources
-    const ingestionResult = await orchestrator.ingestAll();
-    console.log('Ingestion Results:');
-    console.log(`  Total documents processed: ${ingestionResult.totalDocumentsProcessed}`);
-    console.log(`  Total documents updated: ${ingestionResult.totalDocumentsUpdated}`);
-    console.log(`  Success: ${ingestionResult.success ? '✅' : '❌'}`);
+      // Run ingestion for configured sources
+      const ingestionResult = await orchestrator.ingestAll();
+      console.log('Ingestion Results:');
+      console.log(`  Total documents processed: ${ingestionResult.totalDocumentsProcessed}`);
+      console.log(`  Total documents updated: ${ingestionResult.totalDocumentsUpdated}`);
+      console.log(`  Success: ${ingestionResult.success ? '✅' : '❌'}`);
     
-    if (ingestionResult.errors.length > 0) {
-      console.log('  Errors:');
-      ingestionResult.errors.forEach(error => console.log(`    - ${error}`));
+      if (ingestionResult.errors.length > 0) {
+        console.log('  Errors:');
+        ingestionResult.errors.forEach(error => console.log(`    - ${error}`));
+      }
+      console.log();
     }
-    console.log();
 
     // Step 2: Process embeddings
     console.log('🧠 Step 2: Processing embeddings...');
