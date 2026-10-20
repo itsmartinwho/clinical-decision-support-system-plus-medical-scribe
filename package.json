@@ -6,9 +6,6 @@
   "engines": {
     "node": "24.x"
   },
-  "workspaces": [
-    "."
-  ],
   "scripts": {
     "dev": "next dev",
     "dev:turbo": "next dev --turbo",
