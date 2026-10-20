@@ -1,123 +1,93 @@
-# Foresight Clinical Decision Support System (CDSS) - MVP Prototype
+# Clinical decision support system, plus a medical scribe
 
-## Overview
+A 2025 prototype of clinical decision support in the browser, called Foresight. It listens to a consultation, writes the notes, raises alerts while the doctor and patient talk, and answers clinical questions, all over a small pseudo-EMR.
 
-Foresight CDSS is a browser-based clinical decision support system prototype. This MVP (Minimum Viable Product) focuses on demonstrating core UI/UX concepts and functional AI features. It uses a Supabase backend (PostgreSQL) to manage and serve realistic patient data, providing a comprehensive platform for patient dashboards, consultation workflows, and AI-powered clinical assistance.
+[![Clinical decision support system with proactive alerts, scribe, notes and a pseudo-EMR (3 min 50 s)](https://cdn.loom.com/sessions/thumbnails/4c6c327fe0554e4caa6f5345789f72c2-b23743124f72c0d2.gif)](https://www.loom.com/share/4c6c327fe0554e4caa6f5345789f72c2)
 
-The system currently features:
-*   **Tool A (Advisor):** An AI-powered chatbot for general medical questions using OpenAI's API.
-*   **Tool B (Clinical Engine):** A functional AI diagnostic pipeline that processes patient data, generates diagnoses with differentials, creates SOAP notes, and produces document drafts.
-*   **Tool C (Medical Co-pilot):** A real-time AI alerts system that provides intelligent clinical decision support during consultations, including complex condition detection, drug interaction alerts, and comprehensive post-consultation analysis.
+The video narrates it as "ForSight". Live demo: [foresight-cdss-mvp.vercel.app](https://foresight-cdss-mvp.vercel.app).
 
-**Note:** This is a prototype. For detailed architecture, AI tool status, frontend and development guidelines, please refer to the comprehensive documentation in the `/docs` directory:
-*   **[System Architecture](./docs/architecture.md):** The primary source of truth for system design, AI tools, data layer, application flow, and tech stack.
-*   **[Frontend Guide](./docs/frontend_guide.md):** Detailed frontend development guidelines, styling conventions, component structure, and UI patterns.
-*   **[Development Guide](./docs/development_guide.md):** Rules for development process, coding standards, version control, testing strategy, and more.
-*   **[Clinical Engine Guide](./docs/clinical-engine.md):** Detailed documentation of the Clinical Engine (Tool B), including its V3 architecture and batch processing capabilities.
+> This is a prototype, not a medical device, and not for clinical use. Every patient in it is synthetic: invented people on records from EMRBots' artificial patient dataset, with transcripts and notes generated for the prototype.
 
-## Features (Current Prototype Highlights)
+## What it does
 
-*   **FHIR-Aligned Data Model:** Core data structures (Patient, Encounter, Condition, Observation) map to FHIR concepts.
-*   **Supabase Integration:** Patient and encounter data managed in Supabase (PostgreSQL).
-*   **Tool A - Foresight Advisor:** AI medical advisor chat (OpenAI powered via `/api/advisor`).
-    *   Features citations, follow-up questions, voice input/playback, streamed responses.
-*   **Tool B - Clinical Engine:** Functional AI diagnostic pipeline with:
-    *   Symptom extraction from transcripts
-    *   Diagnostic plan generation and execution
-    *   Primary diagnosis with confidence scoring
-    *   Differential diagnoses with likelihood assessment
-    *   SOAP note generation
-    *   Treatment recommendations
-    *   Referral document generation (in development)
-*   **Tool C - Medical Co-pilot:** Real-time AI alerts system with:
-    *   Real-time consultation monitoring and alerts
-    *   Complex condition detection (autoimmune, inflammatory, oncology patterns)
-    *   Drug interaction alerts
-    *   Missing assessment suggestions
-    *   Comorbidity identification
-    *   Post-consultation comprehensive analysis
-    *   Unified alert management with persistence
-*   **Live Voice Transcription:** Real-time conversation capture using Deepgram integration.
-*   **Advanced Modal System:** Draggable, minimizable modals with cross-page persistence.
-*   **Clinical Guidelines Integration:** Searchable clinical guidelines with semantic search.
-*   **Modular UI Components & Glassmorphism UI.**
-*   **Client-Side Routing (Next.js).**
+- **Scribe and notes.** A consultation is transcribed live with Deepgram's medical model, speakers separated. From the transcript it drafts a SOAP note, a diagnosis and a treatment plan, each editable in place, and drafts referral and prior authorization forms.
+- **Clinical engine.** The pipeline behind those drafts. From the transcript and the chart it ranks differential diagnoses by likelihood, settles on a primary diagnosis with a confidence, plans treatment with a decision tree, writes the SOAP note, and drafts a referral or prior authorization when one is needed. Results are stored in FHIR-shaped tables (conditions, differentials, encounters).
+- **Alerts.** While the consultation runs, each new stretch of transcript is picked up every ten seconds to be checked for drug interactions, missing labs, comorbidities, questions worth asking and diagnostic gaps, and when it ends the whole consultation goes to a reasoning model for review. The step that turns those passes into model calls (`OpenAIClient.processAlerts` in `src/lib/ai/gpt-models.ts`) was left a placeholder in June 2025, so the alerts you see come from the seed and the guided demo.
+- **Advisor.** A chat for clinical questions that can take a patient's chart as context, and writes and runs Python (OpenAI's Code Interpreter) to draw charts.
+- **Pseudo-EMR.** A dashboard of upcoming consultations, a patient list, and a workspace per patient with encounters, diagnoses, labs and everything else in one view. There is also a searchable library of clinical guidelines (USPSTF, NICE, NCI PDQ, RxNorm).
 
-## Target State Features (Future Development)
+On first visit the dashboard offers a guided demo, which plays back a consultation with the seed patient.
 
-*   **Enhanced Clinical Trial Matching:** Automated patient-trial matching based on diagnoses and eligibility criteria.
-*   **Advanced Prior Authorization:** Automated prior authorization document generation with insurance integration.
-*   **Multi-provider Collaboration:** Team-based clinical workflows and communication features.
-*   **Advanced Analytics:** Clinical outcome tracking and performance analytics.
-*   **EHR Integration:** Seamless integration with external electronic health record systems.
-*   **Mobile Application:** Point-of-care mobile access for clinical decision support.
+## Stack
 
-## Getting Started
+Next.js 14 (App Router), React 18 and TypeScript, Tailwind CSS and shadcn/ui. Supabase (Postgres, with pgvector for the guidelines). OpenAI for the language models, Deepgram for transcription. Deployed on Vercel.
 
-### Prerequisites
+## Run it
 
-| Tool                     | Minimum Version      | Notes / Installation                                  |
-|--------------------------|----------------------|-------------------------------------------------------|
-| Node.js                  | 18 LTS (e.g., 18.x)  | [https://nodejs.org/](https://nodejs.org/) (20.x also fine) |
-| pnpm (CLI)               | 8                    | `npm install -g pnpm`                                 |
-| Supabase Account         | N/A                  | Required for your own database instance.   |
-| OpenAI API Key           | N/A                  | Required for Tool A (Advisor) and Tool C (Alerts).          |
-| Python (Optional)        | 3.9+                 | For the Clinical Engine prototype (Tool B), located in `src/clinical_engine_prototype/` |
+You need Node 24, pnpm 10, a Supabase project, an OpenAI API key and, for live transcription, a Deepgram API key.
 
-### Installation & Setup
-1.  **Clone the repository.**
-2.  **Install JavaScript dependencies:** `pnpm install`
-3.  **Configure Environment (`.env.local`):**
-    *   Copy from `.env.example` or create new.
-    *   Add Supabase credentials (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`).
-    *   Add OpenAI API Key (`VITE_OPENAI_API_KEY`).
-4.  **Set up Supabase Database:**
-    *   Create a project on [Supabase](https://supabase.com/).
-    *   Run schema from `scripts/schema.sql`.
-    *   Run the unified alerts migration from `supabase/migrations/20250113000000_unified_alerts_system.sql`.
-5.  **(Optional) Python Prototype Setup (Clinical Engine - Tool B):**
-    *   The prototype code is located in `src/clinical_engine_prototype/`.
-    *   To run it, navigate to that directory: `cd src/clinical_engine_prototype/`
-    *   Create a virtual environment: `python3 -m venv .venv` (or `python -m venv .venv`)
-    *   Activate it: `source .venv/bin/activate`
-    *   Install dependencies: `pip install -r prototype_requirements.txt`
-    *   You can then run the API server: `uvicorn api:app --reload` (from within `src/clinical_engine_prototype/`)
-    *   Or run the engine directly: `python engine.py` (from within `src/clinical_engine_prototype/`)
-    *   Refer to details in **[docs/clinical-engine.md](./docs/clinical-engine.md)** and comments in the Python files for more context.
+```
+pnpm install
+cp .env.example .env.local
+```
 
-### Common Commands
+Fill in `.env.local`:
 
-| Action                       | Command                 |
-|------------------------------|-------------------------|
-| Start Development Server     | `pnpm run dev`          |
-| Create Production Build      | `pnpm run build`        |
-| Start Production Server      | `pnpm run start`        |
-| Lint Code                    | `pnpm run lint`         |
-| Type Check Only              | `pnpm exec tsc --noEmit`|
-| Run Storybook                | `pnpm run storybook`    |
-| Run Playwright E2E Tests     | `pnpm run test:e2e`     |
+| Variable | Used for |
+|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` | The Supabase project's URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Its anon key, for reads and writes from the app |
+| `SUPABASE_SERVICE_ROLE_KEY` | Its service role key, for the server routes, the guideline ingestion and the data scripts |
+| `OPENAI_API_KEY` | The advisor, the clinical engine, the alerts and the guideline embeddings |
+| `NEXT_PUBLIC_DEEPGRAM_API_KEY` | Live transcription. It is sent to the browser, so use a key with a low limit |
+| `API_BASE_URL` | Only for `scripts/batch_clinical_engine_processing.ts`; defaults to `http://localhost:3000` |
 
-Navigate to `http://localhost:3000` for the dev server.
+The app was built with Supabase's anon and service role keys. Supabase is retiring those by the end of 2026 in favour of publishable and secret keys, which may need a newer `@supabase/supabase-js`.
 
-### Troubleshooting
-*   **Node-gyp errors:** Ensure build tools are installed.
-*   **Port 3000 in use:** `pnpm run dev -- -p <other_port>`.
-*   **Type mis-matches:** `pnpm run lint` or `pnpm exec tsc --noEmit`.
-*   **Icon import errors:** Ensure imports use `@phosphor-icons/react`.
-*   **ESLint version issues:** Project pinned to ESLint v8.57.1.
+Set up the database from `supabase/`: the migrations make the tables, and `supabase/seed.sql` adds one synthetic patient, Dorothy Robinson, with four encounters. With the [Supabase CLI](https://supabase.com/docs/guides/cli):
 
-## Project Documentation
+```
+supabase link --project-ref <your-project-ref>
+supabase db push --include-seed
+```
 
-For a comprehensive understanding of the project, please refer to the following documents in the `/docs` directory:
+Without it, run each file in `supabase/migrations/` in name order in the SQL editor, then `supabase/seed.sql`. The tables have no row-level security, so the anon key can read and write all of them: fine for synthetic data, not for anything else.
 
-*   **[System Architecture](./docs/architecture.md):** The primary source of truth for system design, AI tools (current and aspirational), data layer, application flow, tech stack, and backend details.
-*   **[Frontend Guide](./docs/frontend_guide.md):** Covers all aspects of frontend development, including component structure, styling conventions (Tailwind CSS, Shadcn/UI, glassmorphism, input styling), state management, accessibility, and performance for the Next.js/React application.
-*   **[Development Guide](./docs/development_guide.md):** Provides guidelines for the development process, including coding standards, version control (Git workflow, conventional commits), comprehensive testing strategy (unit, integration, E2E with Playwright, Storybook), code review process, and deployment practices.
-*   **[Clinical Engine Guide](./docs/clinical-engine.md):** Detailed documentation of the Clinical Engine (Tool B), including its V3 architecture and batch processing capabilities.
-*   **[Advisor Guide](./docs/advisor.md):** Guide to the Advisor feature (Tool A), including its integration with OpenAI's Code Interpreter.
-*   **[Transcription System](./docs/transcription.md):** Comprehensive documentation of the transcription system, including its architecture and development best practices.
-*   **[Demo System](./docs/demo_system.md):** Guide to the demo system, including its architecture and testing procedures.
-*   **[Clinical Guidelines](./docs/clinical-guidelines.md):** Documentation of the clinical guidelines system and integration.
-*   **[History](./docs/history.md):** Log of notable incidents, bug fixes, and data recovery operations.
+Then:
 
-The `README.md` provides a high-level overview and setup instructions. For in-depth information, consult the specialized documents above.
+```
+pnpm dev
+```
+
+and open `http://localhost:3000`.
+
+The guidelines library starts empty. `pnpm run setup:guidelines` ingests and embeds the sources; see [docs/clinical-guidelines.md](docs/clinical-guidelines.md).
+
+`pnpm build` builds without any keys set. `pnpm lint` passes with warnings. `pnpm test:unit` runs the Vitest suites, several of which have fallen behind the components and fail. `pnpm test:py` tests the earlier Python prototype of the engine, after `pip install -r src/clinical_engine_prototype/prototype_requirements.txt`; some of those fail too.
+
+## Models
+
+The model names are in `src/types/ai-models.ts`. The advisor uses `gpt-4o-mini`, or `gpt-4o` in think mode, through the Responses API; the clinical engine uses `gpt-4o-mini`; the alerts are set to `gpt-4o-mini` during the consultation and `gpt-5.6-sol` after it; the guideline search embeds with `text-embedding-ada-002`. OpenAI shuts `gpt-4o` and `gpt-4o-mini` down on 14 January 2027 and suggests `gpt-6-luna` in their place. Transcription is Deepgram's `nova-3-medical`.
+
+## Where things are
+
+```
+src/app/             pages, and the API routes under api/ (advisor, clinical-engine, alerts, forms, guidelines)
+src/components/      the views, the consultation panel, the editors, and shadcn/ui under ui/
+src/lib/             the clinical engine (clinicalEngineServiceV3.ts), the alerts, the Supabase data layer, prompts
+src/services/        the guideline ingesters and search, and the guided demo
+supabase/            migrations and the seed
+scripts/             guideline setup, a batch run of the engine, and the synthetic data tools
+tests/               Vitest, Playwright and Storybook
+docs/                one guide per part
+```
+
+`src/clinical_engine_prototype/` is an earlier Python version of the engine. The app does not call it.
+
+The guides in `docs/` go deeper: [the advisor](docs/advisor.md), [the clinical engine](docs/clinical-engine.md), [the alerts](docs/alert-system.md), [transcription](docs/transcription.md), [the guidelines](docs/clinical-guidelines.md), [the guided demo](docs/demo_system.md), [the architecture](docs/architecture.md) and [the front end](docs/frontend_guide.md). They were written as it was built, so some details have drifted. How the synthetic data was made is in [scripts/synthetic-data/](scripts/synthetic-data/).
+
+## Licence
+
+MIT, see [LICENSE](LICENSE).
+
+By José (JJ) Martín Quesada, [@itsmartinwho](https://github.com/itsmartinwho).
