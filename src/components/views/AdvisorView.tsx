@@ -441,7 +441,10 @@ export default function AdvisorView() {
                 ...m,
                 content: {
                   ...(m.content as AssistantMessageContent),
-                  codeInterpreterImageId: data.file_id,
+                  // A chart from the Responses API lives in a container
+                  codeInterpreterImageId: data.container_id
+                    ? `${data.file_id}?container_id=${encodeURIComponent(data.container_id)}`
+                    : data.file_id,
                 }
               };
             }
