@@ -58,8 +58,12 @@ export async function probeSupabase(
   const timeoutMs = opts.timeoutMs ?? PROBE_TIMEOUT_MS;
   const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
   let timer: ReturnType<typeof setTimeout> | undefined;
+  let timedOut = false;
   const timeout = new Promise<'timeout'>((resolve) => {
-    timer = setTimeout(() => { controller?.abort(); resolve('timeout'); }, timeoutMs);
+    timer = setTimeout(() => { timedOut = true; resolve('timeout'); controller?.abort(); }, timeoutMs);
+  });
+  const noAnswer = (): DataModeState => ({
+    source: 'demo', reason: 'timeout', detail: `No answer from Supabase in ${Math.round(timeoutMs / 1000)} s.`,
   });
   try {
     const answer = await Promise.race([
@@ -70,12 +74,11 @@ export async function probeSupabase(
       }),
       timeout,
     ]);
-    if (answer === 'timeout') {
-      return { source: 'demo', reason: 'timeout', detail: `No answer from Supabase in ${Math.round(timeoutMs / 1000)} s.` };
-    }
+    if (answer === 'timeout') return noAnswer();
     if (answer.ok) return { source: 'supabase' };
     return { source: 'demo', reason: 'rejected', detail: `Supabase refused the request (HTTP ${answer.status}).` };
   } catch (error) {
+    if (timedOut) return noAnswer();
     return { source: 'demo', reason: 'unreachable', detail: `Could not reach Supabase: ${describe(error)}.` };
   } finally {
     clearTimeout(timer);

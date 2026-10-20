@@ -82,6 +82,19 @@ describe('data mode', () => {
     await expect(settled).resolves.toMatchObject({ source: 'demo', reason: 'timeout' });
   });
 
+  it('calls it a timeout when the request is aborted for taking too long', async () => {
+    vi.useFakeTimers();
+    configure();
+    // A fetch that honours its abort signal, as the real one does.
+    globalThis.fetch = vi.fn((_url: string, init: RequestInit) => new Promise((_, reject) => {
+      init.signal?.addEventListener('abort', () => reject(new DOMException('aborted', 'AbortError')));
+    })) as any;
+    const { dataMode } = await freshModules();
+    const settled = dataMode.resolveDataMode();
+    await vi.advanceTimersByTimeAsync(dataMode.PROBE_TIMEOUT_MS + 1);
+    await expect(settled).resolves.toMatchObject({ source: 'demo', reason: 'timeout' });
+  });
+
   it('queries made before the check settles wait for it, then read the demo data', async () => {
     vi.useFakeTimers();
     configure();

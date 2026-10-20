@@ -10,6 +10,7 @@ export const displayFont = Newsreader({
   style: ['normal', 'italic'],
   variable: '--font-display',
   display: 'swap',
+  adjustFontFallback: false, // next/font has no fallback metrics for Newsreader
 });
 
 export const sansFont = IBM_Plex_Sans({
