@@ -27,20 +27,20 @@ export default function LikelihoodIndicator({
     if (categoryLower === 'high' || categoryLower === 'certain') {
       return {
         badge: 'destructive' as const,
-        bar: 'bg-red-500',
-        text: 'text-red-600',
+        bar: 'bg-critical',
+        text: 'text-critical',
       };
     } else if (categoryLower === 'moderate') {
       return {
         badge: 'default' as const,
-        bar: 'bg-yellow-500',
-        text: 'text-yellow-600',
+        bar: 'bg-flag',
+        text: 'text-flag',
       };
     } else { // Low and Negligible
       return {
         badge: 'secondary' as const,
-        bar: 'bg-green-500',
-        text: 'text-green-600',
+        bar: 'bg-ok',
+        text: 'text-ok',
       };
     }
   };

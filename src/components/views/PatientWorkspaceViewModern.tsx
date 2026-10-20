@@ -1,7 +1,7 @@
 'use client';
 import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { Button } from "@/components/ui/button";
-import { Users, CaretLeft as ChevronLeft, X, CaretUp as ChevronUp } from '@phosphor-icons/react';
+import { CaretLeft, Plus, ClipboardText, PaperPlaneTilt, WarningCircle } from '@phosphor-icons/react';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { supabaseDataService } from "@/lib/supabaseDataService";
 import type { Patient, Encounter, EncounterDetailsWrapper } from "@/lib/types";
@@ -10,7 +10,9 @@ import { cn } from "@/lib/utils";
 import ConsolidatedConsultationTab from "@/components/patient-workspace-tabs/ConsolidatedConsultationTab";
 import AllDataViewTab from "@/components/patient-workspace-tabs/AllDataViewTab";
 import ErrorDisplay from "@/components/ui/ErrorDisplay";
-import LoadingAnimation from "@/components/LoadingAnimation";
+import { ErrorState, LoadingState } from "@/components/ui/states";
+import PatientAvatar from "@/components/ui/PatientAvatar";
+import { ageFrom, formatDate, patientName, severityTone, sexLabel } from "@/lib/format";
 import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { AlertDialogCancel } from "@/components/ui/alert-dialog";
 import { AlertDialogAction } from "@/components/ui/alert-dialog";
@@ -174,7 +176,9 @@ export default function PatientWorkspaceViewModern({ patient: initialPatientStub
       } else {
         // Normal database loading for non-demo mode
         const detailedData = await supabaseDataService.getPatientData(patient.id);
-        if (detailedData) {
+        if (!detailedData) {
+          setError("This patient's record could not be loaded. The database may be unreachable, or there is no patient with this ID.");
+        } else {
           setDetailedPatientData(detailedData);
           setPatient(detailedData.patient);
           
@@ -280,22 +284,6 @@ export default function PatientWorkspaceViewModern({ patient: initialPatientStub
     }
   }, [pendingRestoredConsultModal]);
 
-  const TabBtn = ({ k, children }: { k: string; children: React.ReactNode }) => (
-    <Button
-      variant={activeTab === k ? "default" : "ghost"}
-      size="default"
-      onClick={() => setActiveTab(k)}
-      className={cn(
-        "whitespace-nowrap transition-all duration-200 font-semibold px-6 py-3 h-auto",
-        activeTab === k 
-          ? "bg-neon/20 text-neon border-neon/30 shadow-sm" 
-          : "hover:bg-foreground/5 hover:text-neon text-muted-foreground"
-      )}
-    >
-      {children}
-    </Button>
-  );
-
   const handleDeleteEncounter = async () => {
     if (!encounterToDeleteId) return;
     
@@ -386,227 +374,150 @@ export default function PatientWorkspaceViewModern({ patient: initialPatientStub
     persistent: false
   }), [patient.id]);
 
-  const calculateAge = (dateOfBirth: string): number => {
-    if (!dateOfBirth) return 0;
-    const birthDate = new Date(dateOfBirth);
-    const today = new Date();
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDifference = today.getMonth() - birthDate.getMonth();
-    
-    if (monthDifference < 0 || (monthDifference === 0 && today.getDate() < birthDate.getDate())) {
-      age--;
-    }
-    
-    return age;
-  };
-
-  const formatDate = (dateString: string): string => {
-    if (!dateString) return 'N/A';
-    return new Date(dateString).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
-  };
-
   if (loading) {
-    return <LoadingAnimation />;
+    return <LoadingState />;
   }
 
   if (error || !patient) {
     return (
-      <ContentSurface className="flex flex-col items-center justify-center min-h-[calc(100vh-200px)]">
-        <Button variant="ghost" onClick={onBack} className="self-start mb-8 hover:text-neon">
-          <ChevronLeft className="h-5 w-5 mr-1" />
-          <Users className="h-5 w-5 mr-1" />
-          Back to Patients
-        </Button>
-        <ErrorDisplay message={error || 'Patient not found'} />
+      <ContentSurface>
+        <BackLink onBack={onBack} />
+        <ErrorState message={error || 'Patient not found'} onRetry={() => loadPatientData(true)} />
       </ContentSurface>
     );
   }
 
+  const age = ageFrom(patient.dateOfBirth);
+  const facts: Array<[string, React.ReactNode, boolean?]> = [
+    ['Date of Birth', formatDate(patient.dateOfBirth), true],
+    ['Age', age ?? '—', true],
+    ['Gender', sexLabel(patient.gender)],
+    ...(patient.ethnicity ? [['Ethnicity', patient.ethnicity] as [string, React.ReactNode]] : []),
+    ...(patient.race ? [['Race', patient.race] as [string, React.ReactNode]] : []),
+    ['Patient ID', patient.id, true],
+  ];
+  const sortedEncounters = [...activeEncounterDetails].sort(
+    (a, b) => new Date(b.encounter.scheduledStart).getTime() - new Date(a.encounter.scheduledStart).getTime(),
+  );
+
   return (
-    <ContentSurface className="relative space-y-3 overflow-y-auto max-h-[calc(100vh-2rem)]">
-      {/* Close Button - Top Left Circle */}
-      <Button 
-        variant="ghost" 
-        onClick={onBack} 
-        className="absolute top-3 left-3 z-10 hover:bg-destructive/20 group w-8 h-8 p-0 rounded-full bg-background/80 border border-border/50 shadow-sm"
-      >
-        <X className="h-4 w-4 text-muted-foreground group-hover:text-destructive transition-colors" />
-      </Button>
+    <ContentSurface className="relative">
+      <BackLink onBack={onBack} />
 
-      {/* Patient Overview - Collapsible */}
-      <Collapsible open={isPatientOverviewOpen} onOpenChange={setIsPatientOverviewOpen} className="border-b border-border/20 pb-6 pl-12">
-        {/* Patient Header - Always visible */}
-        <div className="flex items-start gap-6">
-          <Avatar className="h-16 w-16 border-2 border-neon/30 shadow-lg flex-shrink-0">
-            <AvatarImage src={patient.photo} alt={patient.name} />
-            <AvatarFallback className="text-2xl bg-neon/20 text-neon font-bold">
-              {patient.name ? patient.name.charAt(0).toUpperCase() : "P"}
-            </AvatarFallback>
-          </Avatar>
-          
-          <div className="flex-1 min-w-0">
-            {/* Name and controls row */}
-            <div className="flex items-center gap-3 mb-4">
-              <h1 className="text-step-3 font-bold text-foreground">{patient.name}</h1>
-              
-              <CollapsibleTrigger asChild>
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  className="hover:text-neon transition-all duration-200 p-2 rounded-lg hover:bg-foreground/5"
-                >
-                  <ChevronUp 
-                    className={cn(
-                      "h-5 w-5 text-muted-foreground hover:text-neon transition-all duration-300 ease-in-out",
-                      isPatientOverviewOpen ? "rotate-0" : "rotate-180"
-                    )} 
-                  />
-                </Button>
-              </CollapsibleTrigger>
-              
-              {!isPatientOverviewOpen && (
-                <span className="text-sm text-muted-foreground font-normal">
-                  DOB: {formatDate(patient.dateOfBirth)}
-                </span>
-              )}
-            </div>
-
-            <CollapsibleContent className="data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down overflow-hidden">
-              <div className="transition-all duration-300 ease-in-out">
-              
-              {/* Demographics Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-2 max-w-2xl mb-4">
-                <div className="font-semibold text-muted-foreground">Date of Birth:</div>
-                <div className="font-medium text-foreground">{formatDate(patient.dateOfBirth)}</div>
-                
-                <div className="font-semibold text-muted-foreground">Age:</div>
-                <div className="font-medium text-foreground">{calculateAge(patient.dateOfBirth)} years</div>
-                
-                <div className="font-semibold text-muted-foreground">Gender:</div>
-                <div className="font-medium text-foreground">{patient.gender || 'N/A'}</div>
-                
-                {patient.ethnicity && (
-                  <>
-                    <div className="font-semibold text-muted-foreground">Ethnicity:</div>
-                    <div className="font-medium text-foreground">{patient.ethnicity}</div>
-                  </>
-                )}
-                
-                {patient.race && (
-                  <>
-                    <div className="font-semibold text-muted-foreground">Race:</div>
-                    <div className="font-medium text-foreground">{patient.race}</div>
-                  </>
-                )}
-                
-                {patient.id && (
-                  <>
-                    <div className="font-semibold text-muted-foreground">Patient ID:</div>
-                    <div className="font-mono text-sm text-foreground bg-muted/50 px-2 py-1 rounded">{patient.id}</div>
-                  </>
-                )}
-              </div>
-              </div>
-            </CollapsibleContent>
+      <section className="overflow-hidden rounded-[1.25rem] border border-hairline bg-card shadow-card">
+        <div className="relative isolate flex flex-wrap items-start justify-between gap-x-8 gap-y-5 p-5 sm:p-7">
+          <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-28 bg-gradient-to-b from-iris-soft/70 to-transparent" aria-hidden />
+          <div className="flex min-w-0 items-center gap-4 sm:gap-5">
+            <PatientAvatar patient={patient} size={64} className="ring-4 ring-card" />
+            <h1 className="title-display min-w-0 text-[2rem] sm:text-[2.6rem]">{patientName(patient)}</h1>
           </div>
-        </div>
-
-
-      </Collapsible>
-
-      {/* Tab Navigation & Content */}
-      <div className="space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-border/20 pb-4">
-          {/* Left Side: Consultation Tab and Selector */}
-          <div className="flex items-center gap-3">
-            <TabBtn k="consultation">
-              Consultation
-            </TabBtn>
-            {activeEncounterDetails.length > 0 && (
-              <Select
-                value={selectedEncounterForConsultation?.id || ""}
-                onValueChange={(value) => {
-                  const foundEncounter = activeEncounterDetails.find(ew => ew.encounter.id === value)?.encounter || null;
-                  setSelectedEncounterForConsultation(foundEncounter);
-                  if(foundEncounter) setActiveTab('consultation');
-                }}
-                disabled={showDeleteConfirmation}
-              >
-                <SelectTrigger className="w-64 h-9">
-                  <SelectValue placeholder="Select consultation..." />
-                </SelectTrigger>
-                <SelectContent className="w-[32rem]">
-                  {activeEncounterDetails
-                    .sort((a, b) => new Date(b.encounter.scheduledStart).getTime() - new Date(a.encounter.scheduledStart).getTime())
-                    .map((ew) => (
-                    <SelectItem key={ew.encounter.id} value={ew.encounter.id} className="max-w-full">
-                      <span className="truncate">
-                        {new Date(ew.encounter.scheduledStart).toLocaleDateString()} - {ew.encounter.reasonDisplayText || ew.encounter.reasonCode || 'Encounter'}
-                      </span>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-          </div>
-
-          {/* Right Side: All Data Tab and New Consultation Button */}
-          <div className="flex items-center gap-3">
-            <TabBtn k="allData">
-              All Data
-            </TabBtn>
+          <div className="flex flex-wrap gap-2">
             <Button
-              variant="default"
-              size="default"
+              iconLeft={<Plus weight="bold" />}
               onClick={() => {
-                // Save current selection to restore if modal is discarded
+                // Keep the current selection to restore if the new consultation is discarded.
                 previousEncounterRef.current = selectedEncounterForConsultation;
-                // Clear current selection so modal starts a brand-new consultation
                 setSelectedEncounterForConsultation(null);
                 setShowConsultationPanel(true);
               }}
-              className="font-semibold"
             >
-              <span className="mr-2 text-base">🩺</span>
               New Consultation
             </Button>
-            <Button
-              variant="secondary"
-              size="default"
-              onClick={() => setShowPriorAuthModal(true)}
-              className="font-semibold"
-            >
-              <span className="mr-2 text-base">📋</span>
-              Prior Auth
+            <Button variant="secondary" aria-label="Prior Auth" className="max-sm:w-9 max-sm:px-0" onClick={() => setShowPriorAuthModal(true)}>
+              <ClipboardText aria-hidden /><span className="max-sm:sr-only">Prior Auth</span>
             </Button>
-            <Button
-              variant="secondary"
-              size="default"
-              onClick={() => setShowReferralModal(true)}
-              className="font-semibold"
-            >
-              <span className="mr-2 text-base">📝</span>
-              Referral
+            <Button variant="secondary" aria-label="Referral" className="max-sm:w-9 max-sm:px-0" onClick={() => setShowReferralModal(true)}>
+              <PaperPlaneTilt aria-hidden /><span className="max-sm:sr-only">Referral</span>
             </Button>
           </div>
         </div>
 
-        <div className="pt-4">
-          {/* Content Sections */}
-          {activeTab === "consultation" && patient && (
-            <ConsolidatedConsultationTab
-              patient={patient}
-              selectedEncounter={selectedEncounterForConsultation}
-              allEncounters={activeEncounterDetails}
-              onDeleteEncounter={openDeleteConfirmation}
-              autoStartTranscription={searchParams.get('autoStartTranscription') === 'true'}
-            />
-          )}
-          
-          {activeTab === "allData" && (
-            <AllDataViewTab detailedPatientData={detailedPatientData} setDetailedPatientData={setDetailedPatientData} />
-          )}
+        <dl className="flex flex-wrap gap-x-10 gap-y-4 border-t border-hairline px-5 py-4 sm:px-7">
+          {facts.map(([label, value, mono]) => (
+            <div key={label} className={cn('min-w-0', label === 'Patient ID' && 'basis-full sm:basis-auto')}>
+              <dt className="text-xs text-muted-foreground">{label}</dt>
+              <dd className={cn('mt-0.5 text-[0.9375rem] text-ink', mono && 'data-mono break-all text-sm')}>{value}</dd>
+            </div>
+          ))}
+        </dl>
+
+        {patient.alerts && patient.alerts.length > 0 ? (
+          <ul className="space-y-px border-t border-hairline bg-well/60">
+            {patient.alerts.map((alert) => {
+              const tone = severityTone(alert.severity, alert.likelihood);
+              return (
+                <li key={alert.id} className="flex items-start gap-3 px-5 py-3 sm:px-7">
+                  <WarningCircle
+                    size={18}
+                    weight="fill"
+                    className={cn('mt-px shrink-0', tone === 'critical' ? 'text-critical' : tone === 'flag' ? 'text-flag-line' : 'text-iris')}
+                    aria-label={alert.severity ?? undefined}
+                  />
+                  <span className="text-sm text-ink-2">{alert.msg}</span>
+                </li>
+              );
+            })}
+          </ul>
+        ) : null}
+      </section>
+
+      <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div role="tablist" aria-label="Chart" className="inline-flex h-11 w-fit items-center gap-1 rounded-xl border border-hairline bg-well p-1">
+          {([['consultation', 'Consultation'], ['allData', 'All Data']] as const).map(([k, label]) => (
+            <button
+              key={k}
+              role="tab"
+              type="button"
+              aria-selected={activeTab === k}
+              onClick={() => setActiveTab(k)}
+              className={cn(
+                'h-9 rounded-lg px-4 text-sm font-medium transition-[background-color,color,box-shadow] duration-150',
+                activeTab === k ? 'bg-card text-ink shadow-card' : 'text-muted-foreground hover:text-ink',
+              )}
+            >
+              {label}
+            </button>
+          ))}
         </div>
+        {activeTab === 'consultation' && sortedEncounters.length > 0 ? (
+          <div className="sm:w-[22rem]">
+            <Select
+              value={selectedEncounterForConsultation?.id || ""}
+              onValueChange={(value) => {
+                const found = activeEncounterDetails.find(ew => ew.encounter.id === value)?.encounter || null;
+                setSelectedEncounterForConsultation(found);
+              }}
+              disabled={showDeleteConfirmation}
+            >
+              <SelectTrigger aria-label="Consultation" className="h-11 rounded-xl">
+                <SelectValue placeholder="Select consultation..." />
+              </SelectTrigger>
+              <SelectContent className="max-w-[calc(100vw-2rem)]">
+                {sortedEncounters.map((ew) => (
+                  <SelectItem key={ew.encounter.id} value={ew.encounter.id}>
+                    <span className="data-mono text-muted-foreground">{formatDate(ew.encounter.scheduledStart)}</span>
+                    <span className="ml-2">{ew.encounter.reasonDisplayText || ew.encounter.reasonCode || 'Encounter'}</span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        ) : null}
+      </div>
+
+      <div className="pt-6">
+        {activeTab === "consultation" && patient && (
+          <ConsolidatedConsultationTab
+            patient={patient}
+            selectedEncounter={selectedEncounterForConsultation}
+            allEncounters={activeEncounterDetails}
+            onDeleteEncounter={openDeleteConfirmation}
+            autoStartTranscription={searchParams.get('autoStartTranscription') === 'true'}
+          />
+        )}
+        {activeTab === "allData" && (
+          <AllDataViewTab detailedPatientData={detailedPatientData} setDetailedPatientData={setDetailedPatientData} />
+        )}
       </div>
 
       {/* Delete Confirmation Dialog */}
@@ -697,5 +608,17 @@ export default function PatientWorkspaceViewModern({ patient: initialPatientStub
         encounterId={selectedEncounterForConsultation?.id}
       />
     </ContentSurface>
+  );
+}
+function BackLink({ onBack }: { onBack: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onBack}
+      aria-label="Back to Patients"
+      className="mb-4 inline-flex h-9 w-9 items-center justify-center rounded-full border border-hairline bg-card text-ink shadow-card transition-colors hover:bg-well"
+    >
+      <CaretLeft size={16} weight="bold" aria-hidden />
+    </button>
   );
 }

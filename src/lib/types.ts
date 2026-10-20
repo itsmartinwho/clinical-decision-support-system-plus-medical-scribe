@@ -1,4 +1,4 @@
-// Type definitions for Foresight CDSS
+// Type definitions for the clinical decision support app
 
 export interface Patient {
   id: string;

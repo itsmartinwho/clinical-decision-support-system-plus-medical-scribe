@@ -31,6 +31,8 @@ import { DraggableModalWrapper } from '@/components/ui/draggable-modal-wrapper';
 import { ModalDragAndMinimizeConfig } from '@/types/modal';
 import { saveConsultationDraft, loadConsultationDraft, clearConsultationDraft } from '@/lib/consultationDraftStore';
 import { DemoDataService } from '@/services/demo/DemoDataService';
+import TranscriptView from '@/components/transcript/TranscriptView';
+import TranscriptModeToggle from '@/components/transcript/TranscriptModeToggle';
 
 interface ConsultationPanelProps {
   /** Controls open state from parent */
@@ -169,6 +171,7 @@ export default function ConsultationPanel({
   const [differentialDiagnoses, setDifferentialDiagnoses] = useState<DifferentialDiagnosis[]>([]);
   const [isLoadingDifferentials, setIsLoadingDifferentials] = useState(false);
   const [activeTab, setActiveTab] = useState('transcript');
+  const [transcriptMode, setTranscriptMode] = useState<'conversation' | 'edit'>('conversation');
   const [planGenerated, setPlanGenerated] = useState(false);
   const [tabBarVisible, setTabBarVisible] = useState(false);
   const [isGeneratingPlan, setIsGeneratingPlan] = useState(false);
@@ -1406,10 +1409,9 @@ export default function ConsultationPanel({
 
   const modalContent = (
     <>
-      <div className="pt-2 pb-4 px-6 border-b border-border/50">
-        <p className="text-sm text-muted-foreground">
-          Patient: {patient.firstName} {patient.lastName} • {encounter?.id ? `ID: ${encounter.id}` : 'Creating...'}
-        </p>
+      <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 border-b border-border px-6 pb-3 pt-2 text-sm">
+        <span className="font-display text-lg text-ink">{patient.name || `${patient.firstName} ${patient.lastName}`}</span>
+        {!isDemoMode && encounter?.id ? <span className="data-mono text-xs text-muted-foreground">{encounter.id}</span> : null}
       </div>
       <div className="flex-1 overflow-hidden flex flex-col">
         {(!encounter && !isCreating && !isDemoMode) ? (
@@ -1420,16 +1422,16 @@ export default function ConsultationPanel({
           <>
             {planGenerated && (
               <div className={cn("border-b border-border/50 transition-all", tabBarVisible ? "opacity-100" : "opacity-0")}>
-                <div className="flex space-x-4 px-1 py-2">
+                <div className="flex gap-1 overflow-x-auto px-4">
                   {['transcript', 'differentials', 'diagnosis', 'treatment'].map(tab => (
                     <button
                       key={tab}
                       onClick={() => setActiveTab(tab)}
                       className={cn(
-                        "px-4 py-2 text-sm font-medium rounded-md transition-all",
+                        "-mb-px border-b-2 px-3 py-2 text-sm font-medium transition-colors",
                         activeTab === tab
-                          ? "bg-primary text-primary-foreground shadow-sm"
-                          : "text-muted-foreground hover:bg-muted/50"
+                          ? "border-ink text-ink"
+                          : "border-transparent text-muted-foreground hover:text-ink"
                       )}
                     >
                       {tab === 'differentials' ? 'Differentials' : tab.charAt(0).toUpperCase() + tab.slice(1)}
@@ -1446,8 +1448,11 @@ export default function ConsultationPanel({
                       {/* Transcript Panel */}
                       <div className="flex-1 flex flex-col space-y-4 min-h-0">
                         <div className="flex items-center justify-between">
-                          <h3 className="text-lg font-medium">Consultation Transcript</h3>
-                          <div className="flex items-center gap-2">
+                          <h3 className="font-display text-lg text-ink">Consultation Transcript</h3>
+                          <div className="flex flex-wrap items-center gap-2">
+                            {!isDemoMode && !isTranscribing ? (
+                              <TranscriptModeToggle mode={transcriptMode} onChange={setTranscriptMode} />
+                            ) : null}
                             {/* Real-time Alerts Button */}
                             {started && (
                               <Button
@@ -1460,11 +1465,11 @@ export default function ConsultationPanel({
                                 <Bell className={cn(
                                   "h-4 w-4", 
                                   isDemoMode 
-                                    ? (demoAlertToasts.length > 0 ? "text-orange-500" : "text-green-500")
-                                    : (realTimeAlerts.isSessionActive ? "text-green-500" : "text-muted-foreground")
+                                    ? (demoAlertToasts.length > 0 ? "text-flag" : "text-ok")
+                                    : (realTimeAlerts.isSessionActive ? "text-ok" : "text-muted-foreground")
                                 )} />
                                 {(alertToasts.length > 0 || (isDemoMode && demoAlertToasts.length > 0)) && (
-                                  <div className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full text-[8px] text-white flex items-center justify-center">
+                                  <div className="absolute -top-1 -right-1 h-3 w-3 bg-critical rounded-full text-[8px] text-white flex items-center justify-center">
                                     {isDemoMode ? demoAlertToasts.length : alertToasts.length}
                                   </div>
                                 )}
@@ -1499,6 +1504,15 @@ export default function ConsultationPanel({
                           </div>
                         </div>
                         <div className="relative flex-1 min-h-0 overflow-hidden">
+                          {isDemoMode || isTranscribing || transcriptMode === 'conversation' ? (
+                            <TranscriptView
+                              className="h-full max-h-[min(58vh,40rem)] pb-16"
+                              transcript={transcriptText}
+                              live={isDemoMode ? !planGenerated : isTranscribing}
+                              followNewest
+                              emptyText="Transcription will appear here..."
+                            />
+                          ) : (
                           <div
                             ref={transcriptScrollRef}
                             className="h-full overflow-y-auto relative pr-2 pb-24"
@@ -1514,6 +1528,7 @@ export default function ConsultationPanel({
                               className=""
                             />
                           </div>
+                          )}
                           {/* Always render pillbox container; AudioWaveform itself controls content visibility */}
                           {!isDemoMode && (
                             <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-10">
@@ -1609,7 +1624,7 @@ export default function ConsultationPanel({
                               {!isDemoMode && encounter?.id && (
                                 <button
                                   onClick={() => handleGenerateTreatments()}
-                                  className="px-3 py-1.5 bg-blue-100 text-blue-700 rounded-md text-sm hover:bg-blue-200 transition-colors touch-manipulation whitespace-nowrap self-start sm:self-auto"
+                                  className="px-3 py-1.5 bg-info-soft text-info rounded-md text-sm hover:bg-info-soft transition-colors touch-manipulation whitespace-nowrap self-start sm:self-auto"
                                 >
                                   Generate Structured Plan
                                 </button>
@@ -1646,7 +1661,7 @@ export default function ConsultationPanel({
       onClose={handleCloseRequest}
       config={mergedDraggableConfig}
       allowDragging={allowDragging}
-      className="w-[95%] max-w-6xl max-h-[90vh]"
+      className="w-[95%] max-w-6xl max-h-[calc(100svh-9rem)]"
       showCloseButton={!isSaving}
     >
       {modalContent}
@@ -1667,7 +1682,7 @@ export default function ConsultationPanel({
           <X className="h-4 w-4" />
         </Button>
         <div className="pt-8">
-          <h2 className="text-xl font-semibold px-6 pb-2">🩺 New Consultation</h2>
+          <h2 className="px-6 pb-2 font-display text-2xl">New Consultation</h2>
           {modalContent}
         </div>
       </div>

@@ -4,13 +4,15 @@ import { supabaseDataService } from "@/lib/supabaseDataService";
 import { searchGuidelines } from "@/services/guidelines/search-service";
 import { Specialty } from "@/types/guidelines";
 import { AIModelType } from "@/types/ai-models";
+import { hasOpenAIKey, OPENAI_KEY_MISSING } from '@/lib/serverGuards';
+import { PRODUCT_NAME } from '@/lib/brand';
 
 // The advisor: streams an answer from OpenAI's Responses API as server-sent
 // events, with Code Interpreter for charts and tables. The client renders the
 // Markdown (sanitised with DOMPurify) and fetches charts from ./image.
 
 // Enhanced system prompt for OpenAI Code Interpreter with Clinical Guidelines
-const baseSystemPrompt = `You are Foresight, an AI medical advisor for US physicians. Your responses should be comprehensive, empathetic, and formatted in clear, easy-to-read GitHub-flavored Markdown. Use headings, lists, bolding, and other Markdown features appropriately to structure your answer for optimal readability. Avoid overly technical jargon where simpler terms suffice, but maintain medical accuracy.
+const baseSystemPrompt = `You are ${PRODUCT_NAME}, an AI medical advisor for US physicians. Your responses should be comprehensive, empathetic, and formatted in clear, easy-to-read GitHub-flavored Markdown. Use headings, lists, bolding, and other Markdown features appropriately to structure your answer for optimal readability. Avoid overly technical jargon where simpler terms suffice, but maintain medical accuracy.
 
 **CLINICAL GUIDELINES INTEGRATION**: You have access to evidence-based clinical guidelines from authoritative sources including USPSTF, NICE, NCI PDQ, and RxNorm. When relevant to the clinical question or patient scenario:
 
@@ -150,6 +152,13 @@ function extractMedicalTerms(query: string, patientData?: any): string[] {
 }
 
 export async function GET(req: NextRequest) {
+  // The advisor's client reads errors from the event stream, so say it there.
+  if (!hasOpenAIKey()) {
+    return new Response(`data: ${JSON.stringify({ error: OPENAI_KEY_MISSING })}\n\ndata: [DONE]\n\n`, {
+      status: 200,
+      headers: { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache' },
+    });
+  }
   const requestAbortController = new AbortController();
   req.signal.addEventListener('abort', () => {
     requestAbortController.abort();

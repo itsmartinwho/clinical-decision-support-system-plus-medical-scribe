@@ -34,8 +34,8 @@ export const DecisionTreeRenderer: React.FC<DecisionTreeRendererProps> = ({
   }, [tree, onNodeClick]);
 
   return (
-    <div className="decision-tree-container bg-white border border-gray-200 rounded-lg p-2 sm:p-4">
-      <div className="mb-2 text-sm font-medium text-gray-700">
+    <div className="decision-tree-container bg-card border border-border rounded-lg p-2 sm:p-4">
+      <div className="mb-2 text-sm font-medium text-ink">
         {tree?.title || 'Treatment Decision Tree'}
       </div>
       <div ref={containerRef} className="decision-tree overflow-auto max-h-96 sm:max-h-none" />
@@ -177,13 +177,13 @@ function getNodeClassName(type: 'condition' | 'action' | 'outcome'): string {
   
   switch (type) {
     case 'condition':
-      return `${baseClass} border-l-yellow-500 bg-yellow-50 text-yellow-800`;
+      return `${baseClass} border-l-flag-line bg-flag-soft text-flag`;
     case 'action':
-      return `${baseClass} border-l-blue-500 bg-blue-50 text-blue-800`;
+      return `${baseClass} border-l-iris/50 bg-info-soft text-info`;
     case 'outcome':
-      return `${baseClass} border-l-green-500 bg-green-50 text-green-800`;
+      return `${baseClass} border-l-ok-line bg-ok-soft text-ok`;
     default:
-      return `${baseClass} border-l-gray-500 bg-gray-50 text-gray-800`;
+      return `${baseClass} border-l-input bg-well/50 text-ink`;
   }
 }
 

@@ -1,4 +1,21 @@
 import { getSupabaseClient } from './supabaseClient';
+import { isDemoData } from './dataMode';
+
+// The schema has no `name` column (it is first_name and last_name); some
+// databases added one. Use it when it is there.
+const fullName = (row: any): string =>
+  (row.name as string) || [row.first_name, row.last_name].filter(Boolean).join(' ') || row.patient_id;
+
+// The seed writes treatments as { treatment_name, dosage, treatment_type,
+// instructions }; the app reads { drug, status, rationale }. Read either.
+const normaliseTreatments = (value: any): Treatment[] | undefined => {
+  if (!Array.isArray(value)) return value || undefined;
+  return value.map((t: any) =>
+    t && typeof t === 'object' && 'treatment_name' in t && !('drug' in t)
+      ? { drug: [t.treatment_name, t.dosage].filter(Boolean).join(', '), status: t.treatment_type ?? '', rationale: t.instructions ?? '' }
+      : t,
+  );
+};
 import {
   Patient, Encounter, Diagnosis, LabResult, ComplexCaseAlert, Treatment,
   PatientDataPayload, DifferentialDiagnosisRecord, DifferentialDiagnosis // Import the new types
@@ -89,7 +106,7 @@ class SupabaseDataService {
         // Process patient demographics
         const patient: Patient = {
           id: patientRow.patient_id,
-          name: patientRow.name,
+          name: fullName(patientRow),
           firstName: patientRow.first_name,
           lastName: patientRow.last_name,
           gender: patientRow.gender,
@@ -178,7 +195,7 @@ class SupabaseDataService {
               reasonDisplayText: row.reason_display_text,
               transcript: row.transcript,
               soapNote: row.soap_note, // SOAP notes included as requested
-              treatments: row.treatments || undefined, // Treatments (non-rich) included as requested
+              treatments: normaliseTreatments(row.treatments), // Treatments (non-rich) included as requested
               // Exclude rich content fields as per requirements
               priorAuthJustification: row.prior_auth_justification,
               isDeleted: !!row.is_deleted,
@@ -316,7 +333,7 @@ class SupabaseDataService {
         const rawAlertsData = chosenRawAlerts;
         const patient: Patient = {
           id: row.patient_id,
-          name: row.name,
+          name: fullName(row),
           firstName: row.first_name,
           lastName: row.last_name,
           gender: row.gender,
@@ -437,7 +454,7 @@ class SupabaseDataService {
           transcript: row.transcript,
           observations: row.observations || undefined,
           soapNote: row.soap_note,
-          treatments: row.treatments || undefined,
+          treatments: normaliseTreatments(row.treatments),
           // === Rich content fields ===
           diagnosis_rich_content: row.diagnosis_rich_content || undefined,
           treatments_rich_content: row.treatments_rich_content || undefined,
@@ -1195,6 +1212,9 @@ class SupabaseDataService {
    * This prevents demo patients from appearing in upcoming consultations after demo ends
    */
   clearDemoPatientData(demoPatientId: string): void {
+    // On the bundled demo data the guided demo's patient is the whole patient
+    // list, and her records are the seed's: keep them.
+    if (isDemoData()) return;
     console.log(`SupabaseDataService: Clearing demo patient data for ${demoPatientId}`);
     
     // Remove patient from cache
@@ -1513,7 +1533,7 @@ class SupabaseDataService {
       transcript: row.transcript,
       observations: row.observations || undefined,
       soapNote: row.soap_note,
-      treatments: row.treatments || undefined,
+      treatments: normaliseTreatments(row.treatments),
       // === Rich content fields ===
       diagnosis_rich_content: row.diagnosis_rich_content || undefined,
       treatments_rich_content: row.treatments_rich_content || undefined,

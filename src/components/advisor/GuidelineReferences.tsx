@@ -72,10 +72,10 @@ export default function GuidelineReferences({ references, className, onReference
   };
 
   return (
-    <div className={cn("mt-4 p-4 bg-gray-50/70 backdrop-blur-sm rounded-lg border border-gray-200/50", className)}>
+    <div className={cn("mt-4 p-4 bg-well/70 rounded-lg border border-border/50", className)}>
       <div className="flex items-center gap-2 mb-3">
-        <BookOpen className="h-4 w-4 text-gray-600" />
-        <h4 className="text-sm font-semibold text-gray-700">Clinical Guidelines Referenced</h4>
+        <BookOpen className="h-4 w-4 text-ink-2" />
+        <h4 className="text-sm font-semibold text-ink">Clinical Guidelines Referenced</h4>
       </div>
       
       <div className="space-y-3">
@@ -89,7 +89,7 @@ export default function GuidelineReferences({ references, className, onReference
               className={cn(
                 "group flex items-start gap-3 p-3 rounded-lg border transition-all duration-200",
                 "hover:shadow-sm",
-                reference.url ? "cursor-pointer hover:border-gray-300" : "cursor-default"
+                reference.url ? "cursor-pointer hover:border-border" : "cursor-default"
               )}
               style={{ 
                 backgroundColor: config.bgColor,
@@ -161,7 +161,7 @@ export default function GuidelineReferences({ references, className, onReference
                 
                 {/* Summary */}
                 {reference.summary && (
-                  <p className="text-xs text-gray-600 line-clamp-2 leading-relaxed">
+                  <p className="text-xs text-ink-2 line-clamp-2 leading-relaxed">
                     {reference.summary}
                   </p>
                 )}
@@ -169,7 +169,7 @@ export default function GuidelineReferences({ references, className, onReference
                 {/* Specialty Tag */}
                 {reference.specialty && (
                   <div className="mt-2">
-                    <Badge variant="secondary" className="text-xs bg-gray-100 text-gray-600">
+                    <Badge variant="secondary" className="text-xs bg-well text-ink-2">
                       {reference.specialty}
                     </Badge>
                   </div>
@@ -181,8 +181,8 @@ export default function GuidelineReferences({ references, className, onReference
       </div>
       
       {/* Footer with count */}
-      <div className="mt-3 pt-2 border-t border-gray-200/50">
-        <p className="text-xs text-gray-500 text-center">
+      <div className="mt-3 pt-2 border-t border-border/50">
+        <p className="text-xs text-muted-foreground text-center">
           {references.length} guideline{references.length !== 1 ? 's' : ''} referenced
         </p>
       </div>

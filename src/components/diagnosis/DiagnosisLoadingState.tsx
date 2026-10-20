@@ -21,14 +21,14 @@ export default function DiagnosisLoadingState({
           icon: Stethoscope,
           title: 'Generating Differential Diagnoses',
           description: 'Analyzing patient data to identify potential diagnoses...',
-          color: 'text-blue-500',
+          color: 'text-info',
         };
       case 'finalizing':
         return {
           icon: Brain,
           title: 'Finalizing Diagnosis',
           description: 'Synthesizing final diagnosis based on all available information...',
-          color: 'text-green-500',
+          color: 'text-ok',
         };
       default: // analyzing
         return {

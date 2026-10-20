@@ -36,6 +36,8 @@ import { RichTextEditor, type RichTextEditorRef } from '@/components/ui/rich-tex
 import { AudioWaveform } from '@/components/ui/AudioWaveform';
 import { openDeepgramSocket, TranscriptionUnavailableError } from '@/lib/deepgram';
 import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
+import TranscriptView from '@/components/transcript/TranscriptView';
+import TranscriptModeToggle from '@/components/transcript/TranscriptModeToggle';
 
 interface ConsolidatedConsultationTabProps {
   patient: Patient | null;
@@ -116,6 +118,7 @@ export default function ConsolidatedConsultationTab({
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [transcriptText, setTranscriptText] = useState('');
+  const [transcriptMode, setTranscriptMode] = useState<'conversation' | 'edit'>('conversation');
   const [lastSavedTranscript, setLastSavedTranscript] = useState('');
   
   // Refs for transcription functionality
@@ -438,19 +441,19 @@ export default function ConsolidatedConsultationTab({
   return (
     <div className="space-y-6">
       {/* Encounter Header */}
-      <div className="glass-dense rounded-lg p-6 space-y-4">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold text-foreground">
+      <div className="rounded-[var(--radius-lg)] border border-border bg-card p-5 space-y-4 sm:p-6">
+        <div className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+          <h2 className="font-display text-xl text-ink">
             Consultation Details
           </h2>
-          <span className="text-sm text-muted-foreground font-mono">
-            ID: {selectedEncounter.encounterIdentifier}
+          <span className="data-mono break-all text-xs text-muted-foreground sm:text-right">
+            {selectedEncounter.encounterIdentifier}
           </span>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
-            <h3 className="text-lg font-medium text-foreground">Scheduled Start</h3>
+            <h3 className="label-caps">Scheduled Start</h3>
             <EditableDateTimeField
               value={selectedEncounter.scheduledStart || ''}
               onSave={(value) => updateField('scheduledStart', value)}
@@ -459,7 +462,7 @@ export default function ConsolidatedConsultationTab({
           </div>
           
           <div className="space-y-2">
-            <h3 className="text-lg font-medium text-foreground">Scheduled End</h3>
+            <h3 className="label-caps">Scheduled End</h3>
             <EditableDateTimeField
               value={selectedEncounter.scheduledEnd || ''}
               onSave={(value) => updateField('scheduledEnd', value)}
@@ -468,7 +471,7 @@ export default function ConsolidatedConsultationTab({
           </div>
           
           <div className="space-y-2">
-            <h3 className="text-lg font-medium text-foreground">Actual Start</h3>
+            <h3 className="label-caps">Actual Start</h3>
             <EditableDateTimeField
               value={selectedEncounter.actualStart || ''}
               onSave={(value) => updateField('actualStart', value)}
@@ -477,7 +480,7 @@ export default function ConsolidatedConsultationTab({
           </div>
           
           <div className="space-y-2">
-            <h3 className="text-lg font-medium text-foreground">Actual End</h3>
+            <h3 className="label-caps">Actual End</h3>
             <EditableDateTimeField
               value={selectedEncounter.actualEnd || ''}
               onSave={(value) => updateField('actualEnd', value)}
@@ -488,7 +491,7 @@ export default function ConsolidatedConsultationTab({
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <h3 className="text-lg font-medium text-foreground">Reason for Visit</h3>
+            <h3 className="label-caps">Reason for Visit</h3>
             <EditableTextField
               value={selectedEncounter.reasonDisplayText || selectedEncounter.reasonCode || ''}
               onSave={(value) => updateField('reasonDisplayText', value)}
@@ -499,7 +502,7 @@ export default function ConsolidatedConsultationTab({
           </div>
           
           <div className="space-y-2">
-            <h3 className="text-lg font-medium text-foreground">Insurance Status</h3>
+            <h3 className="label-caps">Insurance Status</h3>
             <EditableTextField
               value={selectedEncounter.insuranceStatus || ''}
               onSave={(value) => updateField('insuranceStatus', value)}
@@ -510,59 +513,63 @@ export default function ConsolidatedConsultationTab({
         </div>
       </div>
 
-      {/* Live Transcription Interface */}
+      {/* Transcript: a conversation to read, or text to edit */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-xl font-semibold text-foreground flex items-center justify-between">
+          <CardTitle className="flex flex-wrap items-center justify-between gap-3">
             Live Transcription
-            <div className="flex gap-2">
+            <div className="flex flex-wrap items-center gap-2 font-sans text-sm">
+              {!isTranscribing && transcriptText ? (
+                <TranscriptModeToggle mode={transcriptMode} onChange={setTranscriptMode} />
+              ) : null}
               <Button
                 variant={isTranscribing ? "destructive" : "default"}
                 size="sm"
                 onClick={isTranscribing ? stopTranscriptionAndSave : startTranscription}
                 disabled={isPaused}
-                className="flex items-center gap-2"
+                iconLeft={isTranscribing ? <StopIcon /> : <PlayIcon />}
               >
-                {isTranscribing ? (
-                  <>
-                    <StopIcon className="h-4 w-4" />
-                    Stop & Save
-                  </>
-                ) : (
-                  <>
-                    <PlayIcon className="h-4 w-4" />
-                    Start Recording
-                  </>
-                )}
+                {isTranscribing ? 'Stop & Save' : 'Start Recording'}
               </Button>
               {transcriptText && (
                 <Button
-                  variant="outline"
+                  variant="secondary"
                   size="sm"
                   onClick={() => setShowTranscriptModal(true)}
-                  className="flex items-center gap-2"
+                  iconLeft={<Eye />}
                 >
-                  <Eye className="h-4 w-4" />
                   View Full Transcript
                 </Button>
               )}
             </div>
           </CardTitle>
         </CardHeader>
-        <CardContent className="relative min-h-[300px]">
-          <RichTextEditor
-            ref={richTextEditorRef}
-            content={transcriptText}
-            onContentChange={(content) => setTranscriptText(content)}
-            placeholder="Start recording to begin live transcription, or type your consultation notes here..."
-            disabled={isTranscribing}
-            showToolbar={!isTranscribing}
-            minHeight="200px"
-            className="h-full"
-          />
-          
-          {/* Audio Waveform Controls */}
-          <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-10">
+        <CardContent className="relative min-h-[18rem] pb-20">
+          {isTranscribing || (transcriptMode === 'conversation' && transcriptText) ? (
+            <TranscriptView
+              className="max-h-[32rem]"
+              transcript={transcriptText}
+              live={isTranscribing}
+              followNewest={isTranscribing}
+              terms={[
+                ...diagnoses.map((d) => d.description || ''),
+                ...((selectedEncounter.treatments || []) as any[]).map((t) => t?.treatment_name || t?.drug || ''),
+              ]}
+            />
+          ) : (
+            <RichTextEditor
+              ref={richTextEditorRef}
+              content={transcriptText}
+              onContentChange={(content) => setTranscriptText(content)}
+              placeholder="Start recording to begin live transcription, or type your consultation notes here..."
+              disabled={isTranscribing}
+              showToolbar={!isTranscribing}
+              minHeight="200px"
+              className="h-full"
+            />
+          )}
+
+          <div className="absolute bottom-4 left-1/2 z-10 -translate-x-1/2">
             <AudioWaveform
               isRecording={isTranscribing}
               isPaused={isPaused}
@@ -578,7 +585,7 @@ export default function ConsolidatedConsultationTab({
       {/* Summary Notes (SOAP Notes) */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-xl font-semibold text-foreground">
+          <CardTitle>
             Summary Notes
           </CardTitle>
         </CardHeader>
@@ -593,7 +600,7 @@ export default function ConsolidatedConsultationTab({
       {/* Diagnosis - Enhanced with Rich Content */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-xl font-semibold text-foreground">Diagnosis</CardTitle>
+          <CardTitle>Diagnosis</CardTitle>
         </CardHeader>
         <CardContent>
           {/* Rich Content Diagnosis */}
@@ -616,7 +623,7 @@ export default function ConsolidatedConsultationTab({
             diagnoses.length > 0 ? (
               <div className="space-y-4 mb-6">
                 {diagnoses.map((dx, index) => (
-                  <div key={`dx-${index}-${dx.code || 'unknown'}`} className="bg-white/5 border border-white/10 rounded-md p-4 space-y-3">
+                  <div key={`dx-${index}-${dx.code || 'unknown'}`} className="bg-card border border-border rounded-md p-4 space-y-3">
                     {/* Full Diagnosis Description - prominently displayed */}
                     <div className="space-y-2">
                       <h4 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">Diagnosis</h4>
@@ -646,9 +653,9 @@ export default function ConsolidatedConsultationTab({
           
           {/* Differential Diagnoses Section */}
           <div className="pt-6 border-t border-border/50">
-             <h3 className="text-lg font-medium text-foreground mb-4">Differential Diagnoses</h3>
+             
              {differentialDiagnosesError ? (
-               <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md mb-4">
+               <div className="text-sm text-critical bg-critical-soft p-3 rounded-md mb-4">
                  Error loading differential diagnoses: {differentialDiagnosesError}
                </div>
              ) : null}
@@ -668,7 +675,7 @@ export default function ConsolidatedConsultationTab({
       {/* Treatment - Enhanced with Rich Content */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-xl font-semibold text-foreground">Treatment Plans</CardTitle>
+          <CardTitle>Treatment Plans</CardTitle>
         </CardHeader>
         <CardContent>
           {/* Rich Content Treatment */}
@@ -700,7 +707,7 @@ export default function ConsolidatedConsultationTab({
       {/* Labs */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-xl font-semibold text-foreground">Laboratory Results</CardTitle>
+          <CardTitle>Laboratory Results</CardTitle>
         </CardHeader>
         <CardContent>
           {labResults.length > 0 ? (
@@ -851,7 +858,7 @@ export default function ConsolidatedConsultationTab({
       {/* Clinical Trials */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-xl font-semibold text-foreground">Clinical Trials</CardTitle>
+          <CardTitle>Clinical Trials</CardTitle>
         </CardHeader>
         <CardContent>
           {trialRows.length > 0 ? (
@@ -883,11 +890,11 @@ export default function ConsolidatedConsultationTab({
 
       {/* Danger Zone */}
       <div className="space-y-4 pt-6 mt-6 border-t border-destructive/20">
-        <h2 className="text-xl font-semibold text-destructive">Danger Zone</h2>
+        <h2 className="font-display text-lg text-critical">Danger Zone</h2>
         <div className="bg-destructive/10 border border-destructive/30 hover:bg-destructive/20 transition-colors rounded-lg p-4">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h3 className="text-lg font-medium text-foreground">
+              <h3 className="label-caps">
                 Delete This Consultation
               </h3>
               <p className="text-sm text-muted-foreground">

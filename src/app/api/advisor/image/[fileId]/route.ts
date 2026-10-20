@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
+import { openAIKeyMissingResponse } from '@/lib/serverGuards';
 
 // Made on first request, so that building the app does not need the key.
 let openai: OpenAI | null = null;
@@ -11,6 +12,8 @@ export async function GET(
   request: NextRequest,
   { params }: { params: { fileId: string } }
 ) {
+  const noKey = openAIKeyMissingResponse();
+  if (noKey) return noKey;
   try {
     const { fileId } = params;
     const containerId = request.nextUrl.searchParams.get('container_id');

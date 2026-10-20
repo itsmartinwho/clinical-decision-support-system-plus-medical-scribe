@@ -40,6 +40,19 @@ export default function SOAPNoteEditor({
 
     if (!soapText) return defaultSections;
 
+    // Headings spelled out ("SUBJECTIVE:", "Objective:"), each at the start of a line
+    const heading = (name: string) =>
+      soapText.match(new RegExp(`(?:^|\\n)\\s*${name}\\s*:\\s*([\\s\\S]*?)(?=\\n\\s*(?:SUBJECTIVE|OBJECTIVE|ASSESSMENT|PLAN)\\s*:|$)`, 'i'))?.[1]?.trim();
+    const full = ['SUBJECTIVE', 'OBJECTIVE', 'ASSESSMENT', 'PLAN'].map(heading);
+    if (full.some(Boolean)) {
+      return [
+        { id: 'subjective', title: 'Subjective', content: full[0] || '' },
+        { id: 'objective', title: 'Objective', content: full[1] || '' },
+        { id: 'assessment', title: 'Assessment', content: full[2] || '' },
+        { id: 'plan', title: 'Plan', content: full[3] || '' },
+      ];
+    }
+
     // Try to parse structured SOAP note (S: ...\nO: ...\nA: ...\nP: ...)
     const sMatch = soapText.match(/S:\s*([\s\S]*?)(?=\n[OAP]:|\n$|$)/);
     const oMatch = soapText.match(/O:\s*([\s\S]*?)(?=\n[SAP]:|\n$|$)/);
@@ -171,7 +184,7 @@ export default function SOAPNoteEditor({
         const history = sectionHistories[section.id];
         
         return (
-          <Card key={section.id} className="border-l-4 border-l-blue-500">
+          <Card key={section.id} className="border-l-[3px] border-l-iris/50">
             <CardHeader className="pb-3">
               <CardTitle className="text-lg font-medium text-foreground">{section.title}</CardTitle>
             </CardHeader>

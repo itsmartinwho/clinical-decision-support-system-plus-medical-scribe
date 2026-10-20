@@ -38,12 +38,12 @@ export default function SpecialtyFilter({
   if (isLoading) {
     return (
       <div className="space-y-4">
-        <h3 className="text-lg font-semibold text-gray-900">Medical Specialties</h3>
+        <h3 className="text-lg font-semibold text-ink">Medical Specialties</h3>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
           {[...Array(6)].map((_, i) => (
             <div
               key={i}
-              className="h-20 bg-white/40 backdrop-blur-sm rounded-xl border border-white/20 animate-pulse"
+              className="h-20 bg-card rounded-xl border border-border animate-pulse"
             />
           ))}
         </div>
@@ -54,10 +54,10 @@ export default function SpecialtyFilter({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-gray-900">Medical Specialties</h3>
+        <h3 className="text-lg font-semibold text-ink">Medical Specialties</h3>
         <button
           onClick={handleSelectAll}
-          className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+          className="text-sm text-info hover:text-info font-medium"
         >
           {selectedSpecialties.length === categories.length ? 'Clear All' : 'Select All'}
         </button>
@@ -73,9 +73,9 @@ export default function SpecialtyFilter({
               onClick={() => handleSpecialtyToggle(category.id)}
               className={cn(
                 "group relative cursor-pointer transition-all duration-200",
-                "bg-white/60 backdrop-blur-sm rounded-lg border border-white/20 p-3",
-                "hover:bg-white/80 hover:shadow-sm hover:border-white/40",
-                isSelected && "bg-white/90 border-blue-200 shadow-sm ring-1 ring-blue-100"
+                "bg-card rounded-lg border border-border p-3",
+                "hover:bg-well hover:shadow-sm hover:border-input",
+                isSelected && "bg-card border-info/30 shadow-sm ring-1 ring-ring"
               )}
             >
               <div className="flex items-center space-x-3">
@@ -85,8 +85,8 @@ export default function SpecialtyFilter({
                     "flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-lg",
                     "transition-colors duration-200",
                     isSelected 
-                      ? "bg-blue-100 text-blue-600" 
-                      : "bg-gray-100 text-gray-600 group-hover:bg-gray-200"
+                      ? "bg-info-soft text-info" 
+                      : "bg-well text-ink-2 group-hover:bg-well"
                   )}
                   style={{ 
                     backgroundColor: isSelected ? `${category.color}20` : undefined,
@@ -101,7 +101,7 @@ export default function SpecialtyFilter({
                   <div className="flex items-center justify-between">
                     <h4 className={cn(
                       "font-medium text-sm",
-                      isSelected ? "text-gray-900" : "text-gray-700"
+                      isSelected ? "text-ink" : "text-ink"
                     )}>
                       {category.displayName}
                     </h4>
@@ -109,13 +109,13 @@ export default function SpecialtyFilter({
                       variant="secondary" 
                       className={cn(
                         "text-xs",
-                        isSelected && "bg-blue-100 text-blue-700"
+                        isSelected && "bg-info-soft text-info"
                       )}
                     >
                       {category.guidelineCount}
                     </Badge>
                   </div>
-                  <p className="text-xs text-gray-500 mt-0.5 line-clamp-1">
+                  <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
                     {category.description}
                   </p>
                 </div>
@@ -123,7 +123,7 @@ export default function SpecialtyFilter({
                 {/* Selection Indicator */}
                 {isSelected && (
                   <div className="flex-shrink-0">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full" />
+                    <div className="w-2 h-2 bg-info rounded-full" />
                   </div>
                 )}
               </div>
@@ -134,7 +134,7 @@ export default function SpecialtyFilter({
       
       {/* Selected Count */}
       {selectedSpecialties.length > 0 && (
-        <div className="text-sm text-gray-600 bg-blue-50 rounded-lg p-3 border border-blue-100">
+        <div className="text-sm text-ink-2 bg-info-soft rounded-lg p-3 border border-info/30">
           <span className="font-medium">{selectedSpecialties.length}</span> 
           {selectedSpecialties.length === 1 ? ' specialty' : ' specialties'} selected
         </div>

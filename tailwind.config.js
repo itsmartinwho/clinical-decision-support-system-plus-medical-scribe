@@ -22,9 +22,9 @@ module.exports = {
         background: "hsl(var(--background) / <alpha-value>)",
         foreground: "hsl(var(--foreground) / <alpha-value>)",
         text: {
-          DEFAULT: "#000000", // Black for main text
-          placeholder: "#334155", // slate-700 for placeholder text (darker for better readability)
-          darkUI: "#FFFFFF", // White for text on dark UI elements
+          DEFAULT: "hsl(var(--ink))",
+          placeholder: "hsl(var(--muted-ink))",
+          darkUI: "hsl(var(--paper))",
         },
         primary: {
           DEFAULT: "hsl(var(--primary) / <alpha-value>)",
@@ -54,37 +54,76 @@ module.exports = {
           DEFAULT: "hsl(var(--card) / <alpha-value>)",
           foreground: "hsl(var(--card-foreground) / <alpha-value>)",
         },
-        /* ----- New surface and accent tokens (UI refresh) ----- */
-        surface: {
-          0: "hsl(var(--surface-0) / <alpha-value>)",
-          1: "hsl(var(--surface-1) / <alpha-value>)",
-          2: "hsl(var(--surface-2) / <alpha-value>)",
-          3: "hsl(var(--surface-3) / <alpha-value>)",
+        /* Surfaces and the semantic colours (src/styles/tokens.css) */
+        paper: "hsl(var(--paper) / <alpha-value>)",
+        well: "hsl(var(--well) / <alpha-value>)",
+        hairline: "hsl(var(--hairline) / <alpha-value>)",
+        ink: {
+          DEFAULT: "hsl(var(--ink) / <alpha-value>)",
+          2: "hsl(var(--ink-2) / <alpha-value>)",
+          muted: "hsl(var(--muted-ink) / <alpha-value>)",
         },
-        glass: "rgba(255, 255, 255, 0.15)",
-        glassHover: "rgba(255, 255, 255, 0.18)",
-        neon: "#256D9C",
-        "custom-blue-teal": "#256D9C",
-        ink: "#0a0d12",
-        lavenderBg: "#f4f6ff",
-        sidebar: "rgba(255,255,255,0.08)",
-        "sidebar-border": "rgba(255,255,255,0.12)",
-        "sidebar-ring": "#256D9C",
-        "sidebar-accent": "rgba(255,255,255,0.18)",
-        "sidebar-accent-foreground": "#ffffff",
-        "sidebar-foreground": "rgba(255,255,255,0.92)",
+        info: {
+          DEFAULT: "hsl(var(--blue) / <alpha-value>)",
+          soft: "hsl(var(--blue-soft) / <alpha-value>)",
+          line: "hsl(var(--blue-line) / <alpha-value>)",
+        },
+        iris: {
+          DEFAULT: "hsl(var(--blue) / <alpha-value>)",
+          soft: "hsl(var(--blue-soft) / <alpha-value>)",
+          line: "hsl(var(--blue-line) / <alpha-value>)",
+        },
+        rail: {
+          DEFAULT: "hsl(var(--rail) / <alpha-value>)",
+          ink: "hsl(var(--rail-ink) / <alpha-value>)",
+          muted: "hsl(var(--rail-muted) / <alpha-value>)",
+        },
+        ok: {
+          DEFAULT: "hsl(var(--sage) / <alpha-value>)",
+          soft: "hsl(var(--sage-soft) / <alpha-value>)",
+          line: "hsl(var(--sage-line) / <alpha-value>)",
+        },
+        flag: {
+          DEFAULT: "hsl(var(--amber) / <alpha-value>)",
+          soft: "hsl(var(--amber-soft) / <alpha-value>)",
+          line: "hsl(var(--amber-line) / <alpha-value>)",
+        },
+        critical: {
+          DEFAULT: "hsl(var(--red) / <alpha-value>)",
+          soft: "hsl(var(--red-soft) / <alpha-value>)",
+          line: "hsl(var(--red-line) / <alpha-value>)",
+        },
+        surface: {
+          0: "hsl(var(--card) / <alpha-value>)",
+          1: "hsl(var(--card) / <alpha-value>)",
+          2: "hsl(var(--well) / <alpha-value>)",
+          3: "hsl(var(--hairline) / <alpha-value>)",
+        },
+        /* Older names, now on the palette */
+        glass: "hsl(var(--card))",
+        glassHover: "hsl(var(--well))",
+        neon: "hsl(var(--blue) / <alpha-value>)",
+        "custom-blue-teal": "hsl(var(--blue) / <alpha-value>)",
+        lavenderBg: "hsl(var(--paper))",
+        sidebar: "hsl(var(--card) / <alpha-value>)",
+        "sidebar-border": "hsl(var(--hairline))",
+        "sidebar-ring": "hsl(var(--blue))",
+        "sidebar-accent": "hsl(var(--well))",
+        "sidebar-accent-foreground": "hsl(var(--ink))",
+        "sidebar-foreground": "hsl(var(--ink))",
       },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
-        card: "1.25rem",
+        card: "var(--radius-lg)",
       },
       fontFamily: {
-        sans: ["Manrope", "sans-serif"],
+        sans: ["var(--font-sans)", "system-ui", "-apple-system", "Segoe UI", "sans-serif"],
+        display: ["var(--font-display)", "Georgia", "serif"],
+        mono: ["var(--font-mono)", "ui-monospace", "SFMono-Regular", "Menlo", "monospace"],
       },
       fontSize: {
-        base: "1.25rem",
         "step--1": "var(--step--1)",
         "step-0": "var(--step-0)",
         "step-1": "var(--step-1)",
@@ -92,9 +131,10 @@ module.exports = {
         "step-3": "var(--step-3)",
       },
       boxShadow: {
-        card: "0 6px 18px rgba(0,0,0,.14)",
-        "card-dark": "0 6px 18px rgba(0,0,0,.25)",
-        "inner-glow": "inset 0 0 8px rgba(255,255,255,0.1)",
+        card: "var(--shadow-card)",
+        "card-dark": "var(--shadow-card)",
+        "inner-glow": "none",
+        float: "var(--shadow-float)",
       },
       backdropBlur: {
         none: '0',

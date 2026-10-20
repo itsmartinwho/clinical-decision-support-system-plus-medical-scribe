@@ -1,50 +1,61 @@
 :root {
-  /* ------------------------------------------------------------------*/
-  /* Global Design Tokens – colours, radii, motion, etc.               */
-  /* These values are taken from the new UI brief (see conversation).  */
-  /* ------------------------------------------------------------------*/
+  /* ------------------------------------------------------------------
+     The palette. A warm grey canvas, white surfaces lifted by a soft
+     shadow, near-black ink, and one accent, iris, for everything that can
+     be pressed, selected or focused. Three semantic colours carry state:
+       sage    done, normal, within range
+       amber   flagged, needs a look
+       red     critical
+     The navigation rail is ink. Every text pairing is WCAG AA or better.
+     ------------------------------------------------------------------ */
+  --paper: 48 17% 94%;        /* #F3F2EE  the canvas */
+  --card: 0 0% 100%;          /* #FFFFFF  surfaces */
+  --well: 45 18% 96%;         /* #F6F5F2  wells, hover */
+  --ink: 223 14% 10%;         /* #15171C  text (16:1 on the canvas) */
+  --ink-2: 225 9% 26%;        /* #3D4049 */
+  --muted-ink: 222 6% 43%;    /* #666A73  secondary text (4.8:1) */
+  --hairline: 40 12% 89%;     /* #E7E4DF  rules, card edges */
+  --input-border: 42 5% 53%;  /* #8E8A81  form edges (3:1) */
 
-  /* ----- New surface tokens (UI refresh) ----- */
-  --surface-0: 218 16% 10%;   /* near black (dialogs etc) */
-  --surface-1: 218 16% 15%;   /* dark grey (cards etc) */
-  --surface-2: 218 16% 20%;   /* medium grey (hovers etc) */
-  --surface-3: 218 16% 25%;   /* light grey (borders etc) */
+  /* The accent, iris: actions, selection, focus */
+  --blue: 245 66% 55%;        /* #4F42D8  (6.8:1 on white) */
+  --blue-soft: 244 71% 96%;   /* #EEEDFC */
+  --blue-line: 245 70% 86%;   /* #CCC7F5 */
 
-  /* ----- New accent tokens (UI refresh) ----- */
-  --accent-primary: 329 84% 59%;   /* pink-500 */
-  --accent-secondary: 271 100% 62%; /* purple-500 */
-  --accent-tertiary: 217 89% 65%;  /* blue-500 */
-  /* Primary is still --accent / --neon-val */
-  --custom-blue-teal: 209 70% 46%; /* New custom blue-teal */
-  --neon-teal: 209 70% 46%; /* Vivid Teal -> New custom blue-teal */
-  --whitish-yellow: 0 0% 100%; /* Light, slightly desaturated Yellow -> White */
-  --white-val: 0 0% 100%; /* Explicit white variable */
-  
-  
-  
+  --sage: 151 55% 30%;        /* #23774F */
+  --sage-soft: 148 35% 93%;   /* #E6F3EC */
+  --sage-line: 148 33% 78%;   /* #B5DCC5 */
 
-  /* Legacy colors (gradual phase-out) */
-  --legacy-blue-primary: 217 89% 61%;
+  --amber: 34 88% 30%;        /* #8F5609 */
+  --amber-soft: 38 83% 93%;   /* #FCF1DE */
+  --amber-line: 38 74% 74%;   /* #EFCB8A */
 
-  /* Neutral surface stack (light theme) */
-  --surface-0: 0 0% 100%;     /* pure white – intended to be used with /alpha */
-  --surface-1: 210 20% 99%;   /* very light cool gray */
-  --surface-2: 210 16% 96%;   /* light cool gray */
-  --surface-3: 210 14% 93%;   /* mid-light cool gray */
+  --red: 6 67% 45%;           /* #BE3426 */
+  --red-soft: 8 79% 94%;      /* #FCE8E5 */
+  --red-line: 8 71% 82%;      /* #F1B8AF */
 
-  /* Accent / brand hues */
-  
-  
-  
+  /* The navigation rail */
+  --rail: 223 15% 9%;         /* #14161B */
+  --rail-ink: 223 10% 73%;    /* #B4B8C2 */
+  --rail-muted: 222 8% 57%;   /* #8A8F9B */
 
-  /* Shadow colour (used for translucent shadows) */
-  --shadow: 210 10% 34%;
+  /* Depth: surfaces sit on the canvas by a soft shadow, floating ones higher */
+  --shadow-card: 0 1px 2px hsl(223 14% 10% / 0.04), 0 4px 14px -6px hsl(223 14% 10% / 0.08);
+  --shadow-float: 0 2px 6px hsl(223 14% 10% / 0.06), 0 24px 48px -16px hsl(223 14% 10% / 0.22);
 
-  /* Radius scale */
-  --radius-lg: 1.25rem;
+  /* Older names, resolved to the palette */
+  --custom-blue-teal: var(--blue);
+  --neon-teal: var(--blue);
+  --surface-0: var(--card);
+  --surface-1: var(--card);
+  --surface-2: var(--well);
+  --surface-3: var(--hairline);
+  --shadow: 223 14% 10%;
 
-  /* Motion durations – will be referenced in animation utilities */
+  --radius-lg: 1rem;
+
   --motion-fast: 120ms;
   --motion-medium: 200ms;
   --motion-slow: 320ms;
-} 
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+}

@@ -31,7 +31,7 @@ export default function Section({
   if (!collapsible) {
     return (
       <section className={cn("mb-8 last:mb-0", className)}>
-        <h2 className={cn("text-step-1 font-bold mb-6 text-foreground", headerClassName)}>
+        <h2 className={cn("mb-5 font-display text-xl text-ink [line-height:1.25]", headerClassName)}>
           {title}
         </h2>
         <div className={cn("space-y-4", contentClassName)}>
@@ -41,34 +41,41 @@ export default function Section({
     );
   }
 
+  // Collapsible: a card whose header row opens it.
   return (
-    <Collapsible open={isOpen} onOpenChange={setIsOpen} className={cn("mb-8 last:mb-0", className)}>
+    <Collapsible
+      open={isOpen}
+      onOpenChange={setIsOpen}
+      className={cn("mb-8 rounded-[var(--radius-lg)] border border-border bg-card shadow-card last:mb-0", className)}
+    >
       <CollapsibleTrigger className={cn(
-        "flex items-center justify-between w-full text-left group hover:text-neon transition-all duration-200 p-3 rounded-lg hover:bg-foreground/5 cursor-pointer",
+        "group flex w-full cursor-pointer items-center justify-between gap-4 rounded-[var(--radius-lg)] p-5 text-left transition-colors hover:bg-well/50 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/35 sm:px-6",
         headerClassName
       )}>
-        <div className="flex items-center gap-3">
-          <h2 className="text-step-1 font-bold text-foreground group-hover:text-neon transition-colors">
+        <div className="min-w-0">
+          <h2 className="font-display text-xl text-ink [line-height:1.25]">
             {title}
           </h2>
           {!isOpen && collapsedSummary && (
-            <span className="text-sm text-muted-foreground font-normal">
-              - {collapsedSummary}
-            </span>
+            <p className="mt-0.5 text-sm text-muted-foreground">
+              {collapsedSummary}
+            </p>
           )}
         </div>
-        <ChevronUp 
-          className={cn(
-            "h-5 w-5 text-muted-foreground group-hover:text-neon transition-all duration-300 ease-in-out",
-            isOpen ? "rotate-0" : "rotate-180"
-          )} 
-        />
+        <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-well text-ink-2 ring-1 ring-hairline transition-colors group-hover:text-iris">
+          <ChevronUp
+            className={cn(
+              "h-4 w-4 transition-transform duration-300 ease-in-out",
+              isOpen ? "rotate-0" : "rotate-180"
+            )}
+          />
+        </span>
       </CollapsibleTrigger>
       <CollapsibleContent className="data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down overflow-hidden">
-        <div className={cn("pt-6 space-y-4 transition-all duration-300 ease-in-out", contentClassName)}>
+        <div className={cn("space-y-4 px-5 pb-5 sm:px-6 sm:pb-6", contentClassName)}>
           {children}
         </div>
       </CollapsibleContent>
     </Collapsible>
   );
-} 
+}

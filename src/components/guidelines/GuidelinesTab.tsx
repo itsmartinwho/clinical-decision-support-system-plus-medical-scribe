@@ -66,8 +66,8 @@ export default function GuidelinesTab() {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
-          <h3 className="text-lg font-semibold text-red-600 mb-2">Error Loading Guidelines</h3>
-          <p className="text-gray-600">{error}</p>
+          <h3 className="text-lg font-semibold text-critical mb-2">Error Loading Guidelines</h3>
+          <p className="text-ink-2">{error}</p>
         </div>
       </div>
     );
@@ -76,16 +76,16 @@ export default function GuidelinesTab() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Clinical Guidelines</h1>
-          <p className="text-gray-600 mt-1">
+          <h1 className="title-display text-[2.125rem] sm:text-[2.6rem]">Clinical Guidelines</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
             Evidence-based recommendations from authoritative medical sources
           </p>
         </div>
         
         {/* View Toggle */}
-        <div className="flex items-center gap-2 bg-white/60 backdrop-blur-sm rounded-lg p-1 border border-white/20">
+        <div className="flex items-center gap-2 bg-card rounded-lg p-1 border border-border">
           <Button
             variant={uiState.currentView === 'grid' ? 'default' : 'ghost'}
             size="sm"
@@ -163,26 +163,26 @@ export default function GuidelinesTab() {
                }}>
         {isLoading ? (
           <div className="flex items-center justify-center h-64">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-info/30"></div>
           </div>
         ) : guidelines.length === 0 ? (
           <div className="flex items-center justify-center h-64">
             <div className="text-center max-w-md">
-              <h3 className="text-lg font-semibold text-gray-600 mb-2">No Guidelines Found</h3>
-              <p className="text-gray-500 mb-4">
+              <h3 className="text-lg font-semibold text-ink-2 mb-2">No Guidelines Found</h3>
+              <p className="text-muted-foreground mb-4">
                 {uiState.filter.searchQuery ? 
                   `No guidelines match your search for "${uiState.filter.searchQuery}"` :
                   'No guidelines available with current filters'
                 }
               </p>
               {!uiState.filter.searchQuery && uiState.filter.sources.length === 0 && uiState.filter.specialties.length === 0 && (
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-sm text-yellow-800">
-                  <p className="mb-2">📚 <strong>No clinical guidelines loaded yet</strong></p>
+                <div className="bg-flag-soft border border-flag-line rounded-lg p-4 text-sm text-flag">
+                  <p className="mb-2"><strong>No clinical guidelines loaded yet</strong></p>
                   <p>Clinical guidelines need to be ingested into the database first. Contact your system administrator to load guidelines from sources like USPSTF, NICE, NCI PDQ, or RxNorm.</p>
                 </div>
               )}
               {(uiState.filter.sources.length > 0 || uiState.filter.specialties.length > 0) && (
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-muted-foreground">
                   Try clearing some filters or search for specific topics
                 </p>
               )}
@@ -198,17 +198,17 @@ export default function GuidelinesTab() {
             {uiState.currentView === 'comparison' && (
               <div className="space-y-6">
                 {/* Comparison View Header */}
-                <div className="flex items-center justify-between bg-gradient-to-r from-blue-50/80 to-purple-50/80 backdrop-blur-sm border border-blue-200/50 rounded-xl p-4 shadow-sm">
+                <div className="flex items-center justify-between bg-info-soft border border-info/30 rounded-lg p-4">
                   <div className="flex items-center gap-3">
-                    <SquaresFour className="h-5 w-5 text-blue-600" />
+                    <SquaresFour className="h-5 w-5 text-info" />
                     <div>
-                      <h3 className="font-semibold text-gray-900">Source Comparison Panels</h3>
-                      <p className="text-sm text-gray-600">
+                      <h3 className="font-semibold text-ink">Source Comparison Panels</h3>
+                      <p className="text-sm text-ink-2">
                         Guidelines organized by source for side-by-side comparison
                       </p>
                     </div>
                   </div>
-                  <Badge variant="secondary" className="bg-white/70 text-gray-800">
+                  <Badge variant="secondary" className="bg-card text-ink">
                     {guidelines.length} guidelines
                   </Badge>
                 </div>
@@ -248,35 +248,35 @@ export default function GuidelinesTab() {
                         <div key={source} className="space-y-4">
                           {/* Source Panel Header */}
                           <div className={cn(
-                            "flex items-center justify-between p-4 rounded-lg border-2 shadow-sm backdrop-blur-sm",
-                            source === 'USPSTF' && "bg-blue-50/80 border-blue-200",
-                            source === 'NICE' && "bg-purple-50/80 border-purple-200",
-                            source === 'NCI_PDQ' && "bg-green-50/80 border-green-200",
-                            source === 'RxNorm' && "bg-orange-50/80 border-orange-200"
+                            "flex items-center justify-between p-4 rounded-lg border-2 shadow-sm ",
+                            source === 'USPSTF' && "bg-info-soft/80 border-info/30",
+                            source === 'NICE' && "bg-info-soft/80 border-info/30",
+                            source === 'NCI_PDQ' && "bg-ok-soft/80 border-ok-line",
+                            source === 'RxNorm' && "bg-flag-soft/80 border-flag-line"
                           )}>
                             <div className="flex items-center space-x-3">
                               <span className="text-2xl">{getSourceIcon(source)}</span>
                               <div>
                                 <h4 className={cn(
                                   "font-semibold text-lg",
-                                  source === 'USPSTF' && "text-blue-800",
-                                  source === 'NICE' && "text-purple-800",
-                                  source === 'NCI_PDQ' && "text-green-800",
-                                  source === 'RxNorm' && "text-orange-800"
+                                  source === 'USPSTF' && "text-info",
+                                  source === 'NICE' && "text-info",
+                                  source === 'NCI_PDQ' && "text-ok",
+                                  source === 'RxNorm' && "text-flag"
                                 )}>
                                   {source}
                                 </h4>
-                                <p className="text-xs text-gray-600 max-w-[180px] truncate">
+                                <p className="text-xs text-ink-2 max-w-[180px] truncate">
                                   {getSourceDisplayName(source)}
                                 </p>
                               </div>
                             </div>
                             <Badge className={cn(
                               "font-medium text-xs",
-                              source === 'USPSTF' && "bg-blue-100 text-blue-700 border-blue-300",
-                              source === 'NICE' && "bg-purple-100 text-purple-700 border-purple-300",
-                              source === 'NCI_PDQ' && "bg-green-100 text-green-700 border-green-300",
-                              source === 'RxNorm' && "bg-orange-100 text-orange-700 border-orange-300"
+                              source === 'USPSTF' && "bg-info-soft text-info border-info/30",
+                              source === 'NICE' && "bg-info-soft text-info border-info/30",
+                              source === 'NCI_PDQ' && "bg-ok-soft text-ok border-ok-line",
+                              source === 'RxNorm' && "bg-flag-soft text-flag border-flag-line"
                             )}>
                               {sourceGuidelines.length} guidelines
                             </Badge>

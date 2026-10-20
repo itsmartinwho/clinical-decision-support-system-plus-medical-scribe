@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ReferralService } from '@/lib/forms/referralService';
 import { PDFGenerator } from '@/lib/forms/pdfGenerator';
+import { PRODUCT_NAME } from '@/lib/brand';
 
 export async function POST(request: NextRequest) {
   try {
@@ -92,7 +93,7 @@ export async function GET(request: NextRequest) {
         referringProvider: {
           name: '',
           npi: '',
-          facility: 'Foresight CDSS',
+          facility: PRODUCT_NAME,
           contactPhone: '',
           contactEmail: ''
         },

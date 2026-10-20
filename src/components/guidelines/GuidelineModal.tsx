@@ -77,7 +77,7 @@ function GuidelineModalContent({
   return (
     <>
       {/* Header */}
-      <div className="p-6 border-b border-gray-200">
+      <div className="p-6 border-b border-border">
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-3 flex-1">
             <div
@@ -87,7 +87,7 @@ function GuidelineModalContent({
               <IconComponent className="h-5 w-5" />
             </div>
             <div className="flex-1">
-              <h2 className="text-xl font-bold text-gray-900 mb-2">{modalData.title}</h2>
+              <h2 className="text-xl font-bold text-ink mb-2">{modalData.title}</h2>
               <div className="flex items-center gap-2 flex-wrap">
                 <Badge
                   style={{ backgroundColor: config.color, color: 'white' }}
@@ -128,7 +128,7 @@ function GuidelineModalContent({
               <Star 
                 className={cn(
                   "h-4 w-4",
-                  isBookmarked ? "fill-yellow-400 text-yellow-400" : "text-gray-400"
+                  isBookmarked ? "fill-flag-line text-flag" : "text-muted-foreground"
                 )}
               />
             </Button>
@@ -147,7 +147,7 @@ function GuidelineModalContent({
 
         {/* Breadcrumbs */}
         {modalData.breadcrumbs && modalData.breadcrumbs.length > 0 && (
-          <nav className="text-sm text-gray-500 mb-4">
+          <nav className="text-sm text-muted-foreground mb-4">
             {modalData.breadcrumbs.map((crumb, index) => (
               <span key={index}>
                 {crumb}
@@ -160,7 +160,7 @@ function GuidelineModalContent({
         )}
 
         {/* Metadata */}
-        <div className="text-sm text-gray-600 space-y-1">
+        <div className="text-sm text-ink-2 space-y-1">
           {modalData.metadata.publication_date && (
             <p>Published: {new Date(modalData.metadata.publication_date).toLocaleDateString()}</p>
           )}
@@ -179,7 +179,7 @@ function GuidelineModalContent({
           {/* Section Controls */}
           {modalData.sections && modalData.sections.length > 0 && (
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-semibold text-gray-900">Guideline Sections</h3>
+              <h3 className="text-lg font-semibold text-ink">Guideline Sections</h3>
               <Button
                 variant="outline"
                 size="sm"
@@ -197,18 +197,18 @@ function GuidelineModalContent({
               {modalData.sections.map((section) => {
                 const isExpanded = expandedSections.has(section.id);
                 return (
-                  <div key={section.id} className="border border-gray-200 rounded-lg">
+                  <div key={section.id} className="border border-border rounded-lg">
                     <button
                       onClick={() => toggleSection(section.id)}
-                      className="w-full flex items-center justify-between p-4 text-left hover:bg-gray-50 transition-colors"
+                      className="w-full flex items-center justify-between p-4 text-left hover:bg-well/50 transition-colors"
                     >
                       <div className="flex items-center gap-3">
                         {isExpanded ? (
-                          <CaretDown className="h-4 w-4 text-gray-500" />
+                          <CaretDown className="h-4 w-4 text-muted-foreground" />
                         ) : (
-                          <CaretRight className="h-4 w-4 text-gray-500" />
+                          <CaretRight className="h-4 w-4 text-muted-foreground" />
                         )}
-                        <h4 className="font-semibold text-gray-900">{section.title}</h4>
+                        <h4 className="font-semibold text-ink">{section.title}</h4>
                       </div>
                       <Badge variant="secondary" className="text-xs capitalize">
                         {section.type.replace('_', ' ')}
@@ -219,7 +219,7 @@ function GuidelineModalContent({
                       <div className="px-4 pb-4">
                         <div className="pl-7 prose prose-sm max-w-none">
                           <div
-                            className="text-gray-700 leading-relaxed"
+                            className="text-ink leading-relaxed"
                             dangerouslySetInnerHTML={{ __html: section.content }}
                           />
                         </div>
@@ -233,7 +233,7 @@ function GuidelineModalContent({
             /* Full Content Fallback */
             <div className="prose prose-sm max-w-none">
               <div
-                className="text-gray-700 leading-relaxed"
+                className="text-ink leading-relaxed"
                 dangerouslySetInnerHTML={{ __html: modalData.fullContent }}
               />
             </div>
@@ -297,7 +297,7 @@ export default function GuidelineModal({
       <DraggableModalWrapper
         config={finalDraggableConfig}
         onClose={onClose}
-        className="max-w-5xl w-full bg-white"
+        className="max-w-5xl w-full bg-card"
         showMinimizeButton={true}
         showCloseButton={true}
       >

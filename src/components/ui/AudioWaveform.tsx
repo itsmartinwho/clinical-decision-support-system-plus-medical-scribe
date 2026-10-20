@@ -27,7 +27,7 @@ export const AudioWaveform: React.FC<AudioWaveformProps> = ({
   className = '',
   height = 32,
   barCount = 15,
-  barColor = '#22c55e', // green-500
+  barColor = '#4F42D8', // iris
   backgroundColor = 'transparent',
   showMicIcon = true
 }) => {
@@ -210,7 +210,7 @@ export const AudioWaveform: React.FC<AudioWaveformProps> = ({
   console.log('AudioWaveform: Rendering component, isRecording:', isRecording, 'isPaused:', isPaused);
 
   return (
-    <div className={`inline-flex items-center gap-2 px-3 py-1.5 bg-white/80 backdrop-blur-md border border-white/20 rounded-full shadow-lg ${className}`}>
+    <div className={`inline-flex items-center gap-2 px-3 py-1.5 bg-card border border-border rounded-full shadow-lg ${className}`}>
       {/* Waveform */}
       <div className="relative">
         <canvas
@@ -230,7 +230,7 @@ export const AudioWaveform: React.FC<AudioWaveformProps> = ({
       
       {/* Microphone indicator */}
       {showMicIcon && (
-        <div className={`flex items-center ${isRecording && !isPaused ? 'text-green-500' : 'text-muted-foreground'}`}>
+        <div className={`flex items-center ${isRecording && !isPaused ? 'text-ok' : 'text-muted-foreground'}`}>
           <Mic size={12} />
         </div>
       )}
@@ -240,7 +240,7 @@ export const AudioWaveform: React.FC<AudioWaveformProps> = ({
         variant="ghost"
         size="sm"
         onClick={isPaused ? onResume : onPause}
-        className="h-6 w-6 p-0 hover:bg-white/20"
+        className="h-6 w-6 p-0 hover:bg-well"
         title={isPaused ? "Resume Recording" : "Pause Recording"}
       >
         {isPaused ? <Play size={10} /> : <Pause size={10} />}

@@ -1,145 +1,98 @@
-"use client";
+'use client';
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { House as Home, Users, BellRinging as BellRing, ArrowSquareLeft as PanelLeftClose, ArrowSquareRight as PanelLeftOpen, Lightning as Zap, BookOpen } from '@phosphor-icons/react';
-import React, { useEffect } from "react";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
+import * as React from 'react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { SidebarSimple } from '@phosphor-icons/react';
+import Mark from '@/components/brand/Mark';
+import AccountMenu from '@/components/layout/AccountMenu';
+import { NAV_ITEMS, isActive } from '@/components/layout/navItems';
+import { PRODUCT_NAME } from '@/lib/brand';
+import { cn } from '@/lib/utils';
 
-const SIDEBAR_EXPANDED_WIDTH_REM = 14;
-const SIDEBAR_COLLAPSED_WIDTH_REM = 4.5;
+const KEY = 'fs_sidebar_collapsed';
+const EXPANDED = '15rem';
+const COLLAPSED = '4.5rem';
 
+// The navigation rail on wide screens, in ink (the file keeps its 2025 name).
+// It sets --actual-sidebar-width, which the advisor's composer centres on.
 export default function GlassSidebar() {
-  const pathname = usePathname();
-  const [collapsed, setCollapsed] = React.useState<boolean>(() => {
-    if (typeof window !== "undefined") {
-      return localStorage.getItem("fs_sidebar_collapsed") === "true";
-    }
-    return false;
-  });
+  const pathname = usePathname() ?? '/';
+  const [collapsed, setCollapsed] = React.useState(false);
 
-  const toggle = () => {
-    setCollapsed((c) => {
-      if (typeof window !== "undefined") {
-        localStorage.setItem("fs_sidebar_collapsed", (!c).toString());
-      }
-      return !c;
-    });
-  };
+  React.useEffect(() => {
+    try { setCollapsed(localStorage.getItem(KEY) === 'true'); } catch { /* storage blocked */ }
+  }, []);
 
-  useEffect(() => {
+  React.useEffect(() => {
     const root = document.documentElement;
-    const lgMediaQuery = window.matchMedia("(min-width: 1024px)");
-
-    const updateSidebarStyling = () => {
-      if (lgMediaQuery.matches) {
-        const currentSidebarWidth = collapsed
-          ? `${SIDEBAR_COLLAPSED_WIDTH_REM}rem`
-          : `${SIDEBAR_EXPANDED_WIDTH_REM}rem`;
-        root.style.setProperty("--actual-sidebar-width", currentSidebarWidth);
-        root.classList.remove("no-lg-sidebar");
-        root.classList.toggle("lg-sidebar-collapsed", collapsed);
-        root.classList.toggle("lg-sidebar-expanded", !collapsed);
-      } else {
-        root.style.setProperty("--actual-sidebar-width", "0rem");
-        root.classList.add("no-lg-sidebar");
-        root.classList.remove("lg-sidebar-collapsed", "lg-sidebar-expanded");
-      }
-    };
-
-    updateSidebarStyling();
-
-    lgMediaQuery.addEventListener("change", updateSidebarStyling);
-
-    return () => {
-      lgMediaQuery.removeEventListener("change", updateSidebarStyling);
-    };
+    const lg = window.matchMedia('(min-width: 1024px)');
+    const apply = () => root.style.setProperty('--actual-sidebar-width', lg.matches ? (collapsed ? COLLAPSED : EXPANDED) : '0rem');
+    apply();
+    lg.addEventListener('change', apply);
+    return () => lg.removeEventListener('change', apply);
   }, [collapsed]);
 
-  const items = [
-    { key: "dashboard", label: "Dashboard", icon: Home },
-    { key: "patients", label: "Patients", icon: Users },
-    { key: "guidelines", label: "Guidelines", icon: BookOpen },
-    { key: "alerts", label: "Alerts", icon: BellRing },
-  ];
+  const toggle = () => setCollapsed((c) => {
+    try { localStorage.setItem(KEY, String(!c)); } catch { /* storage blocked */ }
+    return !c;
+  });
+
   return (
-    <div className={`min-h-[calc(100svh-4rem)] ${collapsed ? 'w-[4.5rem]' : 'w-56'} backdrop-blur-xl bg-transparent border-r border-[rgba(255,255,255,0.084)] flex flex-col pt-6 pb-3 px-3 hidden lg:flex transition-all duration-300 ease-in-out overflow-hidden`}>
-      <TooltipProvider delayDuration={0}>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              aria-label={collapsed ? "Maximize menu" : "Minimize menu"}
-              onClick={toggle}
-              className={`sidebar-button-bg rounded-full w-8 h-8 mb-4 ${collapsed ? 'self-center' : 'self-start ml-1'} hover:bg-white/20`}
-            >
-              {collapsed ? (
-                <PanelLeftOpen strokeWidth={1.5} className="h-5 w-5 text-black" />
-              ) : (
-                <PanelLeftClose strokeWidth={1.5} className="h-5 w-5 text-black" />
-              )}
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent side="right" className="sidebar-collapse-tooltip">
-            <p>{collapsed ? "Maximize menu" : "Minimize menu"}</p>
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
-      
-      {(() => {
-        const isAdvisorActive = pathname.startsWith("/advisor");
-        return (
-          <Link
-            href="/advisor"
-            aria-label="Open Advisor chat"
-            className={`flex items-center h-10 ${collapsed ? 'justify-center' : 'gap-3'} mb-1 rounded-md px-3 py-2 transition-colors ${isAdvisorActive ? 'bg-neon/40 text-text font-semibold' : 'hover:bg-white/10'}`}
-            title={collapsed ? 'Advisor' : undefined}
-          >
-            <Zap
-              strokeWidth={1.5}
-              className={cn(
-                "h-[1.125em] w-[1.125em] flex-shrink-0 filter drop-shadow-sm",
-                isAdvisorActive ? "text-black" : "text-black"
-              )}
-            />
-            {!collapsed && (
-              <span
-                className={cn(
-                  'truncate filter drop-shadow-md',
-                  isAdvisorActive
-                    ? 'text-black font-semibold'
-                    : 'bg-gradient-to-br from-custom-blue-teal to-white bg-clip-text text-transparent sheen'
-                )}
-              >
-                Advisor
-              </span>
-            )}
-          </Link>
-        );
-      })()}
-      {items.map(({ key, label, icon: Icon }) => {
-        const href = `/${key === "dashboard" ? "" : key}`;
-        const isActive = pathname === href || (href !== "/" && pathname.startsWith(href));
-        return (
-          <Link
-            key={key}
-            href={href}
-            className={`flex items-center h-10 ${collapsed ? 'justify-center' : 'gap-3'} mb-1 rounded-md px-3 py-2 transition-colors ${isActive ? "bg-neon/40 text-text font-semibold" : "hover:bg-white/10"}`}
-            title={collapsed ? label : undefined}
-          >
-            <Icon className="h-[1.125em] w-[1.125em] flex-shrink-0" />
-            {!collapsed && <span className="truncate">{label}</span>}
-          </Link>
-        );
-      })}
-    </div>
+    <aside
+      className={cn(
+        'relative hidden shrink-0 flex-col bg-rail text-rail-ink transition-[width] duration-300 ease-[cubic-bezier(.22,1,.36,1)] lg:flex',
+        collapsed ? 'w-[4.5rem]' : 'w-[15rem]',
+      )}
+    >
+      <Link
+        href="/"
+        aria-label={PRODUCT_NAME}
+        className={cn('flex h-16 items-center gap-3 text-white', collapsed ? 'justify-center' : 'px-6')}
+      >
+        <span className="inline-flex h-8 w-8 items-center justify-center rounded-[0.6rem] bg-white/[0.07] ring-1 ring-white/10">
+          <Mark size={18} />
+        </span>
+        {!collapsed && <span className="truncate font-display text-[1.2rem] leading-none tracking-[-0.01em]">{PRODUCT_NAME}</span>}
+      </Link>
+
+      <nav aria-label="Main" className={cn('mt-4 flex-1', collapsed ? 'px-3' : 'px-4')}>
+        <ul className="flex flex-col gap-1">
+          {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
+            const active = isActive(pathname, href);
+            return (
+              <li key={href}>
+                <Link
+                  href={href}
+                  aria-current={active ? 'page' : undefined}
+                  title={collapsed ? label : undefined}
+                  className={cn(
+                    'group relative flex h-10 items-center gap-3 rounded-[0.65rem] px-3 text-[0.875rem] transition-colors duration-150',
+                    collapsed && 'justify-center px-0',
+                    active ? 'bg-white/[0.08] text-white' : 'text-rail-ink hover:bg-white/[0.04] hover:text-white',
+                  )}
+                >
+                  {active ? <span className="absolute -left-4 top-2 bottom-2 w-[3px] rounded-r-full bg-iris" aria-hidden /> : null}
+                  <Icon size={19} weight={active ? 'fill' : 'regular'} className={active ? 'text-[hsl(245_90%_78%)]' : 'text-rail-muted group-hover:text-rail-ink'} aria-hidden />
+                  {!collapsed && <span className="truncate">{label}</span>}
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      </nav>
+
+      <div className={cn('flex items-center border-t border-white/[0.06] py-4', collapsed ? 'flex-col gap-3 px-3' : 'justify-between px-5')}>
+        <AccountMenu tone="dark" side="right" align="end" />
+        <button
+          type="button"
+          onClick={toggle}
+          className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-rail-muted transition-colors hover:bg-white/[0.06] hover:text-white"
+          aria-label={collapsed ? 'Expand' : 'Collapse'}
+        >
+          <SidebarSimple size={18} aria-hidden />
+        </button>
+      </div>
+    </aside>
   );
 }

@@ -110,11 +110,11 @@ export default function AIAnalysisPanel({ patientId, encounterId, onSave }: AIAn
                 placeholder="Diagnosis name"
               />
               {analysisResult.diagnosticResult.diagnosisCode && (
-                <span className="text-sm text-gray-600">
+                <span className="text-sm text-ink-2">
                   Code: {analysisResult.diagnosticResult.diagnosisCode}
                 </span>
               )}
-              <span className="text-sm text-gray-600">
+              <span className="text-sm text-ink-2">
                 Confidence: {(analysisResult.diagnosticResult.confidence * 100).toFixed(0)}%
               </span>
             </div>
@@ -125,9 +125,9 @@ export default function AIAnalysisPanel({ patientId, encounterId, onSave }: AIAn
             <h3 className="text-lg font-semibold mb-2">Differential Diagnoses</h3>
             <ul className="space-y-2">
               {analysisResult.diagnosticResult.differentialDiagnoses.map((diff, idx) => (
-                <li key={idx} className="p-3 bg-gray-50 rounded-lg">
+                <li key={idx} className="p-3 bg-well/50 rounded-lg">
                   <div className="font-medium">{diff.name}</div>
-                  <div className="text-sm text-gray-600">
+                  <div className="text-sm text-ink-2">
                     Likelihood: {diff.likelihood} | Key factors: {diff.keyFactors}
                   </div>
                 </li>
@@ -139,7 +139,7 @@ export default function AIAnalysisPanel({ patientId, encounterId, onSave }: AIAn
           {analysisResult.diagnosticResult.recommendedTests.length > 0 && (
             <div>
               <h3 className="text-lg font-semibold mb-2">Recommended Tests</h3>
-              <div className="p-3 bg-blue-50 rounded-lg">
+              <div className="p-3 bg-info-soft rounded-lg">
                 {analysisResult.diagnosticResult.recommendedTests.join('; ')}
               </div>
             </div>
@@ -151,7 +151,7 @@ export default function AIAnalysisPanel({ patientId, encounterId, onSave }: AIAn
               <h3 className="text-lg font-semibold mb-2">Recommended Treatments</h3>
               <ul className="list-disc list-inside space-y-1">
                 {analysisResult.diagnosticResult.recommendedTreatments.map((treatment, idx) => (
-                  <li key={idx} className="text-gray-700">{treatment}</li>
+                  <li key={idx} className="text-ink">{treatment}</li>
                 ))}
               </ul>
             </div>
@@ -161,7 +161,7 @@ export default function AIAnalysisPanel({ patientId, encounterId, onSave }: AIAn
           {analysisResult.soapNote && (
             <div>
               <h3 className="text-lg font-semibold mb-2">Draft SOAP Note</h3>
-              <div className="p-4 bg-gray-50 rounded-lg text-sm whitespace-pre-wrap">
+              <div className="p-4 bg-well/50 rounded-lg text-sm whitespace-pre-wrap">
                 <div className="mb-2"><strong>S:</strong> {analysisResult.soapNote.subjective}</div>
                 <div className="mb-2"><strong>O:</strong> {analysisResult.soapNote.objective}</div>
                 <div className="mb-2"><strong>A:</strong> {analysisResult.soapNote.assessment}</div>

@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ClinicalEngineServiceV3 } from '@/lib/clinicalEngineServiceV3';
 import { ClinicalOutputPackage } from '@/lib/types';
+import { openAIKeyMissingResponse } from '@/lib/serverGuards';
 
 export async function POST(request: NextRequest) {
+  const noKey = openAIKeyMissingResponse();
+  if (noKey) return noKey;
   try {
     const { patientId, encounterId, transcript } = await request.json();
 

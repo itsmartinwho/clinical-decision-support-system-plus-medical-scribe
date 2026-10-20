@@ -1,73 +1,89 @@
 'use client';
 
-import Link from "next/link";
-import Image from "next/image";
-import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
-import EnhancedSearch from "@/components/ui/EnhancedSearch";
-import { useDemo } from "@/contexts/DemoContext";
-import { ArrowClockwise } from '@phosphor-icons/react';
+import * as React from 'react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { MagnifyingGlass, X } from '@phosphor-icons/react';
+import EnhancedSearch from '@/components/ui/EnhancedSearch';
+import Mark from '@/components/brand/Mark';
+import AccountMenu from '@/components/layout/AccountMenu';
+import { NAV_ITEMS, isActive } from '@/components/layout/navItems';
+import { PRODUCT_NAME } from '@/lib/brand';
+import { cn } from '@/lib/utils';
 
+const SEARCH_INPUT =
+  'h-10 w-full rounded-xl border border-hairline bg-card pl-10 pr-9 text-sm text-foreground shadow-card placeholder:text-muted-foreground transition-shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 unified-search-input';
+const PLACEHOLDER = 'Search patients, guidelines, conditions...';
+
+// The top bar (the file keeps its 2025 name). On wide screens: search and
+// nothing else, over the canvas. On a phone: the mark, search and the
+// account in ink, with the navigation as a row of icons.
 export default function GlassHeader() {
-  const { hasDemoRun, demoStage } = useDemo();
-  
-  const handleResetDemo = () => {
-    console.log('Demo reset from header menu');
-    localStorage.removeItem('hasDemoRun_v3');
-    window.location.reload();
-  };
+  const pathname = usePathname() ?? '/';
+  const [searchOpen, setSearchOpen] = React.useState(false);
+  React.useEffect(() => setSearchOpen(false), [pathname]);
 
   return (
-    <header className="fixed inset-x-0 top-0 z-40 h-12 flex items-center justify-between px-[clamp(1rem,3vw,2.5rem)] backdrop-blur-xl border-b border-[rgba(255,255,255,0.084)] bg-transparent">
-      <div className="flex items-center gap-2">
-        <Link href="/" className="flex items-center gap-0">
-          <Image
-            src="/images/word-logo.png"
-            alt="Foresight Logo"
-            width={90}
-            height={24}
-            className="h-6 w-auto"
-          />
-        </Link>
-      </div>
-      <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8">
-        <div className="w-full max-w-5xl">
-          <EnhancedSearch
-            portal
-            inputClassName="h-8 bg-[rgba(255,255,255,0.06)] backdrop-blur-sm focus-visible:ring-2 focus-visible:ring-[rgba(95,243,255,0.4)] focus:outline-none rounded-full px-3 unified-search-input placeholder:text-[#F0F0F0] placeholder:opacity-75 w-full"
-            placeholder="Search patients, guidelines, conditions..."
-          />
+    <header className="relative z-40 shrink-0">
+      <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-2 focus:z-50 focus:rounded-lg focus:bg-ink focus:px-3 focus:py-2 focus:text-white">
+        Skip to content
+      </a>
+
+      {/* Wide screens */}
+      <div className="hidden h-16 items-center gap-4 px-8 lg:flex xl:px-10">
+        <div className="w-full max-w-xl">
+          <EnhancedSearch portal inputClassName={SEARCH_INPUT} placeholder={PLACEHOLDER} />
         </div>
       </div>
-      <div className="flex items-center">
-        <Popover>
-          <PopoverTrigger asChild>
-            <Image
-              src="https://i.pravatar.cc/32?u=clinician"
-              alt="avatar"
-              width={32}
-              height={32}
-              className="rounded-full cursor-pointer"
-            />
-          </PopoverTrigger>
-          <PopoverContent className="glass rounded-md p-2 flex flex-col">
-            <Link href="/analytics" className="px-4 py-2 rounded hover:bg-white/10">
-              Analytics
-            </Link>
-            <Link href="/settings" className="px-4 py-2 rounded hover:bg-white/10">
-              Settings
-            </Link>
-            {(hasDemoRun || demoStage === 'finished') && (
-              <button
-                onClick={handleResetDemo}
-                className="px-4 py-2 rounded hover:bg-white/10 text-left flex items-center gap-2"
+
+      {/* Phones and tablets */}
+      <div className="bg-rail text-white lg:hidden">
+        <div className="flex h-14 items-center gap-3 px-4">
+          <Link href="/" aria-label={PRODUCT_NAME} className="flex min-w-0 items-center gap-2.5">
+            <span className="inline-flex h-8 w-8 items-center justify-center rounded-[0.6rem] bg-white/[0.07] ring-1 ring-white/10">
+              <Mark size={17} />
+            </span>
+            <span className="truncate font-display text-[1.15rem] leading-none tracking-[-0.01em]">{PRODUCT_NAME}</span>
+          </Link>
+          <div className="ml-auto flex items-center gap-1.5">
+            <button
+              type="button"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-rail-ink hover:bg-white/[0.06] hover:text-white"
+              aria-label="Search"
+              aria-expanded={searchOpen}
+              onClick={() => setSearchOpen((v) => !v)}
+            >
+              {searchOpen ? <X size={18} /> : <MagnifyingGlass size={18} />}
+            </button>
+            <AccountMenu tone="dark" />
+          </div>
+        </div>
+        {searchOpen ? (
+          <div className="px-4 pb-3">
+            <EnhancedSearch inputClassName={SEARCH_INPUT} placeholder={PLACEHOLDER} />
+          </div>
+        ) : null}
+        <nav aria-label="Main" className="grid grid-cols-5 px-2">
+          {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
+            const active = isActive(pathname, href);
+            return (
+              <Link
+                key={href}
+                href={href}
+                aria-current={active ? 'page' : undefined}
+                aria-label={label}
+                className={cn(
+                  'relative flex h-11 items-center justify-center transition-colors',
+                  active ? 'text-white' : 'text-rail-muted hover:text-rail-ink',
+                )}
               >
-                <ArrowClockwise className="h-4 w-4" />
-                Reset Demo
-              </button>
-            )}
-          </PopoverContent>
-        </Popover>
+                <Icon size={21} weight={active ? 'fill' : 'regular'} aria-hidden />
+                <span className={cn('absolute bottom-0 h-[3px] w-6 rounded-t-full transition-colors', active ? 'bg-iris' : 'bg-transparent')} aria-hidden />
+              </Link>
+            );
+          })}
+        </nav>
       </div>
     </header>
   );
-} 
+}

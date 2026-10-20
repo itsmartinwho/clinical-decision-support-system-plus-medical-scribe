@@ -1,46 +1,28 @@
 'use client';
-import React, { useState, useEffect, useMemo } from "react";
-import { Card, CardHeader, CardContent, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
+import Link from "next/link";
+import { useRouter } from 'next/navigation';
+import { Stethoscope, ClipboardText, PaperPlaneTilt, Eye, Play, CaretRight, ArrowRight } from '@phosphor-icons/react';
 import { Button } from "@/components/ui/button";
-import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
-import { PlayCircle, Eye } from '@phosphor-icons/react';
 import { supabaseDataService } from "@/lib/supabaseDataService";
 import type { Patient, Encounter, ComplexCaseAlert } from "@/lib/types";
 import NewConsultationModal from '../modals/NewConsultationModal';
-import LoadingAnimation from '@/components/LoadingAnimation';
 import ContentSurface from '@/components/layout/ContentSurface';
-// No Progress import needed for this change
-import Image from 'next/image';
-import { useRouter } from 'next/navigation';
-// No BarChart imports needed for this change
-
-// Import shared UI components
-// No LikelihoodBadge import needed for this change
-import NotificationBell from "@/components/ui/NotificationBell";
-import AlertSidePanel from "@/components/ui/AlertSidePanel";
-
-// Demo Context and UI
+import PageHeader from '@/components/layout/PageHeader';
+import PatientAvatar from '@/components/ui/PatientAvatar';
+import NotificationBell from '@/components/ui/NotificationBell';
+import AlertSidePanel from '@/components/ui/AlertSidePanel';
+import { EmptyState, ErrorState, LoadingState, SectionHeading } from '@/components/ui/states';
+import MarkLoader from '@/components/brand/MarkLoader';
 import { useDemo } from "@/contexts/DemoContext";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-  DraggableDialogContent,
-} from "@/components/ui/dialog";
-
-// Import side panel configuration
-import { SIDE_PANEL_CONFIG } from '@/lib/side-panel-config';
-
-// Import modal manager
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useModalManager } from "@/components/ui/modal-manager";
 import FormCreationModal from '@/components/modals/FormCreationModal';
 import PatientDataModal from '@/components/modals/PatientDataModal';
+import { encounterReason, encounterWhen, formatDate, formatTime, patientName, severityTone } from '@/lib/format';
+import { PRODUCT_NAME } from '@/lib/brand';
 
-// Type for upcoming appointments, specific to this view
-type UpcomingEntry = { patient: Patient; encounter: Encounter };
+type Entry = { patient: Patient; encounter: Encounter };
 
 interface DashboardViewProps {
   onAlertClick: (patientId: string) => void;
@@ -49,347 +31,231 @@ interface DashboardViewProps {
 
 export default function DashboardView({ onAlertClick, allAlerts }: DashboardViewProps) {
   const router = useRouter();
-  const [upcomingAppointments, setUpcomingAppointments] = useState<UpcomingEntry[]>([]);
-  const [isLoadingAppointments, setIsLoadingAppointments] = useState(true);
+  const [upcoming, setUpcoming] = useState<Entry[]>([]);
+  const [past, setPast] = useState<Entry[]>([]);
+  const [pastCount, setPastCount] = useState(0);
+  const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading');
+  const [error, setError] = useState<string | null>(null);
   const [isAlertPanelOpen, setIsAlertPanelOpen] = useState(false);
   const [showNewConsultModal, setShowNewConsultModal] = useState(false);
   const [showPriorAuthModal, setShowPriorAuthModal] = useState(false);
   const [showReferralModal, setShowReferralModal] = useState(false);
-  const [showPatientDataModal, setShowPatientDataModal] = useState(false);
   const [selectedPatientForData, setSelectedPatientForData] = useState<Patient | null>(null);
 
-  const {
-    hasDemoRun,
-    isDemoModalOpen,
-    demoStage,
-    startDemo,
-    skipDemo,
-    setDemoModalOpen,
-    isDemoActive,
-  } = useDemo();
+  const { isDemoModalOpen, demoStage, startDemo, skipDemo, setDemoModalOpen } = useDemo();
+  const startButtonRef = React.useRef<HTMLButtonElement>(null);
 
-  // Automatically show New Consultation modal if it was restored from another page
+  // Reopen the New Consultation modal when it was restored from another page.
   const { getModalState } = useModalManager();
   const pendingRestoredDashboardModal = getModalState('new-consultation-dashboard');
-
-  // Stabilize demo modal draggableConfig to prevent infinite re-renders
-  const stableDemoDraggableConfig = useMemo(() => ({
-    id: 'demo-intro-modal',
-    title: '',
-    defaultPosition: typeof window !== 'undefined' ? {
-      x: Math.max(50, Math.round((window.innerWidth - 750) / 2)),
-      y: Math.round((window.innerHeight - Math.min(window.innerHeight * 0.85, 700)) / 2),
-    } : { x: 200, y: 100 },
-    persistent: false
-  }), []); // Empty dependency array since window dimensions are stable per session
-
-  // Memoize demo modal content to prevent re-rendering
-  const stableDemoModalContent = useMemo(() => {
-    if (demoStage !== 'introModal' || !isDemoModalOpen) {
-      return null;
-    }
-
-    return (
-      <div className="flex flex-col items-center justify-center text-center space-y-8 min-h-[500px]">
-        <DialogHeader className="space-y-0">
-          <DialogTitle className="text-center text-3xl font-bold">See Foresight in Action</DialogTitle>
-        </DialogHeader>
-        <div className="flex justify-center items-center flex-1">
-          <Image
-            src="/images/background_waves_larger.gif"
-            alt="Foresight Animation"
-            width={600}
-            height={350}
-            className="max-w-full max-h-72 w-auto h-auto object-contain rounded-lg"
-            style={{ maxWidth: '600px', maxHeight: '350px' }}
-            unoptimized
-          />
-        </div>
-        <DialogFooter className="flex flex-row justify-center gap-6 mt-4">
-          <Button
-            variant="outline"
-            size="lg"
-            onClick={skipDemo}
-            className="min-w-[100px]"
-          >
-            Skip
-          </Button>
-          <Button
-            size="lg"
-            onClick={startDemo}
-            className="min-w-[140px]"
-          >
-            Start Demo
-          </Button>
-        </DialogFooter>
-      </div>
-    );
-  }, [demoStage, isDemoModalOpen, startDemo, skipDemo]);
-
   useEffect(() => {
-    if (
-      pendingRestoredDashboardModal &&
-      !pendingRestoredDashboardModal.isMinimized &&
-      !pendingRestoredDashboardModal.isVisible
-    ) {
-      // Open the modal so that it can register itself and become visible
+    if (pendingRestoredDashboardModal && !pendingRestoredDashboardModal.isMinimized && !pendingRestoredDashboardModal.isVisible) {
       setShowNewConsultModal(true);
     }
   }, [pendingRestoredDashboardModal]);
 
-  // Debug demo state - reduce frequency and use useMemo to prevent object recreation
-  const demoStateDebug = useMemo(() => ({
-    hasDemoRun,
-    isDemoModalOpen,
-    demoStage,
-    isDemoActive
-  }), [hasDemoRun, isDemoModalOpen, demoStage, isDemoActive]);
-
-  useEffect(() => {
-    // Only log demo state changes in development and less frequently
-    if (process.env.NODE_ENV === 'development') {
-      console.log('DashboardView demo state:', demoStateDebug);
+  const load = useCallback(async (silent = false) => {
+    if (!silent) setStatus('loading');
+    setError(null);
+    try {
+      await supabaseDataService.loadPatientData();
+      const pastAll = supabaseDataService.getPastConsultations() as Entry[];
+      setUpcoming(supabaseDataService.getUpcomingConsultations() as Entry[]);
+      setPast(pastAll.slice(0, 6));
+      setPastCount(pastAll.length);
+      setStatus('ready');
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+      setStatus('error');
     }
-  }, [demoStateDebug]);
-
-  useEffect(() => {
-    const loadUpcomingAppointments = async () => {
-      setIsLoadingAppointments(true);
-      if (supabaseDataService.getAllPatients().length === 0) {
-        await supabaseDataService.loadPatientData();
-      }
-      const upcoming = supabaseDataService.getUpcomingConsultations() as UpcomingEntry[];
-      setUpcomingAppointments(upcoming);
-      setIsLoadingAppointments(false);
-    };
-    loadUpcomingAppointments();
   }, []);
 
-  const highPriorityAlertsCount = allAlerts.filter(
-    alert => alert.likelihood !== undefined && alert.likelihood >= 4
-  ).length;
+  useEffect(() => {
+    load();
+    const refresh = () => { load(true); };
+    supabaseDataService.subscribe(refresh);
+    return () => supabaseDataService.unsubscribe(refresh);
+  }, [load]);
 
-  if (isLoadingAppointments) {
-    return <LoadingAnimation />;
-  }
+  const critical = useMemo(() => allAlerts.some((a) => severityTone(a.severity, a.likelihood) === 'critical'), [allAlerts]);
 
   return (
-    <ContentSurface fullBleed className="p-6 flex flex-col relative">
-      {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-step-1 font-semibold">Upcoming Consultations</h1>
-      </div>
+    <ContentSurface>
+      <PageHeader
+        title="Upcoming Consultations"
+        aside={<NotificationBell count={allAlerts.length} critical={critical} onClick={() => setIsAlertPanelOpen(true)} />}
+      />
 
-      {/* Main Content Area */}
-      <div className="flex-1 overflow-y-auto pr-80 pt-4 pl-8">
-        {/* Main Content - Table */}
-        {upcomingAppointments.length > 0 ? (
-          <Table className="mobile-card:block sm:table text-step-0">
-            <TableHeader className="mobile-card:hidden sm:table-header-group">
-              <TableRow>
-                <TableHead className="w-24">Time</TableHead>
-                <TableHead className="w-40">Patient</TableHead>
-                <TableHead className="w-32">Reason</TableHead>
-                <TableHead className="w-44"></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody className="mobile-card:block sm:table-row-group">
-              {upcomingAppointments.map(({ patient: p, encounter }) => (
-                <TableRow
-                  key={`upcoming_dashboard_${p.id}_${encounter.id}`}
-                  className="mobile-card:relative mobile-card:rounded-xl mobile-card:bg-glass mobile-card:backdrop-blur-sm mobile-card:overflow-hidden mobile-card:mb-3 mobile-card:grid mobile-card:grid-cols-2 mobile-card:gap-x-2 mobile-card:p-4 sm:table-row cursor-pointer hover:bg-white/10 hover:backdrop-blur-md transition-all duration-200 hover:shadow-md"
-                  onClick={() => {
-                    // Navigate to patient workspace without auto-starting consultation
-                    router.push(`/patients/${p.id}?tab=consultation&encounterId=${encounter.id}`);
-                  }}
-                >
-                  <TableCell data-column="Time" className="mobile-card:flex mobile-card:flex-col sm:table-cell w-24">
-                    <span className="mobile-card:text-xs mobile-card:text-muted-foreground sm:hidden">Time: </span>
-                    <div className="text-sm font-medium">
-                      {encounter.scheduledStart ? new Date(encounter.scheduledStart).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit'}) : "N/A"}
-                    </div>
-                  </TableCell>
-                  <TableCell data-column="Patient" className="mobile-card:flex mobile-card:flex-col sm:table-cell w-40">
-                    <span className="mobile-card:text-xs mobile-card:text-muted-foreground sm:hidden">Patient: </span>
-                    <div className="flex items-center">
-                      {p.photo && (
-                        <Image src={p.photo} alt={p.name || "Patient photo"} width={24} height={24} className="rounded-full inline-block mr-2 mobile-card:hidden flex-shrink-0" />
-                      )}
-                      <span className="text-sm font-medium truncate">{p.name}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell data-column="Reason" className="mobile-card:flex mobile-card:flex-col sm:table-cell w-32">
-                    <span className="mobile-card:text-xs mobile-card:text-muted-foreground sm:hidden">Reason: </span>
-                    <div className="text-sm leading-snug break-words" title={encounter.reasonDisplayText || encounter.reasonCode || 'N/A'}>
-                      {encounter.reasonDisplayText || encounter.reasonCode || 'N/A'}
-                    </div>
-                  </TableCell>
-                  <TableCell className="mobile-card:col-span-2 mobile-card:mt-2 sm:table-cell text-right w-44">
-                    <div className="flex gap-1 mobile-card:flex-col sm:flex-row justify-end">
-                      <Button
-                        variant="outline"
-                        iconLeft={<Eye />}
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation(); // Prevent row click when button is clicked
-                          setSelectedPatientForData(p);
-                          setShowPatientDataModal(true);
-                        }}
-                        className="gap-1 text-xs px-2 py-1 h-7 mobile-card:w-full"
+      {status === 'loading' ? <LoadingState /> : null}
+      {status === 'error' ? <ErrorState message={error} onRetry={() => load()} /> : null}
+
+      {status === 'ready' ? (
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_19rem] lg:gap-8">
+          <div className="min-w-0 space-y-6">
+            <section className="rounded-[var(--radius-lg)] border border-hairline bg-card shadow-card" aria-label="Upcoming Consultations">
+              {upcoming.length === 0 ? (
+                <EmptyState title="No upcoming consultations scheduled." />
+              ) : (
+                <ul className="rise-in-stagger divide-y divide-hairline">
+                  {upcoming.map(({ patient, encounter }) => (
+                    <li key={`${patient.id}_${encounter.id}`} className="flex flex-wrap items-center gap-x-5 gap-y-3 px-5 py-4">
+                      <div className="w-16 shrink-0">
+                        <div className="data-mono text-lg leading-none text-ink">{formatTime(encounter.scheduledStart)}</div>
+                        <div className="data-mono mt-1 text-xs text-muted-foreground">{formatDate(encounter.scheduledStart)}</div>
+                      </div>
+                      <Link href={`/patients/${patient.id}?tab=consultation&encounterId=${encounter.id}`} className="flex min-w-0 flex-1 items-center gap-3">
+                        <PatientAvatar patient={patient} size={38} />
+                        <span className="min-w-0">
+                          <span className="block truncate font-display text-[1.15rem] leading-tight text-ink">{patientName(patient)}</span>
+                          <span className="block truncate text-sm text-muted-foreground">{encounterReason(encounter)}</span>
+                        </span>
+                      </Link>
+                      <div className="flex gap-2">
+                        <Button size="sm" variant="secondary" iconLeft={<Eye />} onClick={() => setSelectedPatientForData(patient)}>Prepare</Button>
+                        <Button size="sm" iconLeft={<Play weight="fill" />} onClick={() => router.push(`/patients/${patient.id}?tab=consultation&encounterId=${encounter.id}&autoStartTranscription=true`)}>Start</Button>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+
+            {past.length > 0 ? (
+              <section className="rounded-[var(--radius-lg)] border border-hairline bg-card shadow-card">
+                <SectionHeading className="px-5 pb-2 pt-5" count={pastCount}>Past Consultations</SectionHeading>
+                <ul className="rise-in-stagger px-2 pb-2">
+                  {past.map(({ patient, encounter }) => (
+                    <li key={`${patient.id}_${encounter.id}`}>
+                      <Link
+                        href={`/patients/${patient.id}?tab=consultation&encounterId=${encounter.id}`}
+                        className="group grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-4 rounded-xl px-3 py-3 transition-colors hover:bg-well"
                       >
-                        Prepare
-                      </Button>
-                      <Button
-                        variant="secondary"
-                        iconLeft={<PlayCircle />}
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation(); // Prevent row click when button is clicked
-                          // Navigate to patient workspace WITH auto-start consultation
-                          router.push(`/patients/${p.id}?tab=consultation&encounterId=${encounter.id}&autoStartTranscription=true`);
-                        }}
-                        className="gap-1 text-xs px-2 py-1 h-7 mobile-card:w-full"
-                      >
-                        Start
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        ) : (
-          <p className="text-sm text-muted-foreground">No upcoming consultations scheduled.</p>
-        )}
-      </div>
-
-      {/* Fixed Right Side Panel - New Consultation */}
-      <div className="fixed top-36 right-6 bottom-6 w-72 z-10 flex flex-col space-y-4">
-        {/* New Consultation */}
-        <div 
-          className="relative flex-1 bg-sidebar/60 backdrop-blur-lg border border-border/20 rounded-xl p-6 pb-8 flex flex-col items-center justify-center cursor-pointer hover:bg-sidebar-accent transition-colors overflow-hidden"
-          onClick={() => setShowNewConsultModal(true)}
-        >
-          {/* Background Image with transparency */}
-          <div 
-            className="absolute inset-0 rounded-xl"
-            style={{
-              backgroundImage: `url(${SIDE_PANEL_CONFIG.backgroundImage})`,
-              backgroundSize: SIDE_PANEL_CONFIG.backgroundSize,
-              backgroundPosition: SIDE_PANEL_CONFIG.backgroundPosition,
-              backgroundRepeat: SIDE_PANEL_CONFIG.backgroundRepeat,
-              opacity: SIDE_PANEL_CONFIG.opacity,
-              zIndex: -1,
-            }}
-          />
-          
-          {/* Content on top of background */}
-          <div className="relative text-center space-y-4 z-10">
-            <div className="w-16 h-16 bg-white/60 backdrop-blur-xl rounded-full flex items-center justify-center mx-auto shadow-lg">
-              <span className="text-2xl">🩺</span>
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold mb-2">New Consultation</h3>
-            </div>
+                        <PatientAvatar patient={patient} size={34} />
+                        <span className="min-w-0">
+                          <span className="block truncate text-[0.9375rem] font-medium text-ink">{encounterReason(encounter)}</span>
+                          <span className="mt-0.5 flex items-center gap-2 truncate text-sm text-muted-foreground">
+                            <span className="truncate">{patientName(patient)}</span>
+                            <span className="h-1 w-1 shrink-0 rounded-full bg-input/50" aria-hidden />
+                            <span className="data-mono shrink-0 text-xs">{formatDate(encounterWhen(encounter))}</span>
+                          </span>
+                        </span>
+                        <span className="flex items-center gap-3">
+                          {encounter.reasonCode ? (
+                            <span className="data-mono hidden rounded-md bg-well px-2 py-0.5 text-xs text-ink-2 ring-1 ring-hairline sm:inline">{encounter.reasonCode}</span>
+                          ) : null}
+                          <CaretRight size={14} className="text-muted-foreground transition-transform group-hover:translate-x-0.5" aria-hidden />
+                        </span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            ) : null}
           </div>
-        </div>
 
-        {/* Prior Authorization */}
-        <div 
-          className="relative flex-1 bg-sidebar/60 backdrop-blur-lg border border-border/20 rounded-xl p-6 pb-8 flex flex-col items-center justify-center cursor-pointer hover:bg-sidebar-accent transition-colors overflow-hidden"
-          onClick={() => setShowPriorAuthModal(true)}
-        >
-          <div className="absolute inset-0 rounded-xl" style={{ backgroundImage:`url(${SIDE_PANEL_CONFIG.backgroundImage})`, backgroundSize:SIDE_PANEL_CONFIG.backgroundSize, backgroundPosition:SIDE_PANEL_CONFIG.backgroundPosition, backgroundRepeat:SIDE_PANEL_CONFIG.backgroundRepeat, opacity:SIDE_PANEL_CONFIG.opacity, zIndex:-1 }} />
-          <div className="relative text-center space-y-4 z-10">
-            <div className="w-16 h-16 bg-white/60 backdrop-blur-xl rounded-full flex items-center justify-center mx-auto shadow-lg">
-              <span className="text-2xl">📋</span>
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold mb-2">Prior Authorization</h3>
-            </div>
-          </div>
+          <aside className="rise-in-stagger order-first grid grid-cols-2 gap-3 self-start lg:order-none lg:grid-cols-1">
+            <button
+              type="button"
+              onClick={() => setShowNewConsultModal(true)}
+              className="group relative isolate col-span-2 flex min-h-[8.5rem] flex-col justify-between overflow-hidden rounded-[var(--radius-lg)] bg-iris p-5 text-left text-white shadow-[0_14px_32px_-14px_hsl(var(--blue)/0.7)] transition-transform hover:-translate-y-0.5 lg:col-span-1 lg:min-h-[11rem]"
+            >
+              <MeterMotif />
+              <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-white/15 ring-1 ring-white/25">
+                <Stethoscope size={21} weight="bold" aria-hidden />
+              </span>
+              <span className="flex items-end justify-between gap-3">
+                <span className="font-display text-[1.45rem] leading-tight">New Consultation</span>
+                <ArrowRight size={18} className="mb-1 transition-transform group-hover:translate-x-1" aria-hidden />
+              </span>
+            </button>
+            <ActionTile icon={<ClipboardText size={20} aria-hidden />} label="Prior Authorization" onClick={() => setShowPriorAuthModal(true)} />
+            <ActionTile icon={<PaperPlaneTilt size={20} aria-hidden />} label="Referral" onClick={() => setShowReferralModal(true)} />
+          </aside>
         </div>
+      ) : null}
 
-        {/* Referral */}
-        <div 
-          className="relative flex-1 bg-sidebar/60 backdrop-blur-lg border border-border/20 rounded-xl p-6 pb-8 flex flex-col items-center justify-center cursor-pointer hover:bg-sidebar-accent transition-colors overflow-hidden"
-          onClick={() => setShowReferralModal(true)}
-        >
-          <div className="absolute inset-0 rounded-xl" style={{ backgroundImage:`url(${SIDE_PANEL_CONFIG.backgroundImage})`, backgroundSize:SIDE_PANEL_CONFIG.backgroundSize, backgroundPosition:SIDE_PANEL_CONFIG.backgroundPosition, backgroundRepeat:SIDE_PANEL_CONFIG.backgroundRepeat, opacity:SIDE_PANEL_CONFIG.opacity, zIndex:-1 }} />
-          <div className="relative text-center space-y-4 z-10">
-            <div className="w-16 h-16 bg-white/60 backdrop-blur-xl rounded-full flex items-center justify-center mx-auto shadow-lg">
-              <span className="text-2xl">📝</span>
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold mb-2">Referral</h3>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="fixed bottom-6 right-6 z-40">
-        <div className="bg-white p-2 rounded-full shadow-lg">
-          <NotificationBell
-            count={highPriorityAlertsCount}
-            onClick={() => setIsAlertPanelOpen(true)}
-          />
-        </div>
-      </div>
-
-      {isAlertPanelOpen && (
-        <AlertSidePanel
-          isOpen={true}
-          onClose={() => setIsAlertPanelOpen(false)}
-          alerts={allAlerts}
-          onAlertClick={onAlertClick}
-        />
-      )}
-      <NewConsultationModal 
-        open={showNewConsultModal} 
+      <AlertSidePanel isOpen={isAlertPanelOpen} onClose={() => setIsAlertPanelOpen(false)} alerts={allAlerts} onAlertClick={onAlertClick} />
+      <NewConsultationModal
+        open={showNewConsultModal}
         onOpenChange={setShowNewConsultModal}
         draggable={false}
         allowDragging={false}
-        draggableConfig={{
-          id: 'new-consultation-dashboard',
-          title: 'Start New Consultation',
-          persistent: false,
-        }}
+        draggableConfig={{ id: 'new-consultation-dashboard', title: 'Start New Consultation', persistent: false }}
       />
+      <FormCreationModal open={showPriorAuthModal} onOpenChange={setShowPriorAuthModal} formType="priorAuth" />
+      <FormCreationModal open={showReferralModal} onOpenChange={setShowReferralModal} formType="referral" />
+      <PatientDataModal isOpen={!!selectedPatientForData} onClose={() => setSelectedPatientForData(null)} patient={selectedPatientForData} />
 
-      {/* Prior Authorization Modal */}
-      <FormCreationModal
-        open={showPriorAuthModal}
-        onOpenChange={setShowPriorAuthModal}
-        formType="priorAuth"
-      />
-
-      {/* Referral Modal */}
-      <FormCreationModal
-        open={showReferralModal}
-        onOpenChange={setShowReferralModal}
-        formType="referral"
-      />
-
-      {/* Demo Modal */}
-      {demoStage === 'introModal' && isDemoModalOpen && (
+      {demoStage === 'introModal' && isDemoModalOpen ? (
         <Dialog open={isDemoModalOpen} onOpenChange={setDemoModalOpen}>
-          <DialogContent 
-            className="sm:max-w-[750px] max-h-[650px] p-8 demo-modal-glass"
+          <DialogContent
+            className="intro-dialog max-w-[34rem] gap-0 overflow-hidden p-0 sm:min-w-0 sm:p-0"
+            onOpenAutoFocus={(e) => { e.preventDefault(); startButtonRef.current?.focus(); }}
           >
-            {stableDemoModalContent}
+            <div className="relative isolate flex h-56 items-center justify-center overflow-hidden bg-rail">
+              <WaveField />
+              <span className="relative inline-flex h-20 w-20 items-center justify-center rounded-[1.4rem] bg-white/[0.08] ring-1 ring-white/15">
+                <MarkLoader size={44} className="text-white" />
+              </span>
+            </div>
+            <div className="px-7 pb-7 pt-6">
+              <DialogHeader>
+                <DialogTitle className="text-center text-[1.9rem] leading-[1.15]">See {PRODUCT_NAME} in Action</DialogTitle>
+              </DialogHeader>
+              <DialogFooter className="mt-7 flex-col-reverse gap-2 sm:flex-row sm:justify-center">
+                <Button variant="secondary" size="lg" onClick={skipDemo} className="sm:min-w-[8rem]">Skip</Button>
+                <Button ref={startButtonRef} size="lg" onClick={startDemo} iconLeft={<Play weight="fill" />} className="sm:min-w-[10rem]">Start Demo</Button>
+              </DialogFooter>
+            </div>
           </DialogContent>
         </Dialog>
-      )}
-
-      {/* Patient Data Modal */}
-      <PatientDataModal
-        isOpen={showPatientDataModal}
-        onClose={() => {
-          setShowPatientDataModal(false);
-          setSelectedPatientForData(null);
-        }}
-        patient={selectedPatientForData}
-      />
+      ) : null}
     </ContentSurface>
+  );
+}
+
+function ActionTile({ icon, label, onClick }: { icon: React.ReactNode; label: string; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="group flex min-w-0 flex-col items-start gap-3 rounded-[var(--radius-lg)] border border-hairline bg-card p-4 text-left shadow-card transition-[transform,box-shadow] hover:-translate-y-0.5 hover:shadow-float lg:flex-row lg:items-center lg:gap-4"
+    >
+      <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-iris-soft text-iris ring-1 ring-iris-line">{icon}</span>
+      <span className="min-w-0 flex-1 text-[0.9375rem] font-medium leading-snug text-ink">{label}</span>
+      <ArrowRight size={16} className="hidden text-muted-foreground transition-transform group-hover:translate-x-1 lg:block" aria-hidden />
+    </button>
+  );
+}
+
+/** The mark's level meter, large and faint, behind the New Consultation tile. */
+function MeterMotif() {
+  const bars = [0.35, 0.6, 0.9, 0.55, 1, 0.7, 0.4, 0.8, 0.5, 0.3];
+  return (
+    <svg className="pointer-events-none absolute -right-6 bottom-0 -z-10 h-full w-48 opacity-[0.16]" viewBox="0 0 200 160" preserveAspectRatio="xMaxYMax meet" aria-hidden>
+      {bars.map((h, i) => (
+        <rect key={i} x={i * 20 + 4} y={160 - h * 150} width={11} height={h * 150} rx={5.5} fill="white" />
+      ))}
+    </svg>
+  );
+}
+
+/** Behind the intro's mark: a field of bars rising and falling, like voices in a room. */
+function WaveField() {
+  const n = 34;
+  return (
+    <div className="absolute inset-0 -z-10 flex items-center justify-center gap-[7px]" aria-hidden>
+      {Array.from({ length: n }, (_, i) => {
+        const d = Math.abs(i - (n - 1) / 2) / ((n - 1) / 2);
+        const h = 18 + (1 - d) * 120 * (0.55 + 0.45 * Math.sin(i * 1.7));
+        return (
+          <span
+            key={i}
+            className="wave-bar w-[5px] rounded-full bg-gradient-to-b from-[hsl(245_90%_78%)] to-[hsl(245_66%_55%)]"
+            style={{ height: `${Math.max(10, h)}px`, animationDelay: `${(i % 9) * -0.17}s`, opacity: 0.18 + (1 - d) * 0.5 }}
+          />
+        );
+      })}
+    </div>
   );
 }

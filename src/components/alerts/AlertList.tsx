@@ -62,28 +62,28 @@ export const AlertList: React.FC<AlertListProps> = ({
     switch (severity) {
       case AlertSeverity.CRITICAL:
         return {
-          bgColor: 'bg-red-50 border-red-200',
-          iconColor: 'text-red-600',
-          titleColor: 'text-red-900',
-          badgeColor: 'bg-red-100 text-red-800',
-          borderAccent: 'border-l-red-500'
+          bgColor: 'bg-card border-hairline shadow-card',
+          iconColor: 'text-critical',
+          titleColor: 'text-critical',
+          badgeColor: 'bg-critical-soft text-critical ring-1 ring-critical-line',
+          borderAccent: 'border-l-critical'
         };
       case AlertSeverity.WARNING:
         return {
-          bgColor: 'bg-amber-50 border-amber-200',
-          iconColor: 'text-amber-600',
-          titleColor: 'text-amber-900',
-          badgeColor: 'bg-amber-100 text-amber-800',
-          borderAccent: 'border-l-amber-500'
+          bgColor: 'bg-card border-hairline shadow-card',
+          iconColor: 'text-flag',
+          titleColor: 'text-flag',
+          badgeColor: 'bg-flag-soft text-flag ring-1 ring-flag-line',
+          borderAccent: 'border-l-flag-line'
         };
       case AlertSeverity.INFO:
       default:
         return {
-          bgColor: 'bg-blue-50 border-blue-200',
-          iconColor: 'text-blue-600',
-          titleColor: 'text-blue-900',
-          badgeColor: 'bg-blue-100 text-blue-800',
-          borderAccent: 'border-l-blue-500'
+          bgColor: 'bg-card border-hairline shadow-card',
+          iconColor: 'text-info',
+          titleColor: 'text-info',
+          badgeColor: 'bg-iris-soft text-iris ring-1 ring-iris-line',
+          borderAccent: 'border-l-iris'
         };
     }
   };
@@ -115,9 +115,9 @@ export const AlertList: React.FC<AlertListProps> = ({
   if (alerts.length === 0) {
     return (
       <div className="text-center py-8">
-        <CheckCircle className="mx-auto h-12 w-12 text-green-500" />
-        <h3 className="mt-2 text-sm font-medium text-gray-900">No Active Alerts</h3>
-        <p className="mt-1 text-sm text-gray-500">
+        <CheckCircle className="mx-auto h-12 w-12 text-ok" />
+        <h3 className="mt-2 text-sm font-medium text-ink">No Active Alerts</h3>
+        <p className="mt-1 text-sm text-muted-foreground">
           All alerts have been reviewed or no alerts have been generated.
         </p>
       </div>
@@ -130,10 +130,10 @@ export const AlertList: React.FC<AlertListProps> = ({
         <div key={category} className="space-y-3">
           {/* Category Header */}
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-medium text-gray-900">
+            <h3 className="text-lg font-medium text-ink">
               {categoryAlerts[0]?.alertType ? formatAlertType(categoryAlerts[0].alertType) : 'General'}
             </h3>
-            <span className="bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
+            <span className="bg-well text-ink text-xs font-medium px-2.5 py-0.5 rounded-full">
               {categoryAlerts.length} alert{categoryAlerts.length !== 1 ? 's' : ''}
             </span>
           </div>
@@ -147,7 +147,7 @@ export const AlertList: React.FC<AlertListProps> = ({
               return (
                 <div
                   key={alert.id}
-                  className={`rounded-lg border ${severityConfig.bgColor} ${severityConfig.borderAccent} border-l-4 p-4 transition-all hover:shadow-sm`}
+                  className={`rounded-lg border ${severityConfig.bgColor} ${severityConfig.borderAccent} border-l-[3px] p-4 transition-all hover:shadow-sm`}
                 >
                   <div className="flex items-start space-x-3">
                     {/* Alert Type Icon */}
@@ -167,30 +167,30 @@ export const AlertList: React.FC<AlertListProps> = ({
                             <span className={`inline-flex px-2 py-0.5 text-xs font-medium rounded-full ${severityConfig.badgeColor}`}>
                               {alert.severity}
                             </span>
-                            <span className="inline-flex px-2 py-0.5 text-xs font-medium rounded-full bg-gray-100 text-gray-800">
+                            <span className="inline-flex px-2 py-0.5 text-xs font-medium rounded-full bg-well text-ink">
                               {formatAlertType(alert.alertType)}
                             </span>
                           </div>
 
                           {/* Message */}
-                          <p className="text-sm text-gray-700 mb-2">
+                          <p className="text-sm text-ink mb-2">
                             {alert.message}
                           </p>
 
                           {/* Suggestion */}
                           {alert.suggestion && (
-                            <div className="mb-3 p-2 bg-white bg-opacity-50 rounded border">
-                              <p className="text-xs font-medium text-gray-900 mb-1">
+                            <div className="mb-3 p-2 bg-card rounded border">
+                              <p className="text-xs font-medium text-ink mb-1">
                                 Recommended Action:
                               </p>
-                              <p className="text-xs text-gray-700">
+                              <p className="text-xs text-ink">
                                 {alert.suggestion}
                               </p>
                             </div>
                           )}
 
                           {/* Metadata */}
-                          <div className="flex items-center space-x-4 text-xs text-gray-500">
+                          <div className="flex items-center space-x-4 text-xs text-muted-foreground">
                             <div className="flex items-center space-x-1">
                               <Clock className="h-3 w-3" />
                               <span>{new Date(alert.createdAt).toLocaleString()}</span>
@@ -202,10 +202,10 @@ export const AlertList: React.FC<AlertListProps> = ({
                               <span>AI Model: {alert.processingModel}</span>
                             )}
                             {alert.isRealTime && (
-                              <span className="text-orange-600 font-medium">Real-time</span>
+                              <span className="text-flag font-medium">Real-time</span>
                             )}
                             {alert.isPostConsultation && (
-                              <span className="text-purple-600 font-medium">Post-consultation</span>
+                              <span className="text-info font-medium">Post-consultation</span>
                             )}
                           </div>
                         </div>
@@ -217,10 +217,10 @@ export const AlertList: React.FC<AlertListProps> = ({
                           onClick={() => handleAccept(alert)}
                           className={`inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md border transition-colors ${
                             alert.severity === AlertSeverity.CRITICAL
-                              ? 'bg-red-600 text-white border-red-600 hover:bg-red-700'
+                              ? 'bg-critical text-white border-critical-line hover:bg-critical'
                               : alert.severity === AlertSeverity.WARNING
-                              ? 'bg-amber-600 text-white border-amber-600 hover:bg-amber-700'
-                              : 'bg-blue-600 text-white border-blue-600 hover:bg-blue-700'
+                              ? 'bg-flag text-white border-flag-line hover:bg-flag'
+                              : 'bg-info text-white border-info/30 hover:bg-info'
                           }`}
                         >
                           <CheckCircle className="h-3 w-3 mr-1" />
@@ -232,7 +232,7 @@ export const AlertList: React.FC<AlertListProps> = ({
                         
                         <button
                           onClick={() => onDismiss?.(alert.id)}
-                          className="inline-flex items-center px-3 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                          className="inline-flex items-center px-3 py-1.5 text-xs font-medium text-ink bg-card border border-border rounded-md hover:bg-well/50 transition-colors"
                         >
                           <XCircle className="h-3 w-3 mr-1" />
                           Dismiss
@@ -241,7 +241,7 @@ export const AlertList: React.FC<AlertListProps> = ({
                         {/* View Details Button (if needed) */}
                         {alert.sourceReasoning && (
                           <button
-                            className="inline-flex items-center px-3 py-1.5 text-xs font-medium text-gray-500 hover:text-gray-700 transition-colors"
+                            className="inline-flex items-center px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-ink transition-colors"
                             title="View AI reasoning"
                           >
                             <Brain className="h-3 w-3 mr-1" />

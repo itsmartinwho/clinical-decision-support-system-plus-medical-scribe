@@ -3,7 +3,9 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import type { Patient } from '@/lib/types';
-import { Microphone as Mic, PaperPlaneTilt as Send, BookOpen, Sparkle as Sparkles, WaveSine as Waves, Plus, Upload, X, CheckCircle, XCircle, Stethoscope } from '@phosphor-icons/react';
+import { Microphone as Mic, PaperPlaneTilt as Send, BookOpen, Sparkle as Sparkles, WaveSine as Waves, Plus, Upload, X, CheckCircle, XCircle, Stethoscope, } from '@phosphor-icons/react';
+import Mark from '@/components/brand/Mark';
+import MarkLoader from '@/components/brand/MarkLoader';
 import { createPortal } from "react-dom";
 import ContentSurface from '@/components/layout/ContentSurface';
 import { v4 as uuidv4 } from 'uuid';
@@ -69,9 +71,9 @@ const AssistantGeneratedImage = ({ imageId }: { imageId: string }) => {
 
   if (hasError) {
     return (
-      <div className="mt-2 p-2 bg-red-50 dark:bg-red-900/30 rounded">
-        <h4 className="text-xs font-semibold text-red-700 dark:text-red-300 mb-2">Chart Loading Error</h4>
-        <p className="text-sm text-red-700 dark:text-red-300">
+      <div className="mt-2 rounded-md border border-critical-line bg-critical-soft p-3">
+        <h4 className="label-caps mb-1 !text-critical">Chart Loading Error</h4>
+        <p className="text-sm text-critical">
           Failed to load image: <code>{imageId}</code>
         </p>
       </div>
@@ -79,8 +81,8 @@ const AssistantGeneratedImage = ({ imageId }: { imageId: string }) => {
   }
   
   return (
-    <div className="mt-2 p-2 bg-blue-50 dark:bg-blue-900/30 rounded">
-      <h4 className="text-xs font-semibold text-blue-700 dark:text-blue-300 mb-2">Generated Chart/Visualization:</h4>
+    <div className="mt-3 rounded-md border border-border bg-card p-3">
+      
       {/* Using aspect-video as a sensible default for chart visualizations */}
       <div className="relative aspect-video w-full mt-1"> 
         <Image 
@@ -96,8 +98,25 @@ const AssistantGeneratedImage = ({ imageId }: { imageId: string }) => {
   );
 };
 
+function ToggleChip({ active, onClick, icon, label }: { active: boolean; onClick: () => void; icon: React.ReactNode; label: string }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      className={cn(
+        'inline-flex h-8 items-center gap-1.5 rounded-md px-2 text-[0.8125rem] transition-colors [&_svg]:size-4',
+        active ? 'bg-iris text-white' : 'text-ink-2 hover:bg-well',
+      )}
+    >
+      {icon}
+      <span className="hidden sm:inline">{label}</span>
+    </button>
+  );
+}
+
 export default function AdvisorView() {
-  const [messages, setMessages] = useState<ChatMessage[]>([{ id: uuidv4(), role: "system", content: "Ask Foresight" }]);
+  const [messages, setMessages] = useState<ChatMessage[]>([{ id: uuidv4(), role: "system", content: "" }]);
   const [input, setInput] = useState("");
   const [isSending, setIsSending] = useState(false);
   const scrollRef = useRef<HTMLDivElement | null>(null);
@@ -618,346 +637,164 @@ export default function AdvisorView() {
 
   return (
     <>
-      <ContentSurface fullBleed className="">
-        {/* Removed static header; using system message in chat */}
-
-        {/* Using Radix ScrollArea now -  REPLACE with native scroll div */}
-        <div
-          ref={scrollRef}
-          className="flex-1 min-h-0 p-6 overflow-y-auto"
-        >
-          <div className="w-full max-w-5xl mx-auto space-y-6 pb-44"> {/* Centered to input box width */}
-            {/* Temporary Debug Component */}
-            
-            {messages.map((msg) => (
-              <div
-                key={msg.id}
-                className={cn(
-                  "flex flex-col items-start gap-2",
-                  msg.role === "user" ? "items-end" : ""
-                )}
-              >
-                <div
-                  className={cn(
-                    msg.role === "user"
-                      ? "max-w-[66.666%] w-fit bg-neon/30 text-black p-6"
-                      : msg.role === "assistant"
-                      ? "max-w-full w-fit bg-white/90 text-gray-800 p-6"
-                      : msg.role === "system"
-                      ? "max-w-full w-fit bg-white/90 text-gray-800 p-6"
-                      : "hidden",
-                    "rounded-lg text-sm shadow-sm"
-                  )}
-                >
-                  {msg.role === "user" && typeof msg.content === 'string' && msg.content}
-                  {msg.role === "system" && typeof msg.content === 'string' && (
-                    msg.content === "Ask Foresight" ? (
-                      <div className="flex justify-center items-center">
-                        <span className="bg-gradient-to-br from-custom-blue-teal to-white bg-clip-text text-transparent font-medium sheen">
-                          {msg.content}
-                        </span>
-                      </div>
-                    ) : (
-                      <span>{msg.content}</span>
-                    )
-                  )}
-                  {msg.role === "assistant" && typeof msg.content === 'object' && (
-                    <AssistantMessageRenderer 
-                      assistantMessage={msg.content as AssistantMessageContent} 
-                      isStreaming={msg.isStreaming} 
-                      markdownRootDiv={markdownRootsRef.current[msg.id]}
-                      onGuidelineReferenceClick={handleGuidelineReferenceClick}
-                    />
-                  )}
-                  {/* Loading indicators */}
-                  {msg.role === "assistant" && 
-                   msg.isStreaming && 
-                   typeof msg.content === 'object' && 
-                   (((msg.content as AssistantMessageContent).content?.length ?? 0) === 0) && (
-                    <> {/* Use a fragment to conditionally render one of the indicators */}
-                      {thinkMode && (
-                        <div className="animate-pulse">Thinking...</div>
-                      )}
-                      {!thinkMode && isSending && (
-                        <div className="animate-pulse">Foresight is typing...</div>
-                      )}
-                    </>
-                  )}
-                </div>
+      <ContentSurface fullBleed>
+        <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto px-4 pt-6 sm:px-6">
+          <div className="mx-auto w-full max-w-3xl space-y-8 pb-56">
+            {messages.length <= 1 ? (
+              <div className="flex min-h-[52vh] items-center justify-center lg:min-h-[calc(50svh-8rem)] lg:items-end">
+                <span className="relative inline-flex h-24 w-24 items-center justify-center">
+                  <span className="absolute inset-0 rounded-[1.75rem] bg-iris-soft ring-1 ring-iris-line" aria-hidden />
+                  <span className="dot-live absolute inset-2 rounded-[1.4rem] bg-iris/10" aria-hidden />
+                  <Mark size={40} className="relative text-iris" title="Advisor" />
+                </span>
               </div>
-            ))}
+            ) : null}
+
+            {messages.map((msg) => {
+              if (msg.role === 'system') return null;
+              if (msg.role === 'user') {
+                return (
+                  <div key={msg.id} className="flex justify-end">
+                    <div className="rise-in max-w-[85%] whitespace-pre-wrap rounded-2xl rounded-br-md bg-ink px-4 py-3 text-[0.9375rem] text-white shadow-card sm:max-w-[75%]">
+                      {typeof msg.content === 'string' ? msg.content : null}
+                    </div>
+                  </div>
+                );
+              }
+              if (msg.role !== 'assistant' || typeof msg.content !== 'object') return null;
+              const content = msg.content as AssistantMessageContent;
+              const waiting = msg.isStreaming && (content.content?.length ?? 0) === 0;
+              return (
+                <article key={msg.id} className="rise-in grid grid-cols-[2rem_minmax(0,1fr)] gap-3 text-[0.9375rem] leading-relaxed text-ink">
+                  <span className="mt-0.5 inline-flex h-8 w-8 items-center justify-center rounded-xl bg-iris-soft text-iris ring-1 ring-iris-line" aria-hidden>
+                    <Mark size={16} />
+                  </span>
+                  <div className="min-w-0">
+                  <AssistantMessageRenderer
+                    assistantMessage={content}
+                    isStreaming={msg.isStreaming}
+                    markdownRootDiv={markdownRootsRef.current[msg.id]}
+                    onGuidelineReferenceClick={handleGuidelineReferenceClick}
+                  />
+                  {waiting && isSending ? (
+                    <p className="mt-1 flex items-center gap-2 text-muted-foreground" role="status" aria-label="Writing">
+                      <MarkLoader size={18} className="text-iris" />
+                    </p>
+                  ) : null}
+                  </div>
+                </article>
+              );
+            })}
           </div>
         </div>
 
-        {/* Voice mode overlay */}
         {voiceMode && (
-          <div className="fixed inset-0 z-[9999] glass-backdrop flex flex-col items-center justify-center text-center px-6">
-            <div className="animate-pulse mb-6">
-              <Waves className="h-16 w-16 text-teal-300" />
-            </div>
-            <p className="text-lg mb-4">Ask your question aloud</p>
+          <div className="glass-backdrop fixed inset-0 z-[9999] flex flex-col items-center justify-center px-6 text-center">
+            <MarkLoader size={56} className="mb-6 text-ink" />
+            <p className="mb-4 font-display text-2xl">Ask your question aloud</p>
             <Button variant="secondary" iconLeft={<X />} onClick={() => setVoiceMode(false)}>Exit voice mode</Button>
           </div>
         )}
       </ContentSurface>
       {mounted && createPortal(
-        <>
-          <div
-            className="fixed bottom-4 flex justify-center px-6 pointer-events-none"
-            style={{
-              left: 'var(--actual-sidebar-width, 0rem)',
-              width: 'calc(100% - var(--actual-sidebar-width, 0rem))',
-              transition: 'left 0.3s ease-in-out, width 0.3s ease-in-out',
-            }}
-          >
-            <div
-              className="w-full max-w-5xl bg-[rgba(255,255,255,0.35)] backdrop-blur-lg border border-white/25 rounded-2xl px-3 py-2 flex flex-col gap-0 pointer-events-auto shadow-lg"
-            >
-              {/* Textarea input */}
-              <Textarea
-                ref={textareaRef}
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                placeholder={includePapers
-                  ? "Ask anything, we'll look for recent research papers in the area"
-                  : thinkMode
-                  ? "Reasoning mode selected for your harder medical queries"
-                  : "Ask anything"}
-                rows={1}
-                className="resize-none bg-transparent border-0 shadow-none outline-none ring-0 ring-transparent focus:outline-none focus:ring-0 focus:ring-transparent focus-visible:ring-0 focus-visible:ring-transparent text-base px-2 py-1 min-h-[2.5rem] max-h-32 overflow-y-auto mb-2"
-                style={{ 
-                  height: 'auto',
-                  minHeight: '2.5rem'
-                }}
-                onInput={(e) => {
-                  const target = e.target as HTMLTextAreaElement;
-                  target.style.height = 'auto';
-                  target.style.height = Math.min(target.scrollHeight, 128) + 'px';
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    handleSend();
-                  }
-                }}
-              />
+        <div
+          className={`pointer-events-none fixed bottom-3 flex justify-center px-3 sm:bottom-5 sm:px-6 ${messages.length <= 1 ? 'lg:bottom-[calc(50svh-6.5rem)]' : ''}`}
+          style={{
+            left: 'var(--actual-sidebar-width, 0rem)',
+            width: 'calc(100% - var(--actual-sidebar-width, 0rem))',
+            transition: 'left 0.2s ease, width 0.2s ease, bottom 0.5s var(--ease-out)',
+          }}
+        >
+          <div className="pointer-events-auto flex w-full max-w-3xl flex-col gap-1 rounded-2xl border border-hairline bg-card px-3 pb-2 pt-2.5 shadow-float transition-shadow focus-within:ring-2 focus-within:ring-iris/30">
+            <label htmlFor="advisor-input" className="sr-only">Your question</label>
+            <Textarea
+              id="advisor-input"
+              ref={textareaRef}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder={includePapers
+                ? "Ask anything, we'll look for recent research papers in the area"
+                : thinkMode
+                ? "Reasoning mode selected for your harder medical queries"
+                : "Ask anything"}
+              rows={1}
+              className="max-h-32 min-h-[2.5rem] resize-none overflow-y-auto border-0 bg-transparent px-1.5 py-1 text-base shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
+              style={{ height: 'auto', minHeight: '2.5rem' }}
+              onInput={(e) => {
+                const target = e.target as HTMLTextAreaElement;
+                target.style.height = 'auto';
+                target.style.height = Math.min(target.scrollHeight, 128) + 'px';
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSend();
+                }
+              }}
+            />
 
-              {/* Specialty Suggestion Banner */}
-              {showSuggestion && suggestedSpecialty && (
-                <div className="bg-gradient-to-r from-teal-50 to-cyan-50 dark:from-teal-900/30 dark:to-cyan-900/30 border border-teal-200 dark:border-teal-700 rounded-lg p-3">
-                  <div className="flex items-center gap-3">
-                    <div className="flex-shrink-0">
-                      <Stethoscope className="h-5 w-5 text-teal-600 dark:text-teal-400" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-teal-900 dark:text-teal-100 truncate">
-                        Suggested specialty based on patient profile: <span className="font-semibold">{suggestedSpecialty}</span>
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={handleApplySuggestion}
-                        className="h-8 px-3 text-teal-700 dark:text-teal-300 hover:bg-teal-100 dark:hover:bg-teal-800"
-                      >
-                        <CheckCircle className="h-4 w-4 mr-1" />
-                        Apply
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={handleDismissSuggestion}
-                        className="h-8 w-8 p-0 text-teal-700 dark:text-teal-300 hover:bg-teal-100 dark:hover:bg-teal-800"
-                      >
-                        <XCircle className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              )}
+            {showSuggestion && suggestedSpecialty && (
+              <div className="flex items-center gap-3 rounded-md border border-info/30 bg-info-soft px-3 py-2">
+                <Stethoscope className="h-4 w-4 shrink-0 text-info" aria-hidden />
+                <p className="min-w-0 flex-1 truncate text-sm text-ink">
+                  Suggested specialty based on patient profile: <span className="font-medium">{suggestedSpecialty}</span>
+                </p>
+                <Button size="sm" variant="ghost" onClick={handleApplySuggestion} className="h-7 px-2" iconLeft={<CheckCircle />}>Apply</Button>
+                <Button size="icon" variant="ghost" onClick={handleDismissSuggestion} className="h-7 w-7" aria-label="Dismiss suggestion"><XCircle /></Button>
+              </div>
+            )}
 
-              {/* Action row */}
-              <div className="flex items-center justify-between">
-                <div className="flex gap-2 items-center">
-                  {/* Specialty Filter Dropdown */}
-                  <SpecialtyDropdown 
-                    selectedSpecialty={selectedSpecialty}
-                    onSpecialtyChange={setSelectedSpecialty}
-                    disabled={isSending}
-                  />
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant={includePapers ? "default" : "ghost"}
-                          size="icon"
-                          onClick={() => setIncludePapers((v) => !v)}
-                          className={cn(
-                            "group",
-                            includePapers && "w-auto px-3", // Active state
-                            "hover:w-auto hover:px-3"     // Hover state
-                          )}
-                        >
-                          <BookOpen className="h-4 w-4" />
-                          <span className={cn("ml-2 whitespace-nowrap", includePapers ? "inline" : "hidden", "group-hover:inline")}>
-                            Papers
-                          </span>
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent><p>Papers</p></TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant={thinkMode ? "default" : "ghost"}
-                          size="icon"
-                          onClick={() => setThinkMode((v) => !v)}
-                          className={cn(
-                            "group",
-                            thinkMode && "w-auto px-3", // Active state
-                            "hover:w-auto hover:px-3"    // Hover state
-                          )}
-                        >
-                          <Sparkles className="h-4 w-4" />
-                          <span className={cn("ml-2 whitespace-nowrap", thinkMode ? "inline" : "hidden", "group-hover:inline")}>
-                            Think
-                          </span>
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent><p>Think</p></TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                </div>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="flex min-w-0 items-center gap-1">
+                <SpecialtyDropdown selectedSpecialty={selectedSpecialty} onSpecialtyChange={setSelectedSpecialty} disabled={isSending} />
+                <ToggleChip active={includePapers} onClick={() => setIncludePapers((v) => !v)} icon={<BookOpen />} label="Papers" />
+                <ToggleChip active={thinkMode} onClick={() => setThinkMode((v) => !v)} icon={<Sparkles />} label="Think" />
+              </div>
 
-                <div className="flex items-center gap-2">
-                  {/* Patient context attachment tag */}
-                  {selectedPatientForContext && (
-                    <span className="inline-flex items-center bg-muted/20 text-step--1 rounded-full px-3 py-1">
-                      {selectedPatientForContext.name || `${selectedPatientForContext.firstName ?? ''} ${selectedPatientForContext.lastName ?? ''}`.trim() || selectedPatientForContext.id}
-                      <Button variant="ghost" size="sm" className="h-5 w-5 p-0 ml-2" onClick={() => setSelectedPatientForContext(null)}>
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </span>
+              <div className="flex min-w-0 items-center gap-1">
+                {selectedPatientForContext && (
+                  <span className="inline-flex max-w-[11rem] items-center gap-1 rounded-full border border-border bg-well py-0.5 pl-2.5 pr-1 text-xs text-ink">
+                    <span className="truncate">{selectedPatientForContext.name || `${selectedPatientForContext.firstName ?? ''} ${selectedPatientForContext.lastName ?? ''}`.trim() || selectedPatientForContext.id}</span>
+                    <button type="button" className="rounded-full p-0.5 hover:bg-card" onClick={() => setSelectedPatientForContext(null)} aria-label="Remove the patient's chart">
+                      <X className="h-3 w-3" />
+                    </button>
+                  </span>
+                )}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button size="icon" variant="ghost" className="h-8 w-8" aria-label="Attach a patient's chart or a file">
+                      <Plus />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <PatientSelectionDropdown onPatientSelect={handlePatientSelectForContext} onFileUpload={handleFileUpload} />
+                </DropdownMenu>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*,application/pdf,application/msword,text/plain"
+                  multiple={false}
+                  className="hidden"
+                  onChange={handleFileChange}
+                />
+                {!voiceMode && typeof window !== "undefined" &&
+                  ((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition) && (
+                    <Button size="icon" variant={dictating ? "default" : "ghost"} onClick={toggleDictation} className="h-8 w-8" aria-label={dictating ? 'Stop dictation' : 'Dictate'} aria-pressed={dictating}>
+                      <Mic />
+                    </Button>
                   )}
-                  {/* Context and File Upload Dropdown */}
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              className={cn(
-                                "group",
-                                "hover:w-auto hover:px-3" // Hover state only for this button
-                              )}
-                            >
-                              <span className={cn("mr-2 whitespace-nowrap hidden group-hover:inline")}>
-                                Attach
-                              </span>
-                              <Plus className="h-4 w-4 text-foreground" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <PatientSelectionDropdown
-                            onPatientSelect={handlePatientSelectForContext}
-                            onFileUpload={handleFileUpload}
-                          />
-                        </DropdownMenu>
-                      </TooltipTrigger>
-                      <TooltipContent><p>Attach</p></TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                  {/* Hidden File Input for onFileUpload handler */}
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*,application/pdf,application/msword,text/plain"
-                    multiple={false}
-                    className="hidden"
-                    onChange={handleFileChange}
-                  />
-                  {/* Dictation (if not in voice mode) */}
-                  {!voiceMode && typeof window !== "undefined" &&
-                    ((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition) && (
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              size="icon"
-                              variant={dictating ? "default" : "ghost"}
-                              onClick={toggleDictation}
-                              className={cn(
-                                "group",
-                                dictating && "w-auto px-3", // Active state
-                                "hover:w-auto hover:px-3"   // Hover state
-                              )}
-                            >
-                              <span className={cn("mr-2 whitespace-nowrap", dictating ? "inline" : "hidden", "group-hover:inline")}>
-                                Dictate
-                              </span>
-                              <Mic className="h-4 w-4" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent><p>Dictate</p></TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    )}
-                  {/* Voice or Send based on input */}
-                  {input.trim().length > 0 ? (
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            size="icon" // Will be icon only initially
-                            onClick={() => handleSend()}
-                            disabled={isSending}
-                            className={cn(
-                              "group bg-gradient-to-br from-teal-500 to-cyan-500 hover:opacity-90 text-white",
-                              "hover:w-auto hover:px-3" // Expands on hover
-                            )}
-                          >
-                            <span className={cn("mr-2 whitespace-nowrap hidden group-hover:inline")}>
-                              Send
-                            </span>
-                            <Send className="h-4 w-4" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent><p>Send</p></TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  ) : (
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            size="icon"
-                            variant={voiceMode ? "default" : "ghost"}
-                            onClick={() => setVoiceMode((v) => !v)}
-                            className={cn(
-                              "group",
-                              voiceMode && "w-auto px-3", // Active state
-                              "hover:w-auto hover:px-3"  // Hover state
-                            )}
-                          >
-                            <span className={cn("mr-2 whitespace-nowrap", voiceMode ? "inline" : "hidden", "group-hover:inline")}>
-                              Voice Mode
-                            </span>
-                            <Waves className="h-4 w-4" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent><p>Voice Mode</p></TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  )}
-                </div>
+                {input.trim().length > 0 ? (
+                  <Button size="icon" onClick={() => handleSend()} disabled={isSending} className="h-8 w-8 rounded-full" aria-label="Send">
+                    <Send />
+                  </Button>
+                ) : (
+                  <Button size="icon" variant={voiceMode ? "default" : "ghost"} onClick={() => setVoiceMode((v) => !v)} className="h-8 w-8" aria-label="Voice mode" aria-pressed={voiceMode}>
+                    <Waves />
+                  </Button>
+                )}
               </div>
             </div>
           </div>
-        </>,
+        </div>,
         document.body
       )}
 
@@ -1018,16 +855,16 @@ const AssistantMessageRenderer: React.FC<{
 
   // Helper for custom components for ReactMarkdown
   const reactMarkdownComponents = {
-    h1: ({node, ...props}: any) => <h1 className="text-2xl font-bold my-2" {...props} />,
-    h2: ({node, ...props}: any) => <h2 className="text-xl font-semibold my-2" {...props} />,
-    h3: ({node, ...props}: any) => <h3 className="text-lg font-medium my-2" {...props} />,
+    h1: ({node, ...props}: any) => <h1 className="font-display text-2xl font-normal my-3" {...props} />,
+    h2: ({node, ...props}: any) => <h2 className="font-display text-xl font-normal my-3" {...props} />,
+    h3: ({node, ...props}: any) => <h3 className="label-caps !text-ink mt-4 mb-1" {...props} />,
     ul: ({node, ...props}: any) => <ul className="list-disc pl-5 my-2" {...props} />,
     ol: ({node, ...props}: any) => <ol className="list-decimal pl-5 my-2" {...props} />,
-    p: ({node, ...props}: any) => <p className="my-1" {...props} />,
-    table: ({node, ...props}: any) => <table className="table-auto w-full my-2 border-collapse border border-gray-300 dark:border-gray-600" {...props} />,
-    thead: ({node, ...props}: any) => <thead className="bg-gray-100 dark:bg-gray-800" {...props} />,
-    th: ({node, ...props}: any) => <th className="border border-gray-300 dark:border-gray-600 px-2 py-1 text-left" {...props} />,
-    td: ({node, ...props}: any) => <td className="border border-gray-300 dark:border-gray-600 px-2 py-1" {...props} />,
+    p: ({node, ...props}: any) => <p className="my-2" {...props} />,
+    table: ({node, ...props}: any) => <div className="my-3 overflow-x-auto"><table className="w-full border-collapse text-sm" {...props} /></div>,
+    thead: ({node, ...props}: any) => <thead className="border-b border-ink/60" {...props} />,
+    th: ({node, ...props}: any) => <th className="label-caps px-2 py-1.5 text-left" {...props} />,
+    td: ({node, ...props}: any) => <td className="border-b border-border px-2 py-1.5" {...props} />,
     code: ({node, inline, className, children, ...props}: any) => {
       const match = /language-(\w+)/.exec(className || '');
       const language = match && match[1];
@@ -1046,7 +883,7 @@ const AssistantMessageRenderer: React.FC<{
       // Regular code block rendering
       if (!inline) {
         return (
-          <pre className="bg-gray-100 dark:bg-gray-800 p-3 rounded-md overflow-x-auto my-2" {...props}>
+          <pre className="data-mono my-2 overflow-x-auto rounded-md bg-well p-3 text-sm" {...props}>
             <code className={className} {...props}>
               {children}
             </code>
@@ -1055,7 +892,7 @@ const AssistantMessageRenderer: React.FC<{
       }
       
       // Inline code
-      return <code className="bg-gray-100 dark:bg-gray-800 px-1 rounded text-sm" {...props}>{children}</code>;
+      return <code className="data-mono rounded bg-well px-1 text-[0.875em]" {...props}>{children}</code>;
     },
   };
 
@@ -1064,25 +901,23 @@ const AssistantMessageRenderer: React.FC<{
     <>
       {/* Hide code execution blocks - users only want to see results */}
       {assistantMessage.codeInterpreterTableData ? (
-        <div className="mt-2 p-2 bg-gray-100 dark:bg-gray-800 rounded">
-          <h4 className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">Data Table ({assistantMessage.codeInterpreterOutputFormat}):</h4>
+        <div className="mt-3 rounded-md border border-border bg-card p-3">
+          
           <DataTable
             columns={assistantMessage.codeInterpreterTableData.columns as ColumnDef<unknown, any>[]}
             data={assistantMessage.codeInterpreterTableData.data}
           />
         </div>
       ) : assistantMessage.codeInterpreterOutputText && (
-        <div className="mt-2 p-2 bg-gray-100 dark:bg-gray-800 rounded">
-          <h4 className="text-xs font-semibold text-gray-600 dark:text-gray-400">Code Output ({assistantMessage.codeInterpreterOutputFormat || 'plaintext'}):</h4>
-          <pre className="text-xs overflow-x-auto bg-white dark:bg-gray-700 p-2 rounded mt-1">{assistantMessage.codeInterpreterOutputText}</pre>
+        <div className="mt-3 rounded-md border border-border bg-card p-3">
+          
+          <pre className="data-mono mt-2 overflow-x-auto rounded bg-well p-2 text-xs">{assistantMessage.codeInterpreterOutputText}</pre>
         </div>
       )}
       {assistantMessage.chartLoading && !assistantMessage.codeInterpreterImageId && (
-        <div className="mt-2 p-2 bg-blue-50 dark:bg-blue-900/30 rounded">
-          <h4 className="text-xs font-semibold text-blue-700 dark:text-blue-300 mb-2">Generating Chart/Visualization...</h4>
-          <div className="flex items-center space-x-2">
-            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-            <span className="text-sm text-blue-600 dark:text-blue-300">Creating visualization based on clinical data...</span>
+        <div className="mt-3 rounded-md border border-border bg-card p-3">
+          <div className="flex items-center gap-2">
+            <MarkLoader size={18} className="text-iris" />
           </div>
         </div>
       )}
@@ -1106,7 +941,7 @@ const AssistantMessageRenderer: React.FC<{
     // Actively streaming with smd.js
     return (
       <>
-        <div ref={containerRef} className="prose prose-sm max-w-none dark:prose-invert" />
+        <div ref={containerRef} className="prose max-w-none" />
         {renderToolOutputs()}
         {renderGuidelineReferences()}
       </>
@@ -1116,7 +951,7 @@ const AssistantMessageRenderer: React.FC<{
     const cleanHtml = DOMPurify.sanitize(assistantMessage.finalMarkdown);
     
     return (
-      <div className="prose prose-sm max-w-none dark:prose-invert">
+      <div className="prose max-w-none">
         <ReactMarkdown remarkPlugins={[remarkGfm]} components={reactMarkdownComponents}>
           {cleanHtml}
         </ReactMarkdown>
@@ -1130,7 +965,7 @@ const AssistantMessageRenderer: React.FC<{
     const cleanHtml = DOMPurify.sanitize(assistantMessage.fallbackMarkdown);
     
     return (
-      <div className="prose prose-sm max-w-none dark:prose-invert">
+      <div className="prose max-w-none">
         <ReactMarkdown remarkPlugins={[remarkGfm]} components={reactMarkdownComponents}>
           {cleanHtml}
         </ReactMarkdown>
@@ -1146,7 +981,7 @@ const AssistantMessageRenderer: React.FC<{
       <>
         {/* Show heartbeat message during processing */}
         {assistantMessage.heartbeatMessage && (
-          <div className="animate-pulse text-blue-600 dark:text-blue-400 text-sm mb-2">
+          <div className="mb-2 text-sm text-muted-foreground">
             {assistantMessage.heartbeatMessage}
           </div>
         )}
@@ -1156,7 +991,7 @@ const AssistantMessageRenderer: React.FC<{
         {renderGuidelineReferences()}
         {/* Show pulsing if no tool output yet and no heartbeat */}
         {!assistantMessage.toolCode && !assistantMessage.codeInterpreterOutputText && !assistantMessage.codeInterpreterImageId && !assistantMessage.heartbeatMessage && (
-            <div className="animate-pulse">Thinking...</div>
+            <MarkLoader size={18} className="text-iris" />
         )}
       </>
     );
@@ -1181,7 +1016,7 @@ const AssistantMessageRenderer: React.FC<{
       
       {/* Loading indicator if nothing else is there but it's supposed to be streaming */}
       {isStreaming && !assistantMessage.finalMarkdown && !assistantMessage.fallbackMarkdown && (!assistantMessage.content || assistantMessage.content.length === 0) && !assistantMessage.toolCode && !assistantMessage.codeInterpreterOutputText && !assistantMessage.codeInterpreterImageId && (
-         <div className="animate-pulse">Foresight is typing...</div>
+         <MarkLoader size={18} className="text-iris" />
       )}
     </div>
   );

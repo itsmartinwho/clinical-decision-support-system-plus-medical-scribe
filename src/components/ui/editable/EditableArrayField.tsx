@@ -172,7 +172,7 @@ export function EditableArrayField({
                   size="sm"
                   onClick={() => handleRemoveItem(index)}
                   disabled={isLoading}
-                  className="h-10 w-10 p-0 text-red-600 hover:text-red-700"
+                  className="h-10 w-10 p-0 text-critical hover:text-critical"
                 >
                   <Trash2 className="w-4 h-4" />
                 </Button>

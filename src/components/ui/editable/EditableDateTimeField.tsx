@@ -222,8 +222,8 @@ export default function EditableDateTimeField({
         </div>
       ) : (
         <div className={displayClassName}>
-          <span className="font-medium">{label}:</span>{' '}
-          <span className={!value ? 'text-muted-foreground italic' : ''}>
+          <span className="sr-only">{label}: </span>
+          <span className={!value ? 'text-muted-foreground italic' : 'data-mono text-ink'}>
             {formatDisplayValue(value)}
           </span>
         </div>

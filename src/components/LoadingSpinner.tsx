@@ -1,10 +1,11 @@
 import React from 'react';
+import MarkLoader from '@/components/brand/MarkLoader';
 
 export function LoadingSpinner() {
   return (
-    <div className="flex justify-center items-center">
-      <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
-      <span className="sr-only">Loading...</span>
+    <div className="flex items-center justify-center text-ink" role="status">
+      <MarkLoader size={28} />
+      <span className="sr-only">Loading</span>
     </div>
   );
-} 
+}

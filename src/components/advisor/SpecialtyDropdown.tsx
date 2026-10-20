@@ -65,8 +65,8 @@ export default function SpecialtyDropdown({
   if (isLoading) {
     return (
       <div className="flex items-center gap-2">
-        <Stethoscope className="h-4 w-4 text-gray-400" />
-        <div className="h-8 w-32 bg-gray-200 rounded animate-pulse" />
+        <Stethoscope className="h-4 w-4 text-muted-foreground" />
+        <div className="h-8 w-32 bg-well rounded animate-pulse" />
       </div>
     );
   }
@@ -79,23 +79,23 @@ export default function SpecialtyDropdown({
           size="sm"
           disabled={disabled}
           className={cn(
-            "flex items-center gap-2 h-8 px-3 bg-white/70 backdrop-blur-sm border-white/40 hover:bg-white/80",
+            "flex items-center gap-2 h-8 rounded-lg px-2.5 bg-card border-hairline hover:bg-well",
             "transition-all duration-200",
             className
           )}
         >
-          <Stethoscope className="h-4 w-4 text-gray-600" />
-          <span className="text-sm font-medium truncate max-w-32">
+          <Stethoscope className="h-4 w-4 text-ink-2" />
+          <span className="hidden text-sm font-medium truncate max-w-32 sm:inline">
             {selectedCategory?.displayName || 'Select Specialty'}
           </span>
           {selectedCategory && selectedCategory.guidelineCount > 0 && (
-            <Badge variant="secondary" className="text-xs px-1 py-0 h-4 text-gray-600">
+            <Badge variant="secondary" className="text-xs px-1 py-0 h-4 text-ink-2">
               {selectedCategory.guidelineCount}
             </Badge>
           )}
           <ChevronDown 
             className={cn(
-              "h-3 w-3 text-gray-500 transition-transform duration-200",
+              "h-3 w-3 text-muted-foreground transition-transform duration-200",
               isOpen && "rotate-180"
             )} 
           />
@@ -104,7 +104,7 @@ export default function SpecialtyDropdown({
       
       <DropdownMenuContent 
         align="start" 
-        className="w-64 max-h-[60vh] p-0 bg-white/95 backdrop-blur-lg border border-white/30 shadow-lg"
+        className="w-64 max-h-[60vh] p-0 bg-card border border-border shadow-lg"
       >
         <div className="max-h-[60vh] overflow-y-auto p-2 scrollbar-hide">
           <div className="space-y-1">
@@ -114,8 +114,8 @@ export default function SpecialtyDropdown({
               onClick={() => handleSpecialtySelect(category.id)}
               className={cn(
                 "flex items-center gap-3 p-3 rounded-lg cursor-pointer",
-                "hover:bg-gray-50 transition-colors duration-150",
-                selectedSpecialty === category.id && "bg-blue-50 border border-blue-200"
+                "hover:bg-well/50 transition-colors duration-150",
+                selectedSpecialty === category.id && "bg-info-soft border border-info/30"
               )}
             >
               {/* Specialty Icon */}
@@ -134,7 +134,7 @@ export default function SpecialtyDropdown({
                 <div className="flex items-center justify-between">
                   <span className={cn(
                     "font-medium text-sm truncate",
-                    selectedSpecialty === category.id ? "text-gray-900" : "text-gray-700"
+                    selectedSpecialty === category.id ? "text-ink" : "text-ink"
                   )}>
                     {category.displayName}
                   </span>
@@ -143,21 +143,21 @@ export default function SpecialtyDropdown({
                       variant="secondary" 
                       className={cn(
                         "ml-2 text-xs",
-                        selectedSpecialty === category.id && "bg-blue-100 text-blue-700"
+                        selectedSpecialty === category.id && "bg-info-soft text-info"
                       )}
                     >
                       {category.guidelineCount}
                     </Badge>
                   )}
                 </div>
-                <p className="text-xs text-gray-500 truncate mt-0.5">
+                <p className="text-xs text-muted-foreground truncate mt-0.5">
                   {category.description}
                 </p>
               </div>
               
               {/* Selection Indicator */}
               {selectedSpecialty === category.id && (
-                <Check className="h-4 w-4 text-blue-600 flex-shrink-0" />
+                <Check className="h-4 w-4 text-info flex-shrink-0" />
               )}
             </DropdownMenuItem>
             ))}

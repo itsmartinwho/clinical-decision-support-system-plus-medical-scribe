@@ -21,10 +21,11 @@
     "cf-typegen": "wrangler types --env-interface CloudflareEnv env.d.ts",
     "storybook": "storybook dev -p 6006 -c tests/.storybook",
     "build-storybook": "storybook build -c tests/.storybook",
-    "resize:icons": "tsx scripts/favicon-resizing/resize-icons.ts",
+    "brand:icons": "tsx scripts/brand/build-icons.ts",
     "setup:guidelines": "tsx scripts/clinical-guidelines/setup-guidelines.ts",
     "test:guidelines": "tsx scripts/clinical-guidelines/test-guidelines.ts",
     "test:scheduler": "tsx scripts/clinical-guidelines/test-scheduler.ts",
+    "demo:fixture": "tsx scripts/demo-data/build-fixture.ts",
     "clean": "rm -rf .next node_modules/.cache .turbo",
     "optimize": "node scripts/optimize-dev.js"
   },

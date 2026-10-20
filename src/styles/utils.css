@@ -1,208 +1,70 @@
-.glass {
-  /* Performance-optimized glass effect with reduced opacity */
-  background: linear-gradient(135deg, 
-    rgba(245, 250, 255, 0.24) 0%, 
-    rgba(240, 245, 255, 0.17) 50%, 
-    rgba(235, 240, 255, 0.12) 100%);
-  border: 1px solid rgba(240, 245, 255, 0.21);
-  box-shadow: 
-    0 8px 32px rgba(0, 0, 0, 0.15),
-    inset 0 0 0 1px rgba(240, 245, 255, 0.14),
-    inset 0 1px 0 rgba(240, 245, 255, 0.21);
-  border-radius: var(--radius-lg);
-  position: relative;
-}
+/* The glass of the 2025 design is gone. These class names are still used
+   across the components, so they now draw the paper surfaces instead: card
+   paper, one hairline, no blur, no gradient, no glow. */
 
-.glass::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: radial-gradient(
-    600px circle at 50% 0%,
-    rgba(255, 255, 255, 0.12) 0%,
-    rgba(255, 255, 255, 0.04) 40%,
-    transparent 70%
-  );
-  border-radius: inherit;
-  pointer-events: none;
-  z-index: -1;
+.glass,
+.glass-dense,
+.bg-glass,
+.table-glass,
+.modal-glass,
+.demo-modal-glass {
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--hairline));
+  border-radius: var(--radius-lg);
+  box-shadow: none;
 }
 
 .glass-soft {
-  /* Performance-optimized soft glass effect with reduced opacity */
-  background: linear-gradient(135deg, 
-    rgba(245, 250, 255, 0.17) 0%, 
-    rgba(240, 245, 255, 0.12) 50%, 
-    rgba(235, 240, 255, 0.08) 100%);
-  border: 1px solid rgba(240, 245, 255, 0.17);
-  box-shadow: 
-    0 6px 24px rgba(0, 0, 0, 0.10),
-    inset 0 0 0 1px rgba(240, 245, 255, 0.10);
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--hairline));
   border-radius: var(--radius-lg);
-  position: relative;
 }
 
-.glass-soft::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: radial-gradient(
-    400px circle at 50% 0%,
-    rgba(255, 255, 255, 0.08) 0%,
-    rgba(255, 255, 255, 0.02) 50%,
-    transparent 80%
-  );
-  border-radius: inherit;
-  pointer-events: none;
-  z-index: -1;
+/* Floating surfaces (dialogs, menus) lift off the page by a soft shadow. */
+.glass,
+.glass-dense,
+.bg-glass,
+.table-glass {
+  box-shadow: var(--shadow-card);
 }
 
-/* More opaque glass for inner surfaces */
-.glass-dense {
-  /* Performance-optimized dense glass effect with reduced opacity */
-  background: linear-gradient(135deg, 
-    rgba(240, 245, 255, 0.31) 0%, 
-    rgba(235, 240, 255, 0.24) 50%, 
-    rgba(230, 235, 255, 0.17) 100%);
-  border: 1px solid rgba(235, 240, 255, 0.28);
-  box-shadow: 
-    0 12px 40px rgba(0, 0, 0, 0.18),
-    inset 0 0 0 1px rgba(235, 240, 255, 0.17),
-    inset 0 2px 0 rgba(235, 240, 255, 0.28);
-  border-radius: var(--radius-lg);
-  position: relative;
+.modal-glass,
+.demo-modal-glass {
+  box-shadow: var(--shadow-float);
 }
 
-.glass-dense::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: radial-gradient(
-    800px circle at 50% 0%,
-    rgba(255, 255, 255, 0.15) 0%,
-    rgba(255, 255, 255, 0.06) 30%,
-    transparent 60%
-  );
-  border-radius: inherit;
-  pointer-events: none;
-  z-index: -1;
+/* Nested surfaces don't stack. */
+.glass .glass {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
 }
 
-/* Modal overlay with light glassmorphic background */
 .glass-backdrop {
   position: fixed;
-  /* Performance-optimized backdrop with better opacity */
-  background: linear-gradient(135deg, 
-    rgba(255, 255, 255, 0.08) 0%, 
-    rgba(255, 255, 255, 0.05) 50%, 
-    rgba(255, 255, 255, 0.03) 100%);
-}
-
-.glass-backdrop::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(
-    ellipse 1200px 800px at 50% 20%,
-    rgba(255, 255, 255, 0.02) 0%,
-    rgba(255, 255, 255, 0.01) 50%,
-    transparent 80%
-  );
-  pointer-events: none;
-}
-
-/* Convenience alias used in existing code */
-.bg-glass {
-  background: rgba(255, 255, 255, 0.15);
-}
-
-/* Modal-specific classes for enhanced styling */
-.modal-glass {
-  background: linear-gradient(135deg, 
-    rgba(230, 240, 255, 0.52) 0%, 
-    rgba(220, 235, 255, 0.45) 50%, 
-    rgba(210, 230, 255, 0.38) 100%);
-  border: 1px solid rgba(220, 235, 255, 0.35);
-  backdrop-filter: blur(20px) saturate(150%);
-  -webkit-backdrop-filter: blur(20px) saturate(150%);
-  box-shadow: 
-    0 8px 32px rgba(0, 0, 0, 0.15),
-    inset 0 0 0 1px rgba(220, 235, 255, 0.28);
+  background: hsl(var(--paper) / 0.92);
 }
 
 .modal-overlay {
-  background: rgba(220, 235, 255, 0.21);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-}
-
-/* Table glass effect */
-.table-glass {
-  background: rgba(230, 240, 255, 0.08);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  border: 1px solid rgba(230, 240, 255, 0.11);
-}
-
-/* Prevent nested glass surfaces picking up double opacity */
-.glass .glass {
-  background: transparent !important;
-}
-
-.glass .glass::before {
-  display: none !important;
+  background: hsl(var(--ink) / 0.36);
+  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px);
 }
 
 .row-hover:hover {
-  background: hsla(var(--surface-1) / .12);
+  background: hsl(var(--well) / 0.6);
 }
 
-/* Hide scrollbars while maintaining scroll functionality */
 .scrollbar-hide {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
-
 .scrollbar-hide::-webkit-scrollbar {
-  display: none;  /* Safari and Chrome */
+  display: none;
 }
 
-@media (prefers-reduced-transparency: reduce) {
-  .glass,
-  .glass-soft,
-  .glass-dense {
-    background: hsl(var(--surface-1));
-  }
-}
-
-/* Demo modal with 20% less opacity (only for demo intro modal) */
-.demo-modal-glass {
-  background: linear-gradient(135deg, 
-    rgba(230, 240, 255, 0.416) 0%, 
-    rgba(220, 235, 255, 0.36) 50%, 
-    rgba(210, 230, 255, 0.304) 100%) !important;
-  border: 1px solid rgba(220, 235, 255, 0.28) !important;
-  backdrop-filter: blur(20px) saturate(150%);
-  -webkit-backdrop-filter: blur(20px) saturate(150%);
-  box-shadow: 
-    0 8px 32px rgba(0, 0, 0, 0.15),
-    inset 0 0 0 1px rgba(220, 235, 255, 0.224) !important;
-}
-
-/* Specific styling for sidebar collapse/expand tooltip only */
 .sidebar-collapse-tooltip {
-  background: rgba(50, 50, 50, 0.9) !important;
-  color: #9ca3af !important; /* medium gray text */
-  border: 1px solid rgba(100, 100, 100, 0.3) !important;
-  backdrop-filter: blur(8px) !important;
-  -webkit-backdrop-filter: blur(8px) !important;
-} 
+  background: hsl(var(--ink)) !important;
+  color: hsl(var(--paper)) !important;
+  border: 0 !important;
+}

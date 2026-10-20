@@ -24,7 +24,11 @@ export default function AlertsScreenView({ onAlertClick, allAlerts: rawAlerts }:
   useEffect(() => {
     const enrichAlertData = async () => {
       setIsLoading(true);
-      await supabaseDataService.loadPatientData();
+      try {
+        await supabaseDataService.loadPatientData();
+      } catch {
+        // Show the alerts without their last-consultation dates.
+      }
 
       const alertsToEnrich = rawAlerts || [];
       const processedAlerts: Array<ComplexCaseAlert & { patientName?: string; lastConsultation?: string }> = [];
@@ -95,7 +99,7 @@ export default function AlertsScreenView({ onAlertClick, allAlerts: rawAlerts }:
         <div className="flex items-center gap-2">
           <h1 className="text-step-1 font-semibold">Patient Alerts</h1>
           {highPriorityAlertsCount > 0 && (
-            <div className="bg-red-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+            <div className="bg-critical text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
               {highPriorityAlertsCount}
             </div>
           )}
@@ -133,7 +137,7 @@ export default function AlertsScreenView({ onAlertClick, allAlerts: rawAlerts }:
               <div className="flex items-center gap-2">
                 <p className="font-medium text-foreground">{alert.patientName}</p>
                 {alert.conditionType && (
-                  <span className="text-xs px-2 py-0.5 bg-blue-100 text-blue-800 rounded-full">
+                  <span className="text-xs px-2 py-0.5 bg-info-soft text-info rounded-full">
                     {alert.conditionType}
                   </span>
                 )}

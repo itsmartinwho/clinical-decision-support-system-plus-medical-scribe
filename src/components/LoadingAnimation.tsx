@@ -1,19 +1,13 @@
 import React from 'react';
-import Image from 'next/image';
+import { LoadingState } from '@/components/ui/states';
 
 interface LoadingAnimationProps {
   customText?: string;
 }
 
-const LoadingAnimation: React.FC<LoadingAnimationProps> = ({ customText }) => {
-  return (
-    <div className="flex flex-col items-center justify-center h-full">
-      <Image src="/slower-load-animation.gif" alt="Loading..." width={100} height={100} priority
-        style={{ width: 'auto', height: 'auto' }}
-      />
-      {customText && <p className="mt-4 text-lg">{customText}</p>}
-    </div>
-  );
-};
+// Kept under its old name: many views import it.
+const LoadingAnimation: React.FC<LoadingAnimationProps> = ({ customText }) => (
+  <LoadingState label={customText ?? 'Loading'} />
+);
 
-export default LoadingAnimation; 
+export default LoadingAnimation;

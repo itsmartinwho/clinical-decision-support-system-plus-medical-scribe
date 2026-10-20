@@ -267,33 +267,35 @@ export function EditableTable({
         ) : (
           <div>
             {normalizedTreatments.length > 0 ? (
-              <div className="space-y-4">
-                <div className="grid grid-cols-12 gap-4 font-medium text-sm text-muted-foreground border-b border-border/30 pb-2">
+              <div>
+                <div className="hidden grid-cols-12 gap-4 border-b border-border pb-2 label-caps sm:grid">
                   <div className="col-span-4">Drug/Medication</div>
                   <div className="col-span-3">Status</div>
                   <div className="col-span-5">Rationale</div>
                 </div>
+                <div className="divide-y divide-border">
                 {normalizedTreatments.map((treatment, index) => (
-                  <div key={index} className="grid grid-cols-12 gap-4 text-sm">
-                    <div className="col-span-4 font-medium">
+                  <div key={index} className="flex flex-col gap-1.5 py-3 text-sm last:pb-0 sm:grid sm:grid-cols-12 sm:gap-4">
+                    <div className="font-medium text-ink sm:col-span-4">
                       {treatment.drug || 'No medication specified'}
                     </div>
-                    <div className="col-span-3">
-                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                        treatment.status === 'active' ? 'bg-green-100 text-green-800' :
-                        treatment.status === 'completed' ? 'bg-blue-100 text-blue-800' :
-                        treatment.status === 'discontinued' ? 'bg-red-100 text-red-800' :
-                        treatment.status === 'on-hold' ? 'bg-yellow-100 text-yellow-800' :
-                        'bg-gray-100 text-gray-800'
+                    <div className="sm:col-span-3">
+                      <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium capitalize ${
+                        treatment.status === 'active' ? 'bg-ok-soft text-ok' :
+                        treatment.status === 'completed' ? 'bg-info-soft text-info' :
+                        treatment.status === 'discontinued' ? 'bg-critical-soft text-critical' :
+                        treatment.status === 'on-hold' ? 'bg-flag-soft text-flag' :
+                        'bg-well text-ink'
                       }`}>
-                        {statusOptions.find(opt => opt.value === treatment.status)?.label || treatment.status || 'Unknown'}
+                        {(statusOptions.find(opt => opt.value === treatment.status)?.label || treatment.status || 'Unknown').replace(/_/g, ' ')}
                       </span>
                     </div>
-                    <div className="col-span-5 text-muted-foreground">
+                    <div className="leading-relaxed text-muted-foreground sm:col-span-5">
                       {treatment.rationale || 'No rationale provided'}
                     </div>
                   </div>
                 ))}
+                </div>
               </div>
             ) : (
               <p className="text-sm text-muted-foreground/70 text-center py-8">

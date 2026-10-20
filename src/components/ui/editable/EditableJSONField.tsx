@@ -179,13 +179,13 @@ export function EditableJSONField({
             onChange={(e) => handleTextChange(e.target.value)}
             placeholder={placeholder}
             className={`font-mono text-sm resize-none ${
-              validationError ? 'border-red-500 focus:border-red-500' : ''
+              validationError ? 'border-critical-line focus:border-critical-line' : ''
             }`}
             style={{ minHeight: '120px', maxHeight }}
             disabled={isLoading}
           />
           {validationError && (
-            <div className="flex items-center gap-2 text-sm text-red-600">
+            <div className="flex items-center gap-2 text-sm text-critical">
               <AlertCircle className="w-4 h-4" />
               {validationError}
             </div>

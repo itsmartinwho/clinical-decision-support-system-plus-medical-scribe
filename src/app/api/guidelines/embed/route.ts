@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { EmbeddingService } from '@/services/guidelines/embedding-service';
+import { openAIKeyMissingResponse } from '@/lib/serverGuards';
 
 export async function POST(request: NextRequest) {
+  const noKey = openAIKeyMissingResponse();
+  if (noKey) return noKey;
   try {
     const body = await request.json();
     const { docId } = body;

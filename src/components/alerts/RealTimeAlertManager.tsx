@@ -129,14 +129,14 @@ export const RealTimeAlertManager: React.FC<RealTimeAlertManagerProps> = ({
             </Button>
           </div>
 
-          <div className="text-xs text-gray-500 space-y-1">
+          <div className="text-xs text-muted-foreground space-y-1">
             <div>Status: {isActive ? 'Active' : 'Inactive'}</div>
             <div>Session: {realTimeAlerts.isSessionActive ? 'Running, checking every 10 s' : 'Not started'}</div>
             <div>Consultation: {consultationId || 'None'}</div>
             <div>Transcript: {transcript.length} characters</div>
             <div>Active Toasts: {alerts.length}</div>
             {realTimeAlerts.error && (
-              <div className="text-red-500">Error: {realTimeAlerts.error}</div>
+              <div className="text-critical">Error: {realTimeAlerts.error}</div>
             )}
           </div>
         </CardContent>

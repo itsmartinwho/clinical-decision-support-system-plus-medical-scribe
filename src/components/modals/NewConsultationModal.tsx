@@ -88,6 +88,7 @@ export default function NewConsultationModal({ open, onOpenChange, onConsultatio
 
   // Validation
   const [errors, setErrors] = useState<Record<string, boolean>>({});
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [shake, setShake] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
 
@@ -114,10 +115,14 @@ export default function NewConsultationModal({ open, onOpenChange, onConsultatio
   useEffect(() => {
     const loadInitialData = async () => {
       if (open) { // Only run if modal is open
-        if (supabaseDataService.getAllPatients().length === 0) {
-          await supabaseDataService.loadPatientData();
+        try {
+          if (supabaseDataService.getAllPatients().length === 0) {
+            await supabaseDataService.loadPatientData();
+          }
+          setAllPatients(supabaseDataService.getAllPatients());
+        } catch (e) {
+          setLoadError(e instanceof Error ? e.message : String(e));
         }
-        setAllPatients(supabaseDataService.getAllPatients());
         // Removed the creation logic from here, it's handled by handleCreate
       }
     };
@@ -231,16 +236,17 @@ export default function NewConsultationModal({ open, onOpenChange, onConsultatio
         <DraggableDialogContent
           onCloseAutoFocus={(e) => e.preventDefault()}
           onOpenAutoFocus={(e) => e.preventDefault()}
-          className={`min-w-[672px] max-w-2xl max-h-[calc(100vh-80px)] overflow-auto pb-4 ${shake ? 'animate-shake' : ''}`}
+          className={`max-w-2xl max-h-[calc(100svh-2rem)] overflow-auto pb-4 ${shake ? 'animate-shake' : ''}`}
           draggable={draggable && open}
           allowDragging={allowDragging}
           draggableConfig={stableDraggableConfig}
         >
           <DialogHeader>
-            <DialogTitle>🩺 Start New Consultation</DialogTitle>
+            <DialogTitle>Start New Consultation</DialogTitle>
+            {loadError ? <p role="alert" className="text-sm text-critical">{loadError}</p> : null}
           </DialogHeader>
           <Tabs value={tab} onValueChange={(v) => setTab(v as any)} className="w-full">
-            <TabsList className="grid w-full grid-cols-2 mb-3">
+            <TabsList className="mb-4 w-full justify-start">
               <TabsTrigger value="existing">Existing Patient</TabsTrigger>
               <TabsTrigger value="new">New Patient</TabsTrigger>
             </TabsList>
@@ -248,7 +254,7 @@ export default function NewConsultationModal({ open, onOpenChange, onConsultatio
             {/* Existing patient tab */}
             <TabsContent value="existing">
               <div className="space-y-3">
-                <label className="font-semibold text-step--1 flex items-center">
+                <label className="text-sm font-medium flex items-center">
                   Select patient <span className="text-destructive">*</span>{errors.selectedPatient && <span className="text-destructive text-xs ml-2">Required field</span>}
                 </label>
                 <div className="transition-all duration-200 ease-in-out">
@@ -280,7 +286,7 @@ export default function NewConsultationModal({ open, onOpenChange, onConsultatio
                           <div
                             key={p.id}
                             onClick={() => setSelectedPatient(p)}
-                            className="px-3 py-2 cursor-pointer hover:bg-muted/50 text-step--1 text-[var(--placeholder-color)] opacity-[var(--placeholder-opacity)]"
+                            className="px-3 py-2 cursor-pointer hover:bg-muted/50 text-step--1 text-ink"
                           >
                             {p.name || `${p.firstName ?? ''} ${p.lastName ?? ''}`.trim() || p.id}
                           </div>
@@ -290,7 +296,7 @@ export default function NewConsultationModal({ open, onOpenChange, onConsultatio
                   )}
                 </div>
                 <div>
-                  <Label htmlFor="consultReason" className="font-semibold text-step--1">Reason for encounter</Label>
+                  <Label htmlFor="consultReason" className="text-sm font-medium">Reason for encounter</Label>
                   <Textarea 
                     id="consultReason"
                     placeholder="E.g., joint pain, generalized inflammation"
@@ -300,7 +306,7 @@ export default function NewConsultationModal({ open, onOpenChange, onConsultatio
                   />
                 </div>
                 <div>
-                  <label className="font-semibold text-step--1">Date and time</label>
+                  <label className="text-sm font-medium">Date and time</label>
                   <StyledDatePicker
                     placeholderText={format(new Date(), 'Pp')}
                     selected={scheduledDate}
@@ -317,13 +323,13 @@ export default function NewConsultationModal({ open, onOpenChange, onConsultatio
                   />
                 </div>
                 <div>
-                  <label className="font-semibold text-step--1">Duration</label>
+                  <label className="text-sm font-medium">Duration</label>
                   <select
                     value={duration || ''}
                     onChange={(e) => setDuration(e.target.value ? parseInt(e.target.value) : null)}
                     className={cn(
                       "w-full mt-1 px-3 py-2 border rounded-md bg-transparent text-step--1 font-sans focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring shadow-sm",
-                      !duration ? "text-[var(--placeholder-color)] opacity-[var(--placeholder-opacity)]" : "text-foreground opacity-100"
+                      !duration ? "text-ink" : "text-foreground opacity-100"
                     )}
                   >
                     <option value="" disabled>Select duration</option>
@@ -338,10 +344,10 @@ export default function NewConsultationModal({ open, onOpenChange, onConsultatio
             {/* New patient tab */}
             <TabsContent value="new">
               <div className="space-y-3">
-                <p className="font-semibold text-step--1">Patient info</p>
+                <p className="text-sm font-medium">Patient info</p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   <div>
-                    <label className="font-semibold text-step--1">First name <span className="text-destructive">*</span></label>
+                    <label className="text-sm font-medium">First name <span className="text-destructive">*</span></label>
                     <Input
                       placeholder="First name"
                       value={firstName}
@@ -351,7 +357,7 @@ export default function NewConsultationModal({ open, onOpenChange, onConsultatio
                     {errors.firstName && <span className="text-destructive text-xs ml-1">Required field</span>}
                   </div>
                   <div>
-                    <label className="font-semibold text-step--1">Last name <span className="text-destructive">*</span></label>
+                    <label className="text-sm font-medium">Last name <span className="text-destructive">*</span></label>
                     <Input
                       placeholder="Last name"
                       value={lastName}
@@ -363,13 +369,13 @@ export default function NewConsultationModal({ open, onOpenChange, onConsultatio
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   <div>
-                    <label className="font-semibold text-step--1">Gender <span className="text-destructive">*</span></label>
+                    <label className="text-sm font-medium">Gender <span className="text-destructive">*</span></label>
                     <select
                       value={gender}
                       onChange={(e) => setGender(e.target.value)}
                       className={cn(
                         "w-full mt-1 px-3 py-2 border rounded-md bg-transparent text-step--1 font-sans focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring shadow-sm",
-                        !gender ? "text-[var(--placeholder-color)] opacity-[var(--placeholder-opacity)]" : "text-foreground opacity-100"
+                        !gender ? "text-ink" : "text-foreground opacity-100"
                       )}
                     >
                       <option value="" disabled className="text-muted-foreground">
@@ -381,7 +387,7 @@ export default function NewConsultationModal({ open, onOpenChange, onConsultatio
                     </select>
                   </div>
                   <div>
-                    <label className="font-semibold text-step--1">Date of Birth</label>
+                    <label className="text-sm font-medium">Date of Birth</label>
                     <StyledDatePicker
                       placeholderText="dd/mm/yyyy"
                       selected={dob}
@@ -397,7 +403,7 @@ export default function NewConsultationModal({ open, onOpenChange, onConsultatio
                   </div>
                 </div>
                 <div>
-                  <Label htmlFor="consultReasonSm" className="font-semibold text-step--1">Reason for encounter</Label>
+                  <Label htmlFor="consultReasonSm" className="text-sm font-medium">Reason for encounter</Label>
                   <Textarea 
                     id="consultReasonSm"
                     placeholder="E.g., joint pain, generalized inflammation"
@@ -407,7 +413,7 @@ export default function NewConsultationModal({ open, onOpenChange, onConsultatio
                   />
                 </div>
                 <div>
-                  <label className="font-semibold text-step--1">Date and time</label>
+                  <label className="text-sm font-medium">Date and time</label>
                   <StyledDatePicker
                     placeholderText={format(new Date(), 'Pp')}
                     selected={scheduledDate}
@@ -424,13 +430,13 @@ export default function NewConsultationModal({ open, onOpenChange, onConsultatio
                   />
                 </div>
                 <div>
-                  <label className="font-semibold text-step--1">Duration</label>
+                  <label className="text-sm font-medium">Duration</label>
                   <select
                     value={duration || ''}
                     onChange={(e) => setDuration(e.target.value ? parseInt(e.target.value) : null)}
                     className={cn(
                       "w-full mt-1 px-3 py-2 border rounded-md bg-transparent text-step--1 font-sans focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring shadow-sm",
-                      !duration ? "text-[var(--placeholder-color)] opacity-[var(--placeholder-opacity)]" : "text-foreground opacity-100"
+                      !duration ? "text-ink" : "text-foreground opacity-100"
                     )}
                   >
                     <option value="" disabled>Select duration</option>
@@ -467,13 +473,14 @@ export default function NewConsultationModal({ open, onOpenChange, onConsultatio
         <DialogContent
           onCloseAutoFocus={(e) => e.preventDefault()}
           onOpenAutoFocus={(e) => e.preventDefault()}
-          className={`min-w-[672px] max-w-2xl max-h-[calc(100vh-80px)] overflow-auto pb-4 ${shake ? 'animate-shake' : ''}`}
+          className={`max-w-2xl max-h-[calc(100svh-2rem)] overflow-auto pb-4 ${shake ? 'animate-shake' : ''}`}
         >
           <DialogHeader>
-            <DialogTitle>🩺 Start New Consultation</DialogTitle>
+            <DialogTitle>Start New Consultation</DialogTitle>
+            {loadError ? <p role="alert" className="text-sm text-critical">{loadError}</p> : null}
           </DialogHeader>
           <Tabs value={tab} onValueChange={(v) => setTab(v as any)} className="w-full">
-            <TabsList className="grid w-full grid-cols-2 mb-3">
+            <TabsList className="mb-4 w-full justify-start">
               <TabsTrigger value="existing">Existing Patient</TabsTrigger>
               <TabsTrigger value="new">New Patient</TabsTrigger>
             </TabsList>
@@ -481,7 +488,7 @@ export default function NewConsultationModal({ open, onOpenChange, onConsultatio
             {/* Existing patient tab */}
             <TabsContent value="existing">
               <div className="space-y-3">
-                <label className="font-semibold text-step--1 flex items-center">
+                <label className="text-sm font-medium flex items-center">
                   Select patient <span className="text-destructive">*</span>{errors.selectedPatient && <span className="text-destructive text-xs ml-2">Required field</span>}
                 </label>
                 <div className="transition-all duration-200 ease-in-out">
@@ -513,7 +520,7 @@ export default function NewConsultationModal({ open, onOpenChange, onConsultatio
                           <div
                             key={p.id}
                             onClick={() => setSelectedPatient(p)}
-                            className="px-3 py-2 cursor-pointer hover:bg-muted/50 text-step--1 text-[var(--placeholder-color)] opacity-[var(--placeholder-opacity)]"
+                            className="px-3 py-2 cursor-pointer hover:bg-muted/50 text-step--1 text-ink"
                           >
                             {p.name || `${p.firstName ?? ''} ${p.lastName ?? ''}`.trim() || p.id}
                           </div>
@@ -523,7 +530,7 @@ export default function NewConsultationModal({ open, onOpenChange, onConsultatio
                   )}
                 </div>
                 <div>
-                  <Label htmlFor="consultReason" className="font-semibold text-step--1">Reason for encounter</Label>
+                  <Label htmlFor="consultReason" className="text-sm font-medium">Reason for encounter</Label>
                   <Textarea 
                     id="consultReason"
                     placeholder="E.g., joint pain, generalized inflammation"
@@ -533,7 +540,7 @@ export default function NewConsultationModal({ open, onOpenChange, onConsultatio
                   />
                 </div>
                 <div>
-                  <label className="font-semibold text-step--1">Date and time</label>
+                  <label className="text-sm font-medium">Date and time</label>
                   <StyledDatePicker
                     placeholderText={format(new Date(), 'Pp')}
                     selected={scheduledDate}
@@ -550,13 +557,13 @@ export default function NewConsultationModal({ open, onOpenChange, onConsultatio
                   />
                 </div>
                 <div>
-                  <label className="font-semibold text-step--1">Duration</label>
+                  <label className="text-sm font-medium">Duration</label>
                   <select
                     value={duration || ''}
                     onChange={(e) => setDuration(e.target.value ? parseInt(e.target.value) : null)}
                     className={cn(
                       "w-full mt-1 px-3 py-2 border rounded-md bg-transparent text-step--1 font-sans focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring shadow-sm",
-                      !duration ? "text-[var(--placeholder-color)] opacity-[var(--placeholder-opacity)]" : "text-foreground opacity-100"
+                      !duration ? "text-ink" : "text-foreground opacity-100"
                     )}
                   >
                     <option value="" disabled>Select duration</option>
@@ -571,10 +578,10 @@ export default function NewConsultationModal({ open, onOpenChange, onConsultatio
             {/* New patient tab */}
             <TabsContent value="new">
               <div className="space-y-3">
-                <p className="font-semibold text-step--1">Patient info</p>
+                <p className="text-sm font-medium">Patient info</p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   <div>
-                    <label className="font-semibold text-step--1">First name <span className="text-destructive">*</span></label>
+                    <label className="text-sm font-medium">First name <span className="text-destructive">*</span></label>
                     <Input
                       placeholder="First name"
                       value={firstName}
@@ -584,7 +591,7 @@ export default function NewConsultationModal({ open, onOpenChange, onConsultatio
                     {errors.firstName && <span className="text-destructive text-xs ml-1">Required field</span>}
                   </div>
                   <div>
-                    <label className="font-semibold text-step--1">Last name <span className="text-destructive">*</span></label>
+                    <label className="text-sm font-medium">Last name <span className="text-destructive">*</span></label>
                     <Input
                       placeholder="Last name"
                       value={lastName}
@@ -596,13 +603,13 @@ export default function NewConsultationModal({ open, onOpenChange, onConsultatio
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   <div>
-                    <label className="font-semibold text-step--1">Gender <span className="text-destructive">*</span></label>
+                    <label className="text-sm font-medium">Gender <span className="text-destructive">*</span></label>
                     <select
                       value={gender}
                       onChange={(e) => setGender(e.target.value)}
                       className={cn(
                         "w-full mt-1 px-3 py-2 border rounded-md bg-transparent text-step--1 font-sans focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring shadow-sm",
-                        !gender ? "text-[var(--placeholder-color)] opacity-[var(--placeholder-opacity)]" : "text-foreground opacity-100"
+                        !gender ? "text-ink" : "text-foreground opacity-100"
                       )}
                     >
                       <option value="" disabled className="text-muted-foreground">
@@ -614,7 +621,7 @@ export default function NewConsultationModal({ open, onOpenChange, onConsultatio
                     </select>
                   </div>
                   <div>
-                    <label className="font-semibold text-step--1">Date of Birth</label>
+                    <label className="text-sm font-medium">Date of Birth</label>
                     <StyledDatePicker
                       placeholderText="dd/mm/yyyy"
                       selected={dob}
@@ -630,7 +637,7 @@ export default function NewConsultationModal({ open, onOpenChange, onConsultatio
                   </div>
                 </div>
                 <div>
-                  <Label htmlFor="consultReasonSm" className="font-semibold text-step--1">Reason for encounter</Label>
+                  <Label htmlFor="consultReasonSm" className="text-sm font-medium">Reason for encounter</Label>
                   <Textarea 
                     id="consultReasonSm"
                     placeholder="E.g., joint pain, generalized inflammation"
@@ -640,7 +647,7 @@ export default function NewConsultationModal({ open, onOpenChange, onConsultatio
                   />
                 </div>
                 <div>
-                  <label className="font-semibold text-step--1">Date and time</label>
+                  <label className="text-sm font-medium">Date and time</label>
                   <StyledDatePicker
                     placeholderText={format(new Date(), 'Pp')}
                     selected={scheduledDate}
@@ -657,13 +664,13 @@ export default function NewConsultationModal({ open, onOpenChange, onConsultatio
                   />
                 </div>
                 <div>
-                  <label className="font-semibold text-step--1">Duration</label>
+                  <label className="text-sm font-medium">Duration</label>
                   <select
                     value={duration || ''}
                     onChange={(e) => setDuration(e.target.value ? parseInt(e.target.value) : null)}
                     className={cn(
                       "w-full mt-1 px-3 py-2 border rounded-md bg-transparent text-step--1 font-sans focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring shadow-sm",
-                      !duration ? "text-[var(--placeholder-color)] opacity-[var(--placeholder-opacity)]" : "text-foreground opacity-100"
+                      !duration ? "text-ink" : "text-foreground opacity-100"
                     )}
                   >
                     <option value="" disabled>Select duration</option>
