@@ -1,10 +1,12 @@
 # Clinical decision support system, plus a medical scribe
 
-A 2025 prototype of clinical decision support in the browser, called Foresight. It listens to a consultation, writes the notes, raises alerts while the doctor and patient talk, and answers clinical questions, all over a small pseudo-EMR.
+A 2025 prototype of clinical decision support in the browser. It listens to a consultation, writes the notes, raises alerts while the doctor and patient talk, and answers clinical questions, all over a small pseudo-EMR.
 
 [![Clinical decision support system with proactive alerts, scribe, notes and a pseudo-EMR (3 min 50 s)](https://cdn.loom.com/sessions/thumbnails/4c6c327fe0554e4caa6f5345789f72c2-b23743124f72c0d2.gif)](https://www.loom.com/share/4c6c327fe0554e4caa6f5345789f72c2)
 
-The video narrates it as "ForSight". Live demo: [foresight-cdss-mvp.vercel.app](https://foresight-cdss-mvp.vercel.app).
+The video shows the 2025 interface. Live demo, as it looks now: [foresight-cdss-mvp.vercel.app](https://foresight-cdss-mvp.vercel.app).
+
+![A patient's workspace in the current interface](docs/screenshot.jpg)
 
 > This is a prototype, not a medical device, and not for clinical use. Every patient in it is synthetic: invented people on records from EMRBots' artificial patient dataset, with transcripts and notes generated for the prototype.
 
