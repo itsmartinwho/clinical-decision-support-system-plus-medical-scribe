@@ -19,10 +19,11 @@ import {
   AIProcessingRequest, 
   AIProcessingResponse,
   AIProcessingContext,
-  AIAlertResult
+  AIAlertResult,
+  AIModelType
 } from '@/types/ai-models';
 
-import { getModelForUseCase, DEFAULT_REALTIME_MODEL, DEFAULT_POST_CONSULTATION_MODEL, GPT_4O_MINI } from './ai/gpt-models';
+import { getModelForUseCase, isReasoningModel, DEFAULT_REALTIME_MODEL, DEFAULT_POST_CONSULTATION_MODEL, GPT_4O_MINI } from './ai/gpt-models';
 import { getRealTimeTemplate } from './ai/prompt-templates';
 import { getSupabaseClient } from './supabaseClient';
 import { supabaseDataService } from '@/lib/supabaseDataService';
@@ -88,10 +89,11 @@ export class UnifiedAlertsService {
         messages
       };
 
-      // o4-mini models have specific parameter requirements
-      if (model.includes('o4-mini')) {
-        requestBody.max_completion_tokens = maxTokens;
-        // o4-mini only supports default temperature (1), don't set temperature parameter
+      // Reasoning models take max_completion_tokens, which also covers their
+      // reasoning, and keep the default temperature.
+      if (isReasoningModel(model as AIModelType)) {
+        requestBody.max_completion_tokens = Math.max(maxTokens, 25000);
+        requestBody.reasoning_effort = 'low';
       } else {
         requestBody.max_tokens = maxTokens;
         requestBody.temperature = 0.1;
