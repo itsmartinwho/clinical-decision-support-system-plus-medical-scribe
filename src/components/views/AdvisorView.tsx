@@ -641,7 +641,7 @@ export default function AdvisorView() {
         <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto px-4 pt-6 sm:px-6">
           <div className="mx-auto w-full max-w-3xl space-y-8 pb-56">
             {messages.length <= 1 ? (
-              <div className="flex min-h-[52vh] items-center justify-center">
+              <div className="flex min-h-[52vh] items-center justify-center lg:min-h-[calc(50svh-8rem)] lg:items-end">
                 <span className="relative inline-flex h-24 w-24 items-center justify-center">
                   <span className="absolute inset-0 rounded-[1.75rem] bg-iris-soft ring-1 ring-iris-line" aria-hidden />
                   <span className="dot-live absolute inset-2 rounded-[1.4rem] bg-iris/10" aria-hidden />
@@ -698,11 +698,11 @@ export default function AdvisorView() {
       </ContentSurface>
       {mounted && createPortal(
         <div
-          className="pointer-events-none fixed bottom-3 flex justify-center px-3 sm:bottom-5 sm:px-6"
+          className={`pointer-events-none fixed bottom-3 flex justify-center px-3 sm:bottom-5 sm:px-6 ${messages.length <= 1 ? 'lg:bottom-[calc(50svh-6.5rem)]' : ''}`}
           style={{
             left: 'var(--actual-sidebar-width, 0rem)',
             width: 'calc(100% - var(--actual-sidebar-width, 0rem))',
-            transition: 'left 0.2s ease, width 0.2s ease',
+            transition: 'left 0.2s ease, width 0.2s ease, bottom 0.5s var(--ease-out)',
           }}
         >
           <div className="pointer-events-auto flex w-full max-w-3xl flex-col gap-1 rounded-2xl border border-hairline bg-card px-3 pb-2 pt-2.5 shadow-float transition-shadow focus-within:ring-2 focus-within:ring-iris/30">

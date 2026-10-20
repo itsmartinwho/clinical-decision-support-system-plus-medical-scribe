@@ -128,9 +128,9 @@ export default function DifferentialDiagnosesList({
   return (
     <div className={`w-full flex flex-col ${className}`}>
       {/* Header - Fixed at top */}
-      <div className="flex-shrink-0 flex items-center justify-between mb-4">
-        <div>
-          <h3 className="text-lg font-semibold text-foreground">Differential Diagnoses</h3>
+      <div className="mb-4 flex flex-shrink-0 items-start justify-between gap-4">
+        <div className="min-w-0">
+          <h3 className="font-display text-xl text-ink [line-height:1.25]">Differential Diagnoses</h3>
           <p className="text-sm text-muted-foreground">
             {diagnoses.length} diagnos{diagnoses.length === 1 ? 'is' : 'es'} ranked by likelihood
           </p>

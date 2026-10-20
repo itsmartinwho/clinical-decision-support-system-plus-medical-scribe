@@ -442,11 +442,11 @@ export default function ConsolidatedConsultationTab({
     <div className="space-y-6">
       {/* Encounter Header */}
       <div className="rounded-[var(--radius-lg)] border border-border bg-card p-5 space-y-4 sm:p-6">
-        <div className="flex items-center justify-between mb-4">
+        <div className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
           <h2 className="font-display text-xl text-ink">
             Consultation Details
           </h2>
-          <span className="data-mono break-all text-xs text-muted-foreground">
+          <span className="data-mono break-all text-xs text-muted-foreground sm:text-right">
             {selectedEncounter.encounterIdentifier}
           </span>
         </div>
