@@ -242,7 +242,7 @@ This fix restores the intended user experience where creating a new consultation
         - `endpointing=false`: Disables automatic endpointing to prevent premature closures
         - `vad_events=true`: Enables voice activity detection events
 - **Environment Variables**:
-    - `NEXT_PUBLIC_DEEPGRAM_API_KEY`: Required for the transcription service.
+    - `DEEPGRAM_API_KEY`: Required for the transcription service. Server only: the browser gets a 30-second token from `/api/deepgram/token` (`src/lib/deepgram.ts`) for each socket it opens, and passes it as the `bearer` subprotocol.
 
 ## Troubleshooting Common Issues
 

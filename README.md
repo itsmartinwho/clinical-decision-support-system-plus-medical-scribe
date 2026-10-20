@@ -39,7 +39,7 @@ Fill in `.env.local`:
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Its anon key, for reads and writes from the app |
 | `SUPABASE_SERVICE_ROLE_KEY` | Its service role key, for the server routes, the guideline ingestion and the data scripts |
 | `OPENAI_API_KEY` | The advisor, the clinical engine, the alerts and the guideline embeddings |
-| `NEXT_PUBLIC_DEEPGRAM_API_KEY` | Live transcription. It is sent to the browser, so use a key with a low limit |
+| `DEEPGRAM_API_KEY` | Live transcription. It stays on the server, which trades it for a 30-second token each time the browser opens a transcription socket; the key needs Member permissions |
 | `API_BASE_URL` | Only for `scripts/batch_clinical_engine_processing.ts`; defaults to `http://localhost:3000` |
 
 The app was built with Supabase's anon and service role keys. Supabase is retiring those by the end of 2026 in favour of publishable and secret keys, which may need a newer `@supabase/supabase-js`.

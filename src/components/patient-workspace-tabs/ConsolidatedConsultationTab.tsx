@@ -34,6 +34,7 @@ import { supabaseDataService } from '@/lib/supabaseDataService';
 import { format } from 'date-fns';
 import { RichTextEditor, type RichTextEditorRef } from '@/components/ui/rich-text-editor';
 import { AudioWaveform } from '@/components/ui/AudioWaveform';
+import { openDeepgramSocket, TranscriptionUnavailableError } from '@/lib/deepgram';
 import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
 
 interface ConsolidatedConsultationTabProps {
@@ -184,12 +185,6 @@ export default function ConsolidatedConsultationTab({
   // Start transcription functionality
   const startTranscription = useCallback(async () => {
     console.log('[ConsolidatedConsultationTab] Starting transcription');
-    const apiKey = process.env.NEXT_PUBLIC_DEEPGRAM_API_KEY;
-    
-    if (!apiKey) {
-      toast({ title: "Error", description: "Deepgram API key not configured.", variant: "destructive" });
-      return;
-    }
     
     if (isTranscribing) {
       console.log('[ConsolidatedConsultationTab] Already transcribing, ignoring start request');
@@ -214,7 +209,7 @@ export default function ConsolidatedConsultationTab({
         vad_events: 'true'
       }).toString();
       
-      const ws = new WebSocket(wsUrl, ['token', apiKey]);
+      const ws = await openDeepgramSocket(wsUrl);
       socketRef.current = ws;
 
       // KeepAlive mechanism to prevent connection timeouts during silence
@@ -335,7 +330,12 @@ export default function ConsolidatedConsultationTab({
         cleanupAllAudioResources();
       };
     } catch (err) {
-      toast({ title: "Microphone Error", description: "Could not access microphone.", variant: "destructive" });
+      cleanupAllAudioResources();
+      if (err instanceof TranscriptionUnavailableError) {
+        toast({ title: "Error", description: err.message, variant: "destructive" });
+      } else {
+        toast({ title: "Microphone Error", description: "Could not access microphone.", variant: "destructive" });
+      }
     }
   }, [isTranscribing, isPaused, cleanupAllAudioResources]);
 
