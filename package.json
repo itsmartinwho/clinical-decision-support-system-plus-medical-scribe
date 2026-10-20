@@ -25,8 +25,6 @@
     "setup:guidelines": "tsx scripts/clinical-guidelines/setup-guidelines.ts",
     "test:guidelines": "tsx scripts/clinical-guidelines/test-guidelines.ts",
     "test:scheduler": "tsx scripts/clinical-guidelines/test-scheduler.ts",
-    "enrich-data": "node scripts/unified_enrichment_script.js --enrich",
-    "analyze-data": "node scripts/unified_enrichment_script.js --analyze",
     "clean": "rm -rf .next node_modules/.cache .turbo",
     "optimize": "node scripts/optimize-dev.js"
   },
