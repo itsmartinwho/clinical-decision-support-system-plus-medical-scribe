@@ -41,13 +41,15 @@ export default function DataSourceIndicator({ className }: { className?: string 
         <button
           type="button"
           className={cn(
-            'inline-flex h-7 items-center gap-2 rounded-full border border-flag-line bg-flag-soft px-2.5 text-[0.6875rem] font-semibold uppercase tracking-[0.08em] text-flag transition-colors hover:border-flag',
+            'inline-flex h-7 shrink-0 items-center gap-1.5 rounded-full border border-flag-line bg-flag-soft px-2 text-[0.6875rem] font-semibold sm:px-2.5 uppercase tracking-[0.08em] text-flag transition-colors hover:border-flag',
             className,
           )}
           aria-label="Demo data: about the data on this page"
         >
           <span className="h-1.5 w-1.5 rounded-full bg-flag" aria-hidden />
-          <span aria-live="polite">{justSaved ? 'Saved in this tab' : 'Demo data'}</span>
+          <span aria-live="polite">
+            {justSaved ? 'Saved in this tab' : <>Demo<span className="hidden sm:inline"> data</span></>}
+          </span>
         </button>
       </PopoverTrigger>
       <PopoverContent align="end" className="w-80">

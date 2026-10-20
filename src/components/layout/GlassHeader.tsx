@@ -34,17 +34,17 @@ export default function GlassHeader() {
       <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-2 focus:z-50 focus:rounded-md focus:bg-ink focus:px-3 focus:py-2 focus:text-paper">
         Skip to content
       </a>
-      <div className="flex h-14 items-center gap-3 px-4 sm:px-6">
+      <div className="flex h-14 items-center gap-2 px-4 sm:gap-3 sm:px-6">
         <Link href="/" className="flex min-w-0 items-center gap-2.5 rounded-md text-ink" aria-label={`${PRODUCT_NAME}: dashboard`}>
           <Mark size={22} />
-          <span className="truncate font-display text-[1.3rem] leading-none tracking-[-0.01em]">{PRODUCT_NAME}</span>
+          <span className="truncate font-display text-[1.2rem] leading-none tracking-[-0.01em] sm:text-[1.3rem]">{PRODUCT_NAME}</span>
         </Link>
 
         <div className="mx-auto hidden w-full max-w-xl md:block">
           <EnhancedSearch portal inputClassName={SEARCH_INPUT} placeholder="Search patients, conditions, guidelines" />
         </div>
 
-        <div className="ml-auto flex shrink-0 items-center gap-1.5 md:ml-0">
+        <div className="ml-auto flex shrink-0 items-center gap-0.5 sm:gap-1.5 md:ml-0">
           <DataSourceIndicator />
           <button
             type="button"
