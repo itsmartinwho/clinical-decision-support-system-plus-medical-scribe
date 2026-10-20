@@ -27,6 +27,7 @@ import { useDemo } from '@/contexts/DemoContext';
 import { useDemoWorkspace } from '@/hooks/demo/useDemoWorkspace';
 import { useDemoConsultation } from '@/hooks/demo/useDemoConsultation';
 import { DemoDataService } from "@/services/demo/DemoDataService";
+import { DEMO_TIMING } from "@/services/demo/demoTiming";
 import { useModalManager } from '@/components/ui/modal-manager';
 import FormCreationModal from '@/components/modals/FormCreationModal';
 
@@ -266,7 +267,7 @@ export default function PatientWorkspaceViewModern({ patient: initialPatientStub
       const timer = setTimeout(() => {
         console.log('[PatientWorkspace] Timer executed, advancing to animatingTranscript');
         demoState.advanceDemoStage('animatingTranscript');
-      }, 500); // Small delay to allow panel to render
+      }, DEMO_TIMING.panelSettleMs); // Small delay to allow panel to render
       return () => {
         console.log('[PatientWorkspace] Clearing demo stage advancement timer');
         clearTimeout(timer);

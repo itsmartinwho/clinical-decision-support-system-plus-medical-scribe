@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { Patient, DifferentialDiagnosis, SoapNote, RichContent } from '@/lib/types';
 import { DEMO_PATIENT_ID, DemoDataService } from '@/services/demo/DemoDataService';
 import { DemoStage } from '@/services/demo/DemoStateService';
+import { DEMO_TIMING } from '@/services/demo/demoTiming';
 import { getDemoDifferentialDiagnoses } from '@/data/demoClinicalResults';
 
 export interface DemoConsultationBehavior {
@@ -127,12 +128,11 @@ export function useDemoConsultation({
     
     setIsGeneratingPlan(true);
     
-    // Note: Clinical plan generation delay is handled by DemoAnimationService
-    // This is just for UI state management
+    // A short beat for the "Analyzing..." state, from the demo's one clock
     setTimeout(() => {
       setIsGeneratingPlan(false);
       onAdvanceStage('showingPlan');
-    }, 200); // Quick UI update, actual delay handled by orchestrator
+    }, DEMO_TIMING.planBeatMs);
   };
   
   // Reset generation state when stage changes
