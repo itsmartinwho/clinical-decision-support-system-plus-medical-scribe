@@ -1,14 +1,14 @@
 // Early answers for API routes that cannot work in this deployment, so the
 // client hears why at once instead of waiting on a call that cannot succeed.
+import { timingSafeEqual } from 'node:crypto';
 import { NextResponse } from 'next/server';
 import { resolveDataMode } from './dataMode';
 
 export const OPENAI_KEY_MISSING =
   'The AI features are off in this deployment: OPENAI_API_KEY is not set.';
 
-export function hasOpenAIKey(): boolean {
-  return !!process.env.OPENAI_API_KEY?.trim();
-}
+export { hasOpenAIKey } from './ai/keys';
+import { hasOpenAIKey } from './ai/keys';
 
 /** 503 with a plain reason when OPENAI_API_KEY is not set, otherwise null. */
 export function openAIKeyMissingResponse(): NextResponse | null {
@@ -32,4 +32,30 @@ export async function databaseRequiredResponse(feature: string): Promise<NextRes
     },
     { status: 503 },
   );
+}
+
+function sameSecret(given: string, expected: string): boolean {
+  const a = Buffer.from(given);
+  const b = Buffer.from(expected);
+  return a.length === b.length && timingSafeEqual(a, b);
+}
+
+/**
+ * For the admin routes that spend money (guideline ingestion and embeddings):
+ * refused unless GUIDELINES_ADMIN_SECRET is set on the server and the request
+ * carries it as a bearer token. Null when the request may go ahead.
+ */
+export function adminSecretRequiredResponse(request: Request, what: string): NextResponse | null {
+  const secret = process.env.GUIDELINES_ADMIN_SECRET?.trim();
+  if (!secret) {
+    return NextResponse.json(
+      { error: `${what} is turned off in this deployment: GUIDELINES_ADMIN_SECRET is not set.`, code: 'ADMIN_DISABLED' },
+      { status: 403 },
+    );
+  }
+  const auth = request.headers.get('authorization') ?? '';
+  if (!auth.startsWith('Bearer ') || !sameSecret(auth.slice(7), secret)) {
+    return NextResponse.json({ error: 'Unauthorized', code: 'UNAUTHORIZED' }, { status: 401 });
+  }
+  return null;
 }

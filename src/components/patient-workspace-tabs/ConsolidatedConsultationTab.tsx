@@ -517,9 +517,9 @@ export default function ConsolidatedConsultationTab({
         <CardHeader>
           <CardTitle className="flex flex-wrap items-center justify-between gap-3">
             Transcript
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2 font-sans text-sm">
               {!isTranscribing && transcriptText ? (
-                <div role="group" aria-label="Transcript view" className="inline-flex rounded-md border border-input p-0.5 font-sans text-[0.8125rem]">
+                <div role="group" aria-label="Transcript view" className="inline-flex rounded-md border border-input p-0.5 text-[0.8125rem]">
                   {(['conversation', 'edit'] as const).map((v) => (
                     <button
                       key={v}

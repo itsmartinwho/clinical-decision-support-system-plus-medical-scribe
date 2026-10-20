@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { IngestionOrchestrator } from '@/services/guidelines/ingestion-orchestrator';
 import { GuidelineSource } from '@/types/guidelines';
-import { databaseRequiredResponse } from '@/lib/serverGuards';
+import { adminSecretRequiredResponse, databaseRequiredResponse } from '@/lib/serverGuards';
 
 export async function POST(request: NextRequest) {
+  // Ingestion embeds what it fetches, which spends money: only with the admin secret.
+  const refused = adminSecretRequiredResponse(request, 'Guideline ingestion');
+  if (refused) return refused;
   const noDatabase = await databaseRequiredResponse('Guideline ingestion');
   if (noDatabase) return noDatabase;
   try {

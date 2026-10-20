@@ -252,7 +252,7 @@ export default function DashboardView({ onAlertClick, allAlerts }: DashboardView
             </div>
             <div className="px-6 py-6 sm:px-8">
               <DialogHeader className="space-y-3">
-                <DialogTitle className="text-[1.875rem] sm:text-[2.125rem]">See a consultation turn into a note</DialogTitle>
+                <DialogTitle className="text-[1.875rem] leading-[1.12] sm:text-[2.125rem]">See a consultation turn into a note</DialogTitle>
                 <DialogDescription className="text-[0.9375rem] leading-relaxed text-ink-2">
                   {PRODUCT_NAME} listens to a visit with Dorothy Robinson, a synthetic patient, writes the transcript as
                   the two of them speak, then drafts the differential, the diagnosis, the plan and the note.

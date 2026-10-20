@@ -23,13 +23,19 @@ export async function GET(request: NextRequest) {
     const searchService = new GuidelineSearchService();
 
     switch (searchType) {
-      case 'semantic':
-        const semanticResults = await searchService.semanticSearch(
+      case 'semantic': {
+        // Falls back to text search when the query cannot be embedded.
+        const outcome = await searchService.semanticSearchWithFallback(
           query,
           specialty || undefined,
           limit
         );
-        return NextResponse.json({ results: semanticResults, type: 'semantic' });
+        return NextResponse.json({
+          results: outcome.results,
+          type: 'semantic',
+          ...(outcome.fallback ? { fallback: outcome.fallback, reason: outcome.reason } : {}),
+        });
+      }
 
       case 'text':
         const textResults = await searchService.textSearch(

@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { EmbeddingService } from '@/services/guidelines/embedding-service';
-import { openAIKeyMissingResponse } from '@/lib/serverGuards';
+import { adminSecretRequiredResponse, openAIKeyMissingResponse } from '@/lib/serverGuards';
 
 export async function POST(request: NextRequest) {
+  // Embedding spends money: only with the admin secret.
+  const refused = adminSecretRequiredResponse(request, 'Embedding guidelines');
+  if (refused) return refused;
   const noKey = openAIKeyMissingResponse();
   if (noKey) return noKey;
   try {
