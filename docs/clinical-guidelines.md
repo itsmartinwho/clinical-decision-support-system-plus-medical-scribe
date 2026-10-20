@@ -101,16 +101,22 @@ pnpm run setup:guidelines --embed-only
 
 ### Ingestion
 
+The ingest and schedule routes (`/api/guidelines/ingest`, `/api/guidelines/schedule`)
+run with the Supabase service role, which bypasses row level security, so
+every call must carry the server-side secret as
+`Authorization: Bearer $ADMIN_SECRET`. They answer 401 without it, and always
+when `ADMIN_SECRET` is not set in the environment.
+
 - **`POST /api/guidelines/ingest`**: Trigger guideline ingestion
   ```bash
   # Ingest all sources
-  curl -X POST /api/guidelines/ingest
+  curl -X POST /api/guidelines/ingest -H "Authorization: Bearer $ADMIN_SECRET"
   
   # Ingest specific source
-  curl -X POST /api/guidelines/ingest -d '{"source": "USPSTF"}'
+  curl -X POST /api/guidelines/ingest -H "Authorization: Bearer $ADMIN_SECRET" -d '{"source": "USPSTF"}'
   ```
 
-- **`GET /api/guidelines/ingest`**: Get available sources
+- **`GET /api/guidelines/ingest`**: Get available sources (same header)
 
 ### Embeddings
 

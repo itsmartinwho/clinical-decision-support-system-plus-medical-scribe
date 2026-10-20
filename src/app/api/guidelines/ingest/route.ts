@@ -1,8 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { IngestionOrchestrator } from '@/services/guidelines/ingestion-orchestrator';
 import { GuidelineSource } from '@/types/guidelines';
+import { requireAdminSecret } from '@/lib/adminAuth';
+
+// Both handlers run the ingesters, which write with the service role (it
+// bypasses RLS), so they take the server-side admin secret.
 
 export async function POST(request: NextRequest) {
+  const refused = requireAdminSecret(request);
+  if (refused) return refused;
+
   try {
     const body = await request.json();
     const { source } = body;
@@ -34,7 +41,10 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const refused = requireAdminSecret(request);
+  if (refused) return refused;
+
   try {
     const orchestrator = new IngestionOrchestrator();
     const sources = orchestrator.getAvailableSources();

@@ -1,8 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getScheduler } from '@/services/guidelines/scheduler';
 import { GuidelineSource } from '@/types/guidelines';
+import { requireAdminSecret } from '@/lib/adminAuth';
 
-export async function GET() {
+// Both handlers use the scheduler, which reads and writes the refresh log and
+// the guidelines with the service role (it bypasses RLS), so they take the
+// server-side admin secret.
+
+export async function GET(request: NextRequest) {
+  const refused = requireAdminSecret(request);
+  if (refused) return refused;
+
   try {
     const scheduler = getScheduler();
     const status = await scheduler.getScheduleStatus();
@@ -27,6 +35,9 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
+  const refused = requireAdminSecret(request);
+  if (refused) return refused;
+
   try {
     const body = await request.json();
     const { action, sources } = body;
