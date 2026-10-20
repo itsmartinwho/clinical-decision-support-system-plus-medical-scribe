@@ -23,6 +23,8 @@ import {
 import { OpenAIClient } from '../ai/gpt-models';
 import { getRealTimeTemplate } from '../ai/prompt-templates';
 import { UnifiedAlertsService } from '../unifiedAlertsService';
+import { supabaseDataService } from '../supabaseDataService';
+import type { PatientDataPayload } from '../types';
 import { GPT_4O_MINI, REASONING } from '../ai/gpt-models';
 
 export class AlertEngine {
@@ -50,13 +52,15 @@ export class AlertEngine {
         timeout: 15000, // 15 seconds for real-time
       });
 
-      // Post-consultation client for comprehensive analysis
+      // Post-consultation client for comprehensive analysis. Its output budget
+      // includes the reasoning, and two attempts fit inside Vercel's default
+      // 300-second function limit.
       this.postConsultationClient = new OpenAIClient({
         model: REASONING,
-        maxTokens: 3000,
-        temperature: 0.05,
-        retryAttempts: 3,
-        timeout: 60000, // 60 seconds for thorough analysis
+        maxTokens: 16000,
+        reasoningEffort: 'low',
+        retryAttempts: 1,
+        timeout: 120000,
       });
     } catch (error) {
       console.warn('AI clients not available:', error);
@@ -126,6 +130,11 @@ export class AlertEngine {
       
       if (!context) {
         console.warn('Could not build post-consultation context');
+        return [];
+      }
+
+      if (!context.fullTranscript.trim()) {
+        console.log('[AlertEngine] No transcript saved for this consultation; nothing to review');
         return [];
       }
 
@@ -234,8 +243,7 @@ export class AlertEngine {
         statuses: [AlertStatus.ACTIVE]
       });
 
-      // Get patient history (simplified for now)
-      const patientHistory = await this.getPatientHistory(patientId);
+      const patientHistory = this.getPatientHistory(await this.loadPatientData(patientId));
 
       return {
         patientId,
@@ -263,11 +271,10 @@ export class AlertEngine {
         isRealTime: true
       });
 
-      // Get patient history
-      const patientHistory = await this.getPatientHistory(patientId);
-
-      // Get consultation data (simplified for now)
-      const consultationData = await this.getConsultationData(encounterId);
+      // Read the consultation back as it was just saved, not from a cached copy
+      const patientData = await this.loadPatientData(patientId, true);
+      const patientHistory = this.getPatientHistory(patientData);
+      const consultationData = this.getConsultationData(patientData, patientId, encounterId);
 
       return {
         patientId,
@@ -323,27 +330,72 @@ export class AlertEngine {
 
   // ==================== HELPER METHODS ====================
 
-  private async getPatientHistory(patientId: string): Promise<Record<string, any>> {
-    // TODO: Integrate with patient data service
-    // For now, return mock data structure
+  // The patient's chart, loaded the way the clinical engine loads it.
+  private async loadPatientData(patientId: string, fresh = false): Promise<PatientDataPayload | null> {
+    try {
+      if (fresh) supabaseDataService.clearPatientCache(patientId);
+      return await supabaseDataService.getPatientData(patientId);
+    } catch (error) {
+      console.error('[AlertEngine] Could not load the patient:', error);
+      return null;
+    }
+  }
+
+  // What the model is told about the patient: only what the chart holds.
+  private getPatientHistory(patientData: PatientDataPayload | null): Record<string, any> {
+    const patient = patientData?.patient;
+    const encounters = patientData?.encounters ?? [];
     return {
-      demographics: { age: 45, gender: 'M' },
-      conditions: [],
-      medications: [],
-      labResults: [],
+      demographics: patient
+        ? {
+            gender: patient.gender,
+            dateOfBirth: patient.dateOfBirth,
+            race: patient.race,
+            ethnicity: patient.ethnicity,
+            language: patient.language
+          }
+        : {},
+      conditions: encounters.flatMap(({ diagnoses }) =>
+        diagnoses
+          .filter(diagnosis => diagnosis.code || diagnosis.description)
+          .map(diagnosis => ({ code: diagnosis.code, description: diagnosis.description }))
+      ),
+      medications: encounters.flatMap(({ encounter }) =>
+        (encounter.treatments ?? []).map(treatment => ({ drug: treatment.drug, status: treatment.status }))
+      ),
+      labResults: encounters.flatMap(({ labResults }) =>
+        labResults.map(lab => ({
+          name: lab.name,
+          value: lab.value,
+          units: lab.units,
+          dateTime: lab.dateTime,
+          referenceRange: lab.referenceRange,
+          flag: lab.flag
+        }))
+      ),
       allergies: [],
       vitals: []
     };
   }
 
-  private async getConsultationData(encounterId: string): Promise<Record<string, any> | null> {
-    // TODO: Integrate with consultation service
-    // For now, return mock data structure
+  private getConsultationData(
+    patientData: PatientDataPayload | null,
+    patientId: string,
+    encounterId: string
+  ): Record<string, any> | null {
+    // The id may come as "<patientId>_<encounterId>", as the clinical engine's does
+    const id = encounterId.startsWith(`${patientId}_`) ? encounterId.slice(patientId.length + 1) : encounterId;
+    const encounter = patientData?.encounters.find(
+      ({ encounter }) => encounter.id === id || encounter.encounterIdentifier === id
+    )?.encounter;
+    if (!encounter) return null;
     return {
-      transcript: '',
-      soapNote: '',
-      diagnosticResults: {},
-      treatments: []
+      transcript: encounter.transcript || '',
+      soapNote: encounter.soapNote || '',
+      diagnosticResults: encounter.diagnosis_rich_content?.text_content
+        ? { diagnosis: encounter.diagnosis_rich_content.text_content }
+        : {},
+      treatments: encounter.treatments ?? []
     };
   }
 
