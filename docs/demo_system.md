@@ -28,10 +28,12 @@ Contains all demo data including:
 
 #### 2. DemoAnimationService (`src/services/demo/DemoAnimationService.ts`)
 
-Handles all demo animations and timing:
-- **Transcript Animation**: Types out conversation lines with 1200ms intervals
-- **Clinical Plan Simulation**: Simulates AI processing with 1800ms delay
+Plays the scripted consultation. It is not a real transcription, so it does not run at the speed of speech: the whole transcript plays in about 8.5 seconds, each turn typed in fast, so the alerts, the notes and the clinical plan show up while the audience is still looking.
+- **Transcript Animation**: Lays the turns out over `DEMO_TIMING.transcriptMs`, each turn's share of the time following its length, and reads the text off the clock (so a throttled timer only skips frames). With `prefers-reduced-motion` each turn appears whole, at the same moment and in the same order.
+- **Clinical Plan Simulation**: A short beat (`DEMO_TIMING.planBeatMs`) between the last turn and the notes and plan
 - **Cleanup Management**: Proper cleanup of timers and intervals
+
+**Timing** lives in one place, `DEMO_TIMING` in `src/services/demo/demoTiming.ts`: the panel's settle time, the stage debounce, the transcript's length, how a turn's share of it is weighted and how much of that is typing, the redraw rate and the beat before the plan. Change a number there and the pace changes everywhere; no wait in the scripted flow has a number of its own. Live mode (real keys) does not use it. The first alert (the glyburide and warfarin interaction) fires about 1 second into the transcript, and the second (overdue labs) about 3 seconds in.
 
 **Key Methods:**
 - `startTranscriptAnimation()`: Begins typing animation for transcript
@@ -367,7 +369,7 @@ const transcriptLines = DemoDataService.getTranscriptLines();
 
 1. **Multiple Demo Scenarios**: Support for different demo flows and patient cases
 2. **Demo Recording**: Ability to record and replay user interactions
-3. **Customizable Timing**: User-configurable animation speeds and delays
+3. **User-adjustable Timing**: `DEMO_TIMING` holds the demo's pace; exposing it as a setting is all that is left
 4. **Demo Analytics**: Track demo completion rates and user engagement
 5. **Interactive Tutorials**: Step-by-step guided tours with tooltips
 

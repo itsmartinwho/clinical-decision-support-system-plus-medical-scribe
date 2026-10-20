@@ -1,23 +1,25 @@
-// Demo Animation Service - Handles all demo animations and timings
-export const TRANSCRIPT_ANIMATION_INTERVAL = 110; // ms per tick
-export const TRANSCRIPT_WORDS_PER_TICK = 3; // words (each with its following space) per tick
-export const TRANSCRIPT_PAUSE_TICKS = 4; // ticks of silence between turns
-export const CLINICAL_PLAN_SIMULATION_DELAY = 200; 
+// Demo Animation Service - Plays the guided demo's scripted consultation.
+// Every timing comes from DEMO_TIMING (demoTiming.ts).
+import { DEMO_TIMING, planTranscript, prefersReducedMotion, transcriptAt } from './demoTiming';
+
+const now = () => (typeof performance !== 'undefined' ? performance.now() : Date.now());
 
 export class DemoAnimationService {
   private static transcriptIntervalId: NodeJS.Timeout | null = null;
   private static clinicalPlanTimeoutId: NodeJS.Timeout | null = null;
 
   /**
-   * Plays the transcript back as live transcription arrives: a few words at a
-   * time, a pause between turns, so the conversation builds turn by turn
-   * rather than appearing as a block. A scripted replay: no microphone, no
-   * transcription service, no keys.
+   * Plays the transcript back turn by turn, each typed in fast, so the
+   * conversation builds rather than appearing as a block, and the whole of it
+   * is over in a few seconds (DEMO_TIMING.transcriptMs). A scripted replay: no
+   * microphone, no transcription service, no keys. With reduced motion each
+   * turn appears whole, at the same moment and in the same order.
    */
   static startTranscriptAnimation(
     transcriptLines: string[],
     onLineUpdate: (animatedTranscript: string) => void,
-    onComplete: () => void
+    onComplete: () => void,
+    timing = DEMO_TIMING
   ): void {
     if (transcriptLines.length === 0) {
       onComplete();
@@ -25,41 +27,35 @@ export class DemoAnimationService {
     }
     this.clearTranscriptAnimation();
 
-    const reduced = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-    let line = 0;
-    let word = 0;
-    let done: string[] = [];
-    let pauseTicks = 0;
-    const words = transcriptLines.map((l) => l.split(/(\s+)/).filter((w) => w.length));
+    const reduced = prefersReducedMotion();
+    const plan = planTranscript(transcriptLines, timing);
+    const began = now();
+    let shown = '';
 
-    this.transcriptIntervalId = setInterval(() => {
-      if (pauseTicks > 0) { pauseTicks--; return; }
-      if (line >= words.length) {
+    const step = () => {
+      // Read off the clock, not counted in ticks, so a throttled timer only skips frames
+      const { text, done } = transcriptAt(plan, now() - began, reduced);
+      if (text !== shown) {
+        shown = text;
+        onLineUpdate(text);
+      }
+      if (done) {
         this.clearTranscriptAnimation();
         onComplete();
-        return;
       }
-      const current = words[line];
-      // A whole line at once with reduced motion; otherwise a short phrase per tick.
-      word = reduced ? current.length : Math.min(current.length, word + TRANSCRIPT_WORDS_PER_TICK * 2);
-      const partial = current.slice(0, word).join('');
-      onLineUpdate([...done, partial].join('\n'));
-      if (word >= current.length) {
-        done = [...done, partial];
-        line++;
-        word = 0;
-        pauseTicks = TRANSCRIPT_PAUSE_TICKS;
-      }
-    }, TRANSCRIPT_ANIMATION_INTERVAL);
+    };
+
+    this.transcriptIntervalId = setInterval(step, timing.frameMs);
+    step();
   }
 
-  static startClinicalPlanSimulation(onComplete: () => void): void {
+  static startClinicalPlanSimulation(onComplete: () => void, timing = DEMO_TIMING): void {
     this.clearClinicalPlanSimulation();
-    
+
     this.clinicalPlanTimeoutId = setTimeout(() => {
       this.clinicalPlanTimeoutId = null;
       onComplete();
-    }, CLINICAL_PLAN_SIMULATION_DELAY);
+    }, timing.planBeatMs);
   }
 
   static clearTranscriptAnimation(): void {
@@ -88,4 +84,4 @@ export class DemoAnimationService {
   static isClinicalPlanSimulating(): boolean {
     return this.clinicalPlanTimeoutId !== null;
   }
-} 
+}

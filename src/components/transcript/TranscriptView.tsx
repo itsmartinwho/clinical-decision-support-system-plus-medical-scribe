@@ -60,7 +60,8 @@ export default function TranscriptView({
   React.useEffect(() => {
     const el = scroller.current;
     if (!el || !follow || !pinned.current) return;
-    el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
+    const reduced = typeof window !== 'undefined' && !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    el.scrollTo({ top: el.scrollHeight, behavior: reduced ? 'auto' : 'smooth' });
   }, [turns.length, transcript, follow]);
 
   return (
@@ -98,7 +99,7 @@ export default function TranscriptView({
                 );
               }
               return (
-                <li key={turn.index} className={cn('grid grid-cols-[3.25rem_minmax(0,1fr)] gap-x-3', newest && 'animate-in fade-in-0 slide-in-from-bottom-1 duration-300')}>
+                <li key={turn.index} className={cn('grid grid-cols-[3.25rem_minmax(0,1fr)] gap-x-3', newest && 'motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-bottom-1 motion-safe:duration-300')}>
                   <time className="data-mono pt-[0.2rem] text-xs text-muted-foreground" title={turn.estimated ? 'Estimated from the pace of speech' : undefined}>
                     {formatClock(turn.at)}
                   </time>

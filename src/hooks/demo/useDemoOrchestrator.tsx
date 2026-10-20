@@ -7,6 +7,7 @@ import { Patient } from '@/lib/types';
 import { DemoStateService, DemoStage } from '@/services/demo/DemoStateService';
 import { DemoDataService, DEMO_PATIENT_ID } from '@/services/demo/DemoDataService';
 import { DemoAnimationService } from '@/services/demo/DemoAnimationService';
+import { DEMO_TIMING } from '@/services/demo/demoTiming';
 
 export interface DemoOrchestratorState {
   hasDemoRun: boolean;
@@ -124,7 +125,7 @@ export function useDemoOrchestrator(): UseDemoOrchestratorReturn {
             advanceDemoStage('simulatingPlanGeneration');
           }
         );
-      }, 100); // Small debounce delay
+      }, DEMO_TIMING.stageDebounceMs); // Small debounce delay
 
       return () => {
         clearTimeout(debounceTimer);
@@ -145,7 +146,7 @@ export function useDemoOrchestrator(): UseDemoOrchestratorReturn {
         DemoAnimationService.startClinicalPlanSimulation(
           () => advanceDemoStage('showingPlan')
         );
-      }, 100); // Small debounce delay
+      }, DEMO_TIMING.stageDebounceMs); // Small debounce delay
 
       return () => {
         clearTimeout(debounceTimer);
