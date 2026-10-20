@@ -28,7 +28,7 @@ The application is designed for clinicians, with aspirational roles for administ
 - **Custom Logic:** Next.js API Routes for custom endpoints (e.g., `/api/advisor`, `/api/clinical-engine`).
 - **AI Tools:**
     - **Advisor:** Integrates with the OpenAI API for general medical queries.
-    - **Clinical Engine:** A Python-based prototype (`src/clinical_engine_prototype/engine.py`) integrated via Next.js API routes.
+    - **Clinical Engine:** A TypeScript service (`src/lib/clinicalEngineServiceV3.ts`) behind `/api/clinical-engine`. An earlier Python prototype is in `src/clinical_engine_prototype/`; the app does not call it.
     - **Alerts System:** Real-time and post-consultation AI processing using OpenAI models with sophisticated prompt templates and context management.
 
 ## Frontend Architecture
@@ -63,7 +63,6 @@ The system uses a PostgreSQL database hosted on Supabase with a FHIR-aligned sch
 ### API Layer
 - **Supabase APIs**: Auto-generated REST and GraphQL APIs for data access
 - **Next.js API Routes**: Custom endpoints for AI features and complex business logic
-- **Python Component**: The Clinical Engine prototype integrates via API endpoints
 - **Real-time Processing**: Unified alerts service with background processing and caching
 
 ## Current Implemented Features

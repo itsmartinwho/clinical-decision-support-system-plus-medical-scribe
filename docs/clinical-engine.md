@@ -60,9 +60,8 @@ Rich versions contain the same core clinical information as non-rich versions bu
 
 ### AI Models Used
 
-- **GPT-4.1-mini** - Differential diagnoses generation and primary diagnosis
-- **OpenAI Assistants API** - Complex clinical reasoning and analysis
-- **Code Interpreter** - Data visualization and chart generation
+- **gpt-4o-mini**, through Chat Completions, for every step: differentials,
+  the primary diagnosis, the treatment plan, the SOAP note and the documents
 
 ## Database Schema Integration
 
@@ -145,9 +144,10 @@ POST /api/clinical-engine/treatments
 ## Configuration
 
 ### Model Selection
-- Primary analysis: GPT-4.1-mini for accuracy
-- Visualization: Code Interpreter for charts
-- Temperature: 1.0 for clinical creativity within bounds
+- Model: gpt-4o-mini (`GPT_4O_MINI` in `src/lib/ai/gpt-models.ts`); OpenAI
+  shuts it down on 2027-01-14 and suggests gpt-6-luna
+- Temperature: 1 for the diagnosis steps, 0.3 for guideline-based treatments
+  and single fields
 
 ### FHIR Compliance Settings
 - Clinical status threshold: 0.6 confidence

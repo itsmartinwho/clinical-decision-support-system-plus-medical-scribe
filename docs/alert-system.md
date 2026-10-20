@@ -95,8 +95,9 @@ interface UnifiedAlert {
 ## AI Models and Processing
 
 ### Models Used
-- **GPT-4.1**: Primary model for complex pattern recognition
-- **GPT-o3**: Advanced reasoning for complex conditions
+- **gpt-4o-mini**: real-time alerts during the consultation
+- **gpt-5.6-sol**: the post-consultation analysis (a reasoning model; it replaced
+  o1-preview, which OpenAI shut down in 2025)
 - **Clinical Pattern Recognition**: Rule-based patterns for well-established criteria
 
 ### Confidence Scoring
@@ -126,21 +127,6 @@ The unified alerts system uses a single `alerts` table with the following key fi
 - AI metadata (confidence, reasoning, model)
 - User interaction tracking (acknowledged, dismissed)
 - Audit trail (created, updated, expires)
-
-## Populating Complex Case Alerts
-
-To restore or populate complex case alerts in the database:
-
-```bash
-npx tsx scripts/populate_complex_case_alerts.ts
-```
-
-This script creates sample complex case alerts for:
-- Lupus (SLE)
-- Rheumatoid Arthritis
-- Lung Cancer
-- Hematologic Malignancy
-- Sarcoidosis
 
 ## User Interface
 
