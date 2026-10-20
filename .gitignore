@@ -21,15 +21,9 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# Local env files
-.env*.local
-.env
-.env.backup
-.env*.backup
-.env.local.backup
-.env.local.bak
-.env.local.tmp
-.env.local.backup.*
+# Local env files and their backups: everything but the example
+.env*
+!.env.example
 *.env.bak
 *.env.tmp
 

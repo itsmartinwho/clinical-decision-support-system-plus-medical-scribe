@@ -11,8 +11,8 @@ data was created.
 
 Environment Variables:
 Create a .env.local file in the root of your project with the following variables:
-SUPABASE_URL=your_supabase_url
-SUPABASE_ANON_KEY=your_supabase_anon_key
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 API_BASE_URL=your_api_base_url (e.g., http://localhost:3000)
 
 Running the Script:
@@ -253,11 +253,11 @@ async function main() {
   console.log('Starting batch clinical engine processing...');
 
   // Initialize Supabase client
-  const supabaseUrl = process.env.SUPABASE_URL;
-  const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   if (!supabaseUrl || !supabaseAnonKey) {
-    console.error('Error: SUPABASE_URL and SUPABASE_ANON_KEY must be set in .env.local');
+    console.error('Error: NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY must be set in .env.local');
     process.exit(1);
   }
 
