@@ -62,27 +62,27 @@ export const AlertList: React.FC<AlertListProps> = ({
     switch (severity) {
       case AlertSeverity.CRITICAL:
         return {
-          bgColor: 'bg-critical-soft border-critical-line',
+          bgColor: 'bg-card border-hairline shadow-card',
           iconColor: 'text-critical',
           titleColor: 'text-critical',
-          badgeColor: 'bg-critical-soft text-critical',
+          badgeColor: 'bg-critical-soft text-critical ring-1 ring-critical-line',
           borderAccent: 'border-l-critical'
         };
       case AlertSeverity.WARNING:
         return {
-          bgColor: 'bg-flag-soft border-flag-line',
+          bgColor: 'bg-card border-hairline shadow-card',
           iconColor: 'text-flag',
           titleColor: 'text-flag',
-          badgeColor: 'bg-flag-soft text-flag',
+          badgeColor: 'bg-flag-soft text-flag ring-1 ring-flag-line',
           borderAccent: 'border-l-flag-line'
         };
       case AlertSeverity.INFO:
       default:
         return {
-          bgColor: 'bg-info-soft border-info/30',
+          bgColor: 'bg-card border-hairline shadow-card',
           iconColor: 'text-info',
           titleColor: 'text-info',
-          badgeColor: 'bg-info-soft text-info',
+          badgeColor: 'bg-iris-soft text-iris ring-1 ring-iris-line',
           borderAccent: 'border-l-iris'
         };
     }

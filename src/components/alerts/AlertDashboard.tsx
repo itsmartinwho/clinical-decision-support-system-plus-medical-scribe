@@ -446,7 +446,7 @@ export const AlertDashboard: React.FC<AlertDashboardProps> = ({
                 <select
                   value={sortBy}
                   onChange={(e) => handleSortChange(e.target.value as 'date' | 'severity')}
-                  className="px-2 py-1 border border-border rounded text-xs bg-card"
+                  className="h-8 rounded-lg border border-hairline bg-card px-2.5 text-xs text-ink shadow-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
                   <option value="date">{getSortLabel('date')}</option>
                   <option value="severity">{getSortLabel('severity')}</option>
@@ -470,7 +470,7 @@ export const AlertDashboard: React.FC<AlertDashboardProps> = ({
                 <select
                   value={selectedType}
                   onChange={(e) => setSelectedType(e.target.value)}
-                  className="px-2 py-1 border border-border rounded text-xs bg-card"
+                  className="h-8 rounded-lg border border-hairline bg-card px-2.5 text-xs text-ink shadow-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
                   <option value="all">All Types</option>
                   {Object.entries(alertTypeConfig).map(([type, config]) => (

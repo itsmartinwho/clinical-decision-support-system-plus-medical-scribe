@@ -177,7 +177,7 @@ export default function GuidelinesTab() {
               </p>
               {!uiState.filter.searchQuery && uiState.filter.sources.length === 0 && uiState.filter.specialties.length === 0 && (
                 <div className="bg-flag-soft border border-flag-line rounded-lg p-4 text-sm text-flag">
-                  <p className="mb-2">📚 <strong>No clinical guidelines loaded yet</strong></p>
+                  <p className="mb-2"><strong>No clinical guidelines loaded yet</strong></p>
                   <p>Clinical guidelines need to be ingested into the database first. Contact your system administrator to load guidelines from sources like USPSTF, NICE, NCI PDQ, or RxNorm.</p>
                 </div>
               )}
