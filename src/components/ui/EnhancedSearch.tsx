@@ -360,20 +360,20 @@ export default function EnhancedSearch({
     <div
       ref={dropdownRef}
       className={cn(
-        "bg-white rounded-lg border border-gray-200 shadow-lg max-h-96 overflow-y-auto",
+        "bg-card rounded-lg border border-border shadow-lg max-h-96 overflow-y-auto",
         portal ? "" : "absolute top-full left-0 right-0 mt-2 z-50"
       )}
       style={portal ? portalStyle || {} : {}}
     >
       {/* Sort Controls Header */}
       {totalResults > 0 && !isLoading && (
-        <div className="flex items-center justify-between px-4 py-2 border-b border-gray-100 bg-gray-50">
+        <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-well/50">
           <div className="flex items-center gap-2">
             <Badge variant="secondary" className="text-xs">
               {totalResults} results
             </Badge>
             {query && (
-              <span className="text-xs text-gray-500">for &quot;{query}&quot;</span>
+              <span className="text-xs text-muted-foreground">for &quot;{query}&quot;</span>
             )}
           </div>
           
@@ -394,7 +394,7 @@ export default function EnhancedSearch({
             </Button>
 
             {showSortOptions && (
-              <div className="absolute top-full right-0 mt-1 bg-white rounded-md border border-gray-200 shadow-lg z-10 min-w-40">
+              <div className="absolute top-full right-0 mt-1 bg-card rounded-md border border-border shadow-lg z-10 min-w-40">
                 <div className="p-1">
                   {sortOptions.map((option) => (
                     <button
@@ -405,16 +405,16 @@ export default function EnhancedSearch({
                       }}
                       className={cn(
                         "w-full flex items-center gap-2 px-2 py-1.5 rounded text-xs",
-                        "hover:bg-gray-50 transition-colors duration-150",
+                        "hover:bg-well/50 transition-colors duration-150",
                         sortBy === option.value 
-                          ? "bg-blue-50 text-blue-700" 
-                          : "text-gray-700"
+                          ? "bg-info-soft text-info" 
+                          : "text-ink"
                       )}
                     >
                       <option.icon className="h-3 w-3" />
                       {option.label}
                       {sortBy === option.value && (
-                        <div className="ml-auto w-1.5 h-1.5 bg-blue-600 rounded-full" />
+                        <div className="ml-auto w-1.5 h-1.5 bg-info rounded-full" />
                       )}
                     </button>
                   ))}
@@ -439,7 +439,7 @@ export default function EnhancedSearch({
     <div ref={containerRef} className={cn("relative", className)}>
       <div className="relative">
         {!query && (
-          <MagnifyingGlass className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+          <MagnifyingGlass className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
         )}
         <Input
           ref={inputRef}
@@ -456,14 +456,14 @@ export default function EnhancedSearch({
         {query && (
           <button
             onClick={handleClear}
-            className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 hover:text-gray-600 transition-colors"
+            className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground hover:text-ink-2 transition-colors"
           >
             <X className="h-4 w-4" />
           </button>
         )}
         {isLoading && (
           <div className="absolute right-8 top-1/2 transform -translate-y-1/2">
-            <div className="h-3 w-3 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" />
+            <div className="h-3 w-3 animate-spin rounded-full border-2 border-info/30 border-t-transparent" />
           </div>
         )}
       </div>

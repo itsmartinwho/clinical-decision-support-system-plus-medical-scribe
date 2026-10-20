@@ -2,47 +2,23 @@ import React from 'react';
 import { cn } from '@/lib/utils';
 
 interface ContentSurfaceProps extends React.HTMLAttributes<HTMLDivElement> {
-  /**
-   * If true the surface will span edge-to-edge without background / blur.
-   * Useful for full-bleed visualisations or pages that handle their own layout.
-   */
+  /** Fill the main area edge to edge (the advisor's chat) instead of the page column. */
   fullBleed?: boolean;
 }
 
-/**
- * Single reusable frosted-glass surface that should wrap all route level
- * content.  It owns padding and max-width so views don't add another layer
- * of nested containers.
- */
-export default function ContentSurface({
-  children,
-  className,
-  fullBleed = false,
-  ...rest
-}: ContentSurfaceProps) {
+// The page column every route sits in: one width, one gutter, no surface of
+// its own. Sections inside it draw their own hairlines.
+export default function ContentSurface({ children, className, fullBleed = false, ...rest }: ContentSurfaceProps) {
   if (fullBleed) {
     return (
-      <div
-        className={cn(
-          'flex flex-col flex-1 min-h-0 h-full overflow-x-hidden',
-          className
-        )}
-        {...rest}
-      >
+      <div className={cn('flex min-h-0 flex-1 flex-col', className)} {...rest}>
         {children}
       </div>
     );
   }
-
   return (
-    <div
-      className={cn(
-        'glass-soft rounded-2xl p-4 mx-auto max-w-7xl w-full',
-        className
-      )}
-      {...rest}
-    >
+    <div className={cn('mx-auto w-full max-w-[1320px] px-4 pb-16 pt-5 sm:px-6 sm:pt-7 lg:px-8', className)} {...rest}>
       {children}
     </div>
   );
-} 
+}

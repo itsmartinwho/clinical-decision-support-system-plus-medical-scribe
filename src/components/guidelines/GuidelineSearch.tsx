@@ -160,13 +160,13 @@ export default function GuidelineSearch({
   return (
     <div className="space-y-3">
       {/* Compact Main Row */}
-      <div className="bg-white/20 backdrop-blur-md border border-white/30 rounded-xl p-4">
+      <div className="bg-card border border-border rounded-xl p-4">
         <div className="flex items-center gap-3">
           
           {/* Search Input - Takes most space */}
           <div className="flex-1 relative" ref={searchRef}>
             <div className="relative">
-              <MagnifyingGlass className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <MagnifyingGlass className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <input
                 ref={inputRef}
                 type="text"
@@ -176,16 +176,16 @@ export default function GuidelineSearch({
                 onFocus={() => setIsSearchFocused(true)}
                 onKeyDown={handleKeyDown}
                 className={cn(
-                  "w-full pl-12 pr-12 py-2.5 rounded-lg border border-gray-200",
-                  "focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none",
-                  "bg-white/80 backdrop-blur-sm placeholder-gray-500 text-gray-900",
+                  "w-full pl-12 pr-12 py-2.5 rounded-lg border border-border",
+                  "focus:ring-2 focus:ring-ring focus:border-info/30 outline-none",
+                  "bg-card placeholder-border text-ink",
                   "transition-all duration-200 text-sm"
                 )}
               />
               {tempSearchQuery && (
                 <button
                   onClick={clearSearch}
-                  className="absolute right-4 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 hover:text-gray-600"
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground hover:text-ink-2"
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -194,23 +194,23 @@ export default function GuidelineSearch({
 
             {/* Search Suggestions Dropdown - Rendered via Portal */}
             {isSearchFocused && dropdownPortalStyle && createPortal(
-              <div className="bg-white rounded-lg border border-gray-200 shadow-lg max-h-80 overflow-y-auto" style={dropdownPortalStyle}>
+              <div className="bg-card rounded-lg border border-border shadow-lg max-h-80 overflow-y-auto" style={dropdownPortalStyle}>
                 {/* Search Tips - Only show when no search query */}
                 {tempSearchQuery === '' && (
-                  <div className="p-3 border-b border-gray-100 bg-blue-50/50">
+                  <div className="p-3 border-b border-border bg-info-soft/50">
                     <div className="flex items-center justify-between mb-2">
-                      <p className="text-xs font-medium text-blue-700 flex items-center gap-2">
+                      <p className="text-xs font-medium text-info flex items-center gap-2">
                         <BookOpen className="h-3 w-3" />
                         Search Tips
                       </p>
                       <button
                         onClick={() => setIsSearchFocused(false)}
-                        className="text-gray-400 hover:text-gray-600"
+                        className="text-muted-foreground hover:text-ink-2"
                       >
                         <X className="h-3 w-3" />
                       </button>
                     </div>
-                    <ul className="text-xs text-blue-600 space-y-1">
+                    <ul className="text-xs text-info space-y-1">
                                                   <li>• Try conditions like &quot;depression&quot; or &quot;diabetes&quot;</li>
                             <li>• Search for procedures like &quot;screening&quot; or &quot;treatment&quot;</li>
                             <li>• Use source names like &quot;USPSTF&quot; or &quot;NICE&quot; to filter by organization</li>
@@ -220,8 +220,8 @@ export default function GuidelineSearch({
 
                 {/* Recent Searches */}
                 {tempSearchQuery === '' && recentSearches.length > 0 && (
-                  <div className="p-3 border-b border-gray-100">
-                    <p className="text-xs font-medium text-gray-500 mb-2 flex items-center gap-2">
+                  <div className="p-3 border-b border-border">
+                    <p className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-2">
                       <Clock className="h-3 w-3" />
                       Recent Searches
                     </p>
@@ -229,7 +229,7 @@ export default function GuidelineSearch({
                       <button
                         key={index}
                         onClick={() => handleSearchSubmit(search)}
-                        className="block w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md"
+                        className="block w-full text-left px-3 py-2 text-sm text-ink hover:bg-well/50 rounded-md"
                       >
                         {search}
                       </button>
@@ -240,7 +240,7 @@ export default function GuidelineSearch({
                 {/* Filtered Suggestions */}
                 {filteredSuggestions.length > 0 && (
                   <div className="p-3">
-                    <p className="text-xs font-medium text-gray-500 mb-2 flex items-center gap-2">
+                    <p className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-2">
                       <MagnifyingGlass className="h-3 w-3" />
                       Suggestions
                     </p>
@@ -248,10 +248,10 @@ export default function GuidelineSearch({
                       <button
                         key={index}
                         onClick={() => handleSearchSubmit(suggestion)}
-                        className="block w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md"
+                        className="block w-full text-left px-3 py-2 text-sm text-ink hover:bg-well/50 rounded-md"
                       >
                         <span className="flex items-center gap-2">
-                          <BookOpen className="h-3 w-3 text-gray-400" />
+                          <BookOpen className="h-3 w-3 text-muted-foreground" />
                           {suggestion}
                         </span>
                       </button>
@@ -262,10 +262,10 @@ export default function GuidelineSearch({
                 {/* No Results */}
                 {tempSearchQuery && filteredSuggestions.length === 0 && (
                   <div className="p-3 text-center">
-                    <p className="text-sm text-gray-500">No suggestions found</p>
+                    <p className="text-sm text-muted-foreground">No suggestions found</p>
                     <button
                       onClick={() => handleSearchSubmit(tempSearchQuery)}
-                      className="mt-2 text-xs text-blue-600 hover:text-blue-700"
+                      className="mt-2 text-xs text-info hover:text-info"
                     >
                       Search for &quot;{tempSearchQuery}&quot;
                     </button>
@@ -281,10 +281,10 @@ export default function GuidelineSearch({
             <button
               onClick={() => setIsSortDropdownOpen(!isSortDropdownOpen)}
               className={cn(
-                "flex items-center gap-2 px-3 py-2.5 rounded-lg border border-gray-200",
-                "bg-white/80 hover:bg-white text-sm text-gray-700",
+                "flex items-center gap-2 px-3 py-2.5 rounded-lg border border-border",
+                "bg-card hover:bg-well text-sm text-ink",
                 "transition-all duration-200 min-w-[120px]",
-                isSortDropdownOpen && "ring-2 ring-blue-500 border-blue-500"
+                isSortDropdownOpen && "ring-2 ring-ring border-info/30"
               )}
             >
               <currentSortOption.icon className="h-4 w-4" />
@@ -297,7 +297,7 @@ export default function GuidelineSearch({
             </button>
 
             {isSortDropdownOpen && sortPortalStyle && createPortal(
-              <div className="bg-white rounded-lg border border-gray-200 shadow-lg" style={sortPortalStyle}>
+              <div className="bg-card rounded-lg border border-border shadow-lg" style={sortPortalStyle}>
                 <div className="p-2">
                   {sortOptions.map((option) => (
                     <button
@@ -308,16 +308,16 @@ export default function GuidelineSearch({
                       }}
                       className={cn(
                         "w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm",
-                        "hover:bg-gray-50 transition-colors duration-150",
+                        "hover:bg-well/50 transition-colors duration-150",
                         sortBy === option.value 
-                          ? "bg-blue-50 text-blue-700" 
-                          : "text-gray-700"
+                          ? "bg-info-soft text-info" 
+                          : "text-ink"
                       )}
                     >
                       <option.icon className="h-4 w-4" />
                       {option.label}
                       {sortBy === option.value && (
-                        <div className="ml-auto w-2 h-2 bg-blue-600 rounded-full" />
+                        <div className="ml-auto w-2 h-2 bg-info rounded-full" />
                       )}
                     </button>
                   ))}
@@ -335,8 +335,8 @@ export default function GuidelineSearch({
             className={cn(
               "gap-2 transition-all duration-200 px-3 py-2.5",
               showBookmarksOnly 
-                ? "bg-yellow-500 hover:bg-yellow-600 text-white" 
-                : "border-gray-200 bg-white/80 hover:bg-white text-gray-700"
+                ? "bg-flag hover:bg-flag text-white" 
+                : "border-border bg-card hover:bg-well text-ink"
             )}
           >
             <Star className={cn(
@@ -349,13 +349,13 @@ export default function GuidelineSearch({
 
         {/* Current Search Query Display - Compact */}
         {searchQuery && (
-          <div className="flex items-center gap-2 mt-3 pt-3 border-t border-white/30">
-            <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 text-xs">
+          <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border">
+            <Badge variant="outline" className="bg-info-soft text-info border-info/30 text-xs">
               Searching: {searchQuery}
             </Badge>
             <button
               onClick={() => onSearch('')}
-              className="text-xs text-gray-500 hover:text-gray-700"
+              className="text-xs text-muted-foreground hover:text-ink"
             >
               Clear
             </button>

@@ -13,12 +13,12 @@ export default function ErrorDisplay({ message, context }: ErrorDisplayProps) {
   }
 
   return (
-    <div className="p-4 my-4 bg-red-50 border border-red-200 rounded-md text-red-700 flex items-start space-x-3">
-      <AlertTriangle className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
+    <div className="p-4 my-4 bg-critical-soft border border-critical-line rounded-md text-critical flex items-start space-x-3">
+      <AlertTriangle className="h-5 w-5 text-critical flex-shrink-0 mt-0.5" />
       <div>
         <p className="font-medium">An Error Occurred</p>
         <p className="text-sm">{message}</p>
-        {context && <p className="text-xs mt-1 text-red-600">Context: {context}</p>}
+        {context && <p className="text-xs mt-1 text-critical">Context: {context}</p>}
       </div>
     </div>
   );

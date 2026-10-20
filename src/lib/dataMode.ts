@@ -96,7 +96,7 @@ export function resolveDataMode(): Promise<DataModeState> {
       : { source: 'demo', reason: 'unconfigured', detail: 'No Supabase project is configured.' };
     state = result;
     if (result.source === 'demo') {
-      console.info(`[Foresight] Using the bundled demo data. ${result.detail ?? ''}`.trim());
+      console.info(`[data] Using the bundled demo data. ${result.detail ?? ''}`.trim());
     }
     listeners.forEach((cb) => { try { cb(result); } catch { /* a listener's problem */ } });
     return result;

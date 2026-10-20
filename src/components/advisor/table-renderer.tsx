@@ -119,13 +119,13 @@ except Exception as e:
   };
 
   return (
-    <div className="border rounded-lg p-4 bg-gradient-to-br from-slate-50 to-green-50 dark:from-slate-900 dark:to-green-950">
+    <div className="border rounded-lg p-4 bg-gradient-to-br from-well/50 to-ok-soft dark:from-slate-900 dark:to-green-950">
       {description && (
         <p className="text-sm text-muted-foreground mb-3">{description}</p>
       )}
       
       {/* Python Code Display */}
-      <div className="bg-slate-900 text-green-400 p-3 rounded-md mb-4 overflow-x-auto">
+      <div className="bg-ink text-ok p-3 rounded-md mb-4 overflow-x-auto">
         <pre className="text-xs font-mono whitespace-pre-wrap">{pythonCode}</pre>
       </div>
 
@@ -134,7 +134,7 @@ except Exception as e:
         <Button 
           onClick={executeCode} 
           disabled={loading}
-          className="bg-green-600 hover:bg-green-700"
+          className="bg-ok hover:bg-ok"
         >
           <PlayIcon className="w-4 h-4 mr-2" />
           {loading ? 'Generating Table...' : 'Execute & Generate Table'}
@@ -150,7 +150,7 @@ except Exception as e:
 
       {/* Error Display */}
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 p-3 rounded-md mb-4">
+        <div className="bg-critical-soft border border-critical-line text-critical p-3 rounded-md mb-4">
           <strong>Error:</strong> {error}
         </div>
       )}
@@ -160,10 +160,10 @@ except Exception as e:
         <div className="table-glass rounded-lg overflow-hidden shadow-sm">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-white/20 border-b border-white/30">
+              <thead className="bg-card border-b border-border">
                 <tr>
                   {Object.keys(tableData[0]).map((header) => (
-                    <th key={header} className="px-4 py-2 text-left font-medium text-gray-900">
+                    <th key={header} className="px-4 py-2 text-left font-medium text-ink">
                       {header}
                     </th>
                   ))}
@@ -171,9 +171,9 @@ except Exception as e:
               </thead>
               <tbody>
                 {tableData.map((row: any, index: number) => (
-                  <tr key={index} className={index % 2 === 0 ? 'bg-white/10' : 'bg-white/20'}>
+                  <tr key={index} className={index % 2 === 0 ? 'bg-card' : 'bg-card'}>
                     {Object.keys(tableData[0]).map((header) => (
-                      <td key={header} className="px-4 py-2 text-gray-700">
+                      <td key={header} className="px-4 py-2 text-ink">
                         {row[header] || ''}
                       </td>
                     ))}
@@ -188,7 +188,7 @@ except Exception as e:
       {/* Loading State */}
       {loading && (
         <div className="flex items-center justify-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-ok-line"></div>
           <span className="ml-2 text-sm text-muted-foreground">
             {pyodide ? 'Executing Python code...' : 'Loading Python environment...'}
           </span>
@@ -197,7 +197,7 @@ except Exception as e:
 
       {/* Success State */}
       {executed && tableData && (
-        <div className="text-sm text-green-600 mt-2 flex items-center">
+        <div className="text-sm text-ok mt-2 flex items-center">
           ✓ Table generated successfully! {tableData.length} rows displayed.
         </div>
       )}

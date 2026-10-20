@@ -44,7 +44,7 @@ const DialogContent = React.forwardRef<
       <DialogPrimitive.Content
         ref={ref}
         className={cn(
-          "relative grid w-full max-w-lg gap-4 rounded-lg p-6 shadow-lg modal-glass pointer-events-auto min-w-[672px]",
+          "relative grid w-[calc(100vw-1.5rem)] max-w-lg max-h-[calc(100svh-2rem)] overflow-y-auto gap-4 rounded-xl p-5 sm:p-6 modal-glass pointer-events-auto sm:w-full sm:min-w-[min(672px,calc(100vw-3rem))]",
           "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
           className
         )}
@@ -67,7 +67,7 @@ const DialogHeader = ({
 }: React.HTMLAttributes<HTMLDivElement>) => (
   <div
     className={cn(
-      "flex flex-col space-y-1.5 text-center sm:text-left",
+      "flex flex-col space-y-1.5 text-left",
       className
     )}
     {...props}
@@ -81,7 +81,7 @@ const DialogFooter = ({
 }: React.HTMLAttributes<HTMLDivElement>) => (
   <div
     className={cn(
-      "flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2",
+      "flex flex-col-reverse gap-2 sm:flex-row sm:justify-end",
       className
     )}
     {...props}
@@ -96,7 +96,7 @@ const DialogTitle = React.forwardRef<
   <DialogPrimitive.Title
     ref={ref}
     className={cn(
-      "text-lg font-semibold leading-none tracking-tight",
+      "font-display text-2xl font-normal leading-tight tracking-[-0.01em]",
       className
     )}
     {...props}
@@ -151,7 +151,7 @@ const DraggableDialogContent = React.forwardRef<
           <DialogPrimitive.Content 
             ref={ref}
             className={cn(
-              "relative grid w-full max-w-lg gap-4 rounded-lg p-6 shadow-lg modal-glass pointer-events-auto min-w-[672px]",
+              "relative grid w-[calc(100vw-1.5rem)] max-w-lg max-h-[calc(100svh-2rem)] overflow-y-auto gap-4 rounded-xl p-5 sm:p-6 modal-glass pointer-events-auto sm:w-full sm:min-w-[min(672px,calc(100vw-3rem))]",
               "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
               className
             )} 
@@ -227,13 +227,13 @@ const DraggablePositionedContent = React.forwardRef<
   const stableDragHandleProps = React.useMemo(() => {
     if (!draggableConfig || !modalDragResult.dragHandleProps) {
       return {
-        className: `modal-title-bar flex items-center justify-between p-4 border-b border-white/10 ${allowDragging ? 'cursor-move' : 'cursor-default'}`,
+        className: `modal-title-bar flex items-center justify-between px-5 py-3 border-b border-border ${allowDragging ? 'cursor-move' : 'cursor-default'}`,
         'data-testid': "modal-title-bar"
       };
     }
     return {
       ...modalDragResult.dragHandleProps,
-      className: `modal-title-bar flex items-center justify-between p-4 border-b border-white/10 ${allowDragging ? 'cursor-move' : 'cursor-default'}`,
+      className: `modal-title-bar flex items-center justify-between px-5 py-3 border-b border-border ${allowDragging ? 'cursor-move' : 'cursor-default'}`,
       'data-testid': "modal-title-bar"
     };
   }, [draggableConfig, modalDragResult.dragHandleProps, allowDragging]);
@@ -261,7 +261,7 @@ const DraggablePositionedContent = React.forwardRef<
         {...props}
         id={draggableConfig.id}
         className={cn(
-          "glass rounded-lg shadow-xl overflow-hidden flex flex-col w-full",
+          "modal-glass rounded-xl overflow-hidden flex flex-col w-full",
           // Remove max-w-lg constraint for better formatting
           isDragging && "modal-dragging",
           "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
@@ -273,7 +273,7 @@ const DraggablePositionedContent = React.forwardRef<
         onInteractOutside={onInteractOutside}
       >
         <div {...stableDragHandleProps}>
-          <h3 className="text-lg font-semibold m-0 pointer-events-none">
+          <h3 className="m-0 pointer-events-none">
             {draggableConfig.title || ''}
           </h3>
           <div className="flex items-center gap-2 ml-4 relative z-10">

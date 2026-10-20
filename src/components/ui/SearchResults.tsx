@@ -57,12 +57,12 @@ const categoryLabels = {
 };
 
 const sourceColors = {
-  'USPSTF': 'bg-blue-100 text-blue-800 border-blue-200',
-  'NICE': 'bg-purple-100 text-purple-800 border-purple-200',
-  'NCI': 'bg-green-100 text-green-800 border-green-200',
-  'RxNorm': 'bg-orange-100 text-orange-800 border-orange-200',
-  'CDC': 'bg-indigo-100 text-indigo-800 border-indigo-200',
-  'default': 'bg-gray-100 text-gray-800 border-gray-200'
+  'USPSTF': 'bg-info-soft text-info border-info/30',
+  'NICE': 'bg-info-soft text-info border-info/30',
+  'NCI': 'bg-ok-soft text-ok border-ok-line',
+  'RxNorm': 'bg-flag-soft text-flag border-flag-line',
+  'CDC': 'bg-info-soft text-info border-info/30',
+  'default': 'bg-well text-ink border-border'
 };
 
 function highlightText(text: string, query: string): React.ReactNode {
@@ -73,7 +73,7 @@ function highlightText(text: string, query: string): React.ReactNode {
   
   return parts.map((part, index) => 
     regex.test(part) ? (
-      <mark key={index} className="bg-yellow-200 text-yellow-900 px-0.5 rounded">
+      <mark key={index} className="bg-flag-soft text-flag px-0.5 rounded">
         {part}
       </mark>
     ) : (
@@ -96,8 +96,8 @@ export default function SearchResults({
     return (
       <div className={cn("p-4 text-center", className)}>
         <div className="flex items-center justify-center gap-2">
-          <div className="h-4 w-4 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" />
-          <span className="text-sm text-gray-600">Searching...</span>
+          <div className="h-4 w-4 animate-spin rounded-full border-2 border-info/30 border-t-transparent" />
+          <span className="text-sm text-ink-2">Searching...</span>
         </div>
       </div>
     );
@@ -106,9 +106,9 @@ export default function SearchResults({
   if (totalResults === 0) {
     return (
       <div className={cn("p-6 text-center", className)}>
-        <MagnifyingGlass className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-        <p className="text-gray-600 font-medium">No results found</p>
-        <p className="text-sm text-gray-500">Try adjusting your search terms</p>
+        <MagnifyingGlass className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+        <p className="text-ink-2 font-medium">No results found</p>
+        <p className="text-sm text-muted-foreground">Try adjusting your search terms</p>
       </div>
     );
   }
@@ -126,8 +126,8 @@ export default function SearchResults({
           <div key={category} className="px-4">
             {/* Category Header */}
             <div className="flex items-center gap-2 mb-3">
-              <CategoryIcon className="h-4 w-4 text-gray-600" />
-              <h3 className="font-semibold text-gray-900 text-sm">
+              <CategoryIcon className="h-4 w-4 text-ink-2" />
+              <h3 className="font-semibold text-ink text-sm">
                 {categoryLabels[category]}
               </h3>
               <Badge variant="secondary" className="text-xs">
@@ -140,7 +140,7 @@ export default function SearchResults({
               {items.map((item) => (
                 <div
                   key={item.id}
-                  className="group relative border border-gray-200 rounded-lg p-3 hover:border-blue-300 hover:shadow-sm transition-all duration-200 cursor-pointer"
+                  className="group relative border border-border rounded-lg p-3 hover:border-info/30 hover:shadow-sm transition-all duration-200 cursor-pointer"
                   onClick={() => onResultClick(item)}
                 >
                   <div className="flex items-start gap-3">
@@ -157,9 +157,9 @@ export default function SearchResults({
                       ) : (
                         <div className={cn(
                           "w-8 h-8 rounded-full flex items-center justify-center",
-                          category === 'patients' ? "bg-blue-100 text-blue-600" :
-                          category === 'guidelines' ? "bg-green-100 text-green-600" :
-                          "bg-purple-100 text-purple-600"
+                          category === 'patients' ? "bg-info-soft text-info" :
+                          category === 'guidelines' ? "bg-ok-soft text-ok" :
+                          "bg-info-soft text-info"
                         )}>
                           <CategoryIcon className="h-4 w-4" />
                         </div>
@@ -170,18 +170,18 @@ export default function SearchResults({
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1 min-w-0">
-                          <h4 className="font-medium text-gray-900 text-sm truncate">
+                          <h4 className="font-medium text-ink text-sm truncate">
                             {highlightText(item.title, query)}
                           </h4>
                           
                           {item.description && (
-                            <p className="text-xs text-gray-600 mt-0.5 line-clamp-1">
+                            <p className="text-xs text-ink-2 mt-0.5 line-clamp-1">
                               {highlightText(item.description, query)}
                             </p>
                           )}
                           
                           {item.preview && (
-                            <p className="text-xs text-gray-500 mt-1 line-clamp-2">
+                            <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
                               {highlightText(item.preview, query)}
                             </p>
                           )}
@@ -237,19 +237,19 @@ export default function SearchResults({
                         )}
                         
                         {item.metadata?.specialty && (
-                          <Badge variant="outline" className="text-xs px-1.5 py-0.5 bg-gray-50 text-gray-700">
+                          <Badge variant="outline" className="text-xs px-1.5 py-0.5 bg-well/50 text-ink">
                             {item.metadata.specialty}
                           </Badge>
                         )}
                         
                         {item.metadata?.grade && category === 'guidelines' && (
-                          <Badge variant="outline" className="text-xs px-1.5 py-0.5 bg-amber-50 text-amber-700 border-amber-200">
+                          <Badge variant="outline" className="text-xs px-1.5 py-0.5 bg-flag-soft text-flag border-flag-line">
                             Grade {item.metadata.grade}
                           </Badge>
                         )}
                         
                         {item.metadata?.updatedAt && (
-                          <span className="text-xs text-gray-500">
+                          <span className="text-xs text-muted-foreground">
                             Updated {item.metadata.updatedAt}
                           </span>
                         )}

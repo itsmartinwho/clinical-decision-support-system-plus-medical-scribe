@@ -41,38 +41,38 @@ export default function GuidelineCard({
     switch (source) {
       case 'USPSTF': 
         return {
-          bg: 'bg-blue-50',
-          border: 'border-blue-200',
-          badge: 'bg-blue-600',
-          text: 'text-blue-700'
+          bg: 'bg-info-soft',
+          border: 'border-info/30',
+          badge: 'bg-info',
+          text: 'text-info'
         };
       case 'NICE': 
         return {
-          bg: 'bg-purple-50',
-          border: 'border-purple-200', 
-          badge: 'bg-purple-600',
-          text: 'text-purple-700'
+          bg: 'bg-info-soft',
+          border: 'border-info/30', 
+          badge: 'bg-info',
+          text: 'text-info'
         };
       case 'NCI_PDQ': 
         return {
-          bg: 'bg-emerald-50',
-          border: 'border-emerald-200',
-          badge: 'bg-emerald-600', 
-          text: 'text-emerald-700'
+          bg: 'bg-ok-soft',
+          border: 'border-ok-line',
+          badge: 'bg-ok', 
+          text: 'text-ok'
         };
       case 'RxNorm': 
         return {
-          bg: 'bg-orange-50',
-          border: 'border-orange-200',
-          badge: 'bg-orange-600',
-          text: 'text-orange-700'
+          bg: 'bg-flag-soft',
+          border: 'border-flag-line',
+          badge: 'bg-flag',
+          text: 'text-flag'
         };
       default: 
         return {
-          bg: 'bg-gray-50',
-          border: 'border-gray-200',
-          badge: 'bg-gray-600',
-          text: 'text-gray-700'
+          bg: 'bg-well/50',
+          border: 'border-border',
+          badge: 'bg-ink',
+          text: 'text-ink'
         };
     }
   };
@@ -86,7 +86,7 @@ export default function GuidelineCard({
         "hover:shadow-lg hover:scale-[1.01] transform-gpu p-6",
         colors.bg,
         colors.border,
-        "bg-white/60 backdrop-blur-sm"
+        "bg-card "
       )}
       onClick={onClick}
     >
@@ -97,7 +97,7 @@ export default function GuidelineCard({
             {getSourceIcon(guideline.source)}
           </div>
           <div className="flex-1">
-            <h4 className="font-semibold text-gray-900 mb-2 leading-tight">
+            <h4 className="font-semibold text-ink mb-2 leading-tight">
               {guideline.title}
             </h4>
             <Badge className={cn("text-white text-xs", colors.badge)}>
@@ -118,19 +118,19 @@ export default function GuidelineCard({
           <Star 
             className={cn(
               "h-4 w-4",
-              isBookmarked ? "fill-yellow-400 text-yellow-400" : "text-gray-400"
+              isBookmarked ? "fill-yellow-400 text-flag" : "text-muted-foreground"
             )}
           />
         </Button>
       </div>
 
       {/* Content preview */}
-      <p className="text-sm text-gray-600 mb-4 leading-relaxed">
+      <p className="text-sm text-ink-2 mb-4 leading-relaxed">
         {guideline.preview}
       </p>
 
       {/* Footer with metadata */}
-      <div className="flex items-center justify-between text-xs text-gray-500">
+      <div className="flex items-center justify-between text-xs text-muted-foreground">
         <div className="flex items-center space-x-1">
           <Clock className="h-3 w-3" />
           <span>Updated {new Date(guideline.lastUpdated).toLocaleDateString()}</span>
@@ -143,7 +143,7 @@ export default function GuidelineCard({
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
-              className="text-blue-600 hover:text-blue-800 hover:underline"
+              className="text-info hover:text-info hover:underline"
             >
               Original Source
             </a>
@@ -159,10 +159,10 @@ export default function GuidelineCard({
       {(guideline.isRecentlyUpdated || guideline.isRecentlyViewed) && (
         <div className="absolute top-3 right-14 flex space-x-1">
           {guideline.isRecentlyUpdated && (
-            <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+            <div className="w-2 h-2 bg-ok rounded-full"></div>
           )}
           {guideline.isRecentlyViewed && (
-            <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+            <div className="w-2 h-2 bg-info rounded-full"></div>
           )}
         </div>
       )}

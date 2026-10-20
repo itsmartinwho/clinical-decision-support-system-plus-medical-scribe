@@ -23,46 +23,46 @@ const sourceConfig: Record<GuidelineSource, {
   'USPSTF': {
     name: 'US Preventive Services Task Force',
     shortName: 'USPSTF',
-    color: 'text-blue-700',
-    bgColor: 'bg-blue-50',
-    borderColor: 'border-blue-200',
-    badgeColor: 'bg-blue-600',
+    color: 'text-info',
+    bgColor: 'bg-info-soft',
+    borderColor: 'border-info/30',
+    badgeColor: 'bg-info',
     icon: '🇺🇸'
   },
   'NICE': {
     name: 'National Institute for Health and Care Excellence',
     shortName: 'NICE',
-    color: 'text-purple-700',
-    bgColor: 'bg-purple-50',
-    borderColor: 'border-purple-200',
-    badgeColor: 'bg-purple-600',
+    color: 'text-info',
+    bgColor: 'bg-info-soft',
+    borderColor: 'border-info/30',
+    badgeColor: 'bg-info',
     icon: '🇬🇧'
   },
   'NCI_PDQ': {
     name: 'National Cancer Institute PDQ',
     shortName: 'NCI PDQ',
-    color: 'text-emerald-700',
-    bgColor: 'bg-emerald-50',
-    borderColor: 'border-emerald-200',
-    badgeColor: 'bg-emerald-600',
+    color: 'text-ok',
+    bgColor: 'bg-ok-soft',
+    borderColor: 'border-ok-line',
+    badgeColor: 'bg-ok',
     icon: '🎗️'
   },
   'RxNorm': {
     name: 'RxNorm Drug Information',
     shortName: 'RxNorm',
-    color: 'text-orange-700',
-    bgColor: 'bg-orange-50',
-    borderColor: 'border-orange-200',
-    badgeColor: 'bg-orange-600',
+    color: 'text-flag',
+    bgColor: 'bg-flag-soft',
+    borderColor: 'border-flag-line',
+    badgeColor: 'bg-flag',
     icon: '💊'
   },
   'MANUAL': {
     name: 'Manual Guidelines',
     shortName: 'Manual',
-    color: 'text-gray-700',
-    bgColor: 'bg-gray-50',
-    borderColor: 'border-gray-200',
-    badgeColor: 'bg-gray-600',
+    color: 'text-ink',
+    bgColor: 'bg-well/50',
+    borderColor: 'border-border',
+    badgeColor: 'bg-ink',
     icon: '📝'
   }
 };
@@ -122,24 +122,24 @@ export default function SourceFilter({
       {/* Dropdown Trigger */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full min-w-[200px] px-4 py-3 bg-white/20 backdrop-blur-md border border-white/30 
+        className="w-full min-w-[200px] px-4 py-3 bg-card border border-border 
                    rounded-xl text-left flex items-center justify-between
-                   hover:bg-white/30 hover:border-white/40 transition-all duration-200
-                   focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                   hover:bg-well hover:border-input transition-all duration-200
+                   focus:outline-none focus:ring-2 focus:ring-ring/20"
       >
         <div className="flex items-center space-x-2">
-          <span className="text-sm font-medium text-gray-700">
+          <span className="text-sm font-medium text-ink">
             {getSelectedText()}
           </span>
           {selectedSources.length > 0 && (
-            <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+            <span className="text-xs text-muted-foreground bg-well px-2 py-1 rounded-full">
               {getTotalCount()} guidelines
             </span>
           )}
         </div>
         <CaretDown 
           size={16} 
-          className={`text-gray-500 transition-transform duration-200 ${
+          className={`text-muted-foreground transition-transform duration-200 ${
             isOpen ? 'rotate-180' : ''
           }`} 
         />
@@ -147,25 +147,25 @@ export default function SourceFilter({
 
       {/* Dropdown Menu */}
       {isOpen && (
-        <div className="absolute top-full left-0 right-0 mt-2 bg-white/90 backdrop-blur-lg border border-white/30 
+        <div className="absolute top-full left-0 right-0 mt-2 bg-card border border-border 
                         rounded-xl shadow-xl z-50 max-h-96 overflow-y-auto">
           
           {/* Header with Select All/Clear All */}
-          <div className="p-3 border-b border-gray-200/50">
+          <div className="p-3 border-b border-border/50">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-gray-700">Clinical Sources</h3>
+              <h3 className="text-sm font-semibold text-ink">Clinical Sources</h3>
               <div className="flex space-x-2">
                 <button
                   onClick={handleSelectAll}
-                  className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+                  className="text-xs text-info hover:text-info font-medium"
                   disabled={selectedSources.length === availableSources.length}
                 >
                   Select All
                 </button>
-                <span className="text-gray-300">|</span>
+                <span className="text-muted-foreground">|</span>
                 <button
                   onClick={handleClearAll}
-                  className="text-xs text-gray-600 hover:text-gray-800 font-medium"
+                  className="text-xs text-ink-2 hover:text-ink font-medium"
                   disabled={selectedSources.length === 0}
                 >
                   Clear All
@@ -184,7 +184,7 @@ export default function SourceFilter({
               return (
                 <label
                   key={source}
-                  className="flex items-center p-3 rounded-lg hover:bg-white/50 cursor-pointer 
+                  className="flex items-center p-3 rounded-lg hover:bg-well cursor-pointer 
                            transition-all duration-150 group"
                 >
                   {/* Custom Checkbox */}
@@ -199,8 +199,8 @@ export default function SourceFilter({
                       w-5 h-5 rounded border-2 flex items-center justify-center
                       transition-all duration-200
                       ${isSelected 
-                        ? 'bg-blue-500 border-blue-500' 
-                        : 'bg-white border-gray-300 group-hover:border-gray-400'
+                        ? 'bg-info border-info/30' 
+                        : 'bg-card border-border group-hover:border-input'
                       }
                     `}>
                       {isSelected && (
@@ -215,7 +215,7 @@ export default function SourceFilter({
                       <span className="text-lg">{config?.icon}</span>
                       <div className="flex-1">
                         <div className="flex items-center justify-between">
-                          <span className="text-sm font-medium text-gray-800">
+                          <span className="text-sm font-medium text-ink">
                             {config?.shortName || source}
                           </span>
                           <span className={`
@@ -225,7 +225,7 @@ export default function SourceFilter({
                             {count} guideline{count !== 1 ? 's' : ''}
                           </span>
                         </div>
-                        <p className="text-xs text-gray-600 mt-0.5">
+                        <p className="text-xs text-ink-2 mt-0.5">
                           {config?.name || source}
                         </p>
                       </div>
@@ -238,8 +238,8 @@ export default function SourceFilter({
 
           {/* Footer */}
           {selectedSources.length > 0 && (
-            <div className="p-3 border-t border-gray-200/50 bg-gray-50/50">
-              <div className="flex items-center justify-between text-xs text-gray-600">
+            <div className="p-3 border-t border-border/50 bg-well/50">
+              <div className="flex items-center justify-between text-xs text-ink-2">
                 <span>{selectedSources.length} source{selectedSources.length !== 1 ? 's' : ''} selected</span>
                 <span>{getTotalCount()} total guidelines</span>
               </div>

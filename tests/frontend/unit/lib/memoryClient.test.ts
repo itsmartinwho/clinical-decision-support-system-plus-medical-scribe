@@ -3,7 +3,7 @@ import { createMemoryClient } from '@/lib/demo/memoryClient';
 
 function client() {
   const writes: string[] = [];
-  const store = {
+  const store: { tables: Record<string, any[]>; onWrite: (t: string) => void } = {
     tables: {
       alerts: [
         { id: 'a', patient_id: 'p', severity: 'CRITICAL', status: 'active', expires_at: null, created_at: '2025-01-01T00:00:00Z' },

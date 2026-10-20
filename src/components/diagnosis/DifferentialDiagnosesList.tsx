@@ -159,18 +159,18 @@ export default function DifferentialDiagnosesList({
         <div className="space-y-4 pr-2">
           {/* Add new diagnosis form */}
           {isAddingNew && (
-            <Card className="w-full border-l-4 border-l-green-500 bg-green-50/50">
+            <Card className="w-full border-l-4 border-l-green-500 bg-ok-soft/50">
               <CardHeader className="pb-3">
                 <div className="flex items-center gap-3">
-                  <div className="flex items-center justify-center w-8 h-8 bg-green-100 text-green-800 rounded-full text-sm font-semibold">
+                  <div className="flex items-center justify-center w-8 h-8 bg-ok-soft text-ok rounded-full text-sm font-semibold">
                     +
                   </div>
-                  <h4 className="text-lg font-semibold text-gray-900">New Differential Diagnosis</h4>
+                  <h4 className="text-lg font-semibold text-ink">New Differential Diagnosis</h4>
                 </div>
               </CardHeader>
               <CardContent className="space-y-3">
                 <div>
-                  <label className="text-sm font-medium text-gray-600 block mb-1">
+                  <label className="text-sm font-medium text-ink-2 block mb-1">
                     Diagnosis Name
                   </label>
                   <Input
@@ -181,7 +181,7 @@ export default function DifferentialDiagnosesList({
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-600 block mb-1">
+                  <label className="text-sm font-medium text-ink-2 block mb-1">
                     Likelihood
                   </label>
                   <Select
@@ -203,7 +203,7 @@ export default function DifferentialDiagnosesList({
                   </Select>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-600 block mb-1">
+                  <label className="text-sm font-medium text-ink-2 block mb-1">
                     Key Factors
                   </label>
                   <Textarea

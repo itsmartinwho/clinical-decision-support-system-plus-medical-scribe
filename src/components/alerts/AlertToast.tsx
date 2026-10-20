@@ -37,26 +37,26 @@ export const AlertToast: React.FC<AlertToastProps> = ({
   const getSeverityIcon = (severity: AlertSeverity) => {
     switch (severity) {
       case AlertSeverity.CRITICAL:
-        return <AlertCircle className="h-5 w-5 text-red-500" />;
+        return <AlertCircle className="h-5 w-5 text-critical" />;
       case AlertSeverity.WARNING:
-        return <AlertTriangle className="h-5 w-5 text-yellow-500" />;
+        return <AlertTriangle className="h-5 w-5 text-flag" />;
       case AlertSeverity.INFO:
-        return <Info className="h-5 w-5 text-blue-500" />;
+        return <Info className="h-5 w-5 text-info" />;
       default:
-        return <Info className="h-5 w-5 text-gray-500" />;
+        return <Info className="h-5 w-5 text-muted-foreground" />;
     }
   };
 
   const getSeverityColor = (severity: AlertSeverity) => {
     switch (severity) {
       case AlertSeverity.CRITICAL:
-        return 'border-red-500 bg-red-50';
+        return 'border-critical-line bg-critical-soft';
       case AlertSeverity.WARNING:
-        return 'border-yellow-500 bg-yellow-50';
+        return 'border-flag-line bg-flag-soft';
       case AlertSeverity.INFO:
-        return 'border-blue-500 bg-blue-50';
+        return 'border-info/30 bg-info-soft';
       default:
-        return 'border-gray-500 bg-gray-50';
+        return 'border-input bg-well/50';
     }
   };
 
@@ -166,7 +166,7 @@ export const AlertToast: React.FC<AlertToastProps> = ({
           <Button
             variant="ghost"
             size="sm"
-            className="h-6 w-6 p-0 hover:bg-gray-200/50"
+            className="h-6 w-6 p-0 hover:bg-well/50"
             onClick={handleClose}
           >
             <X className="h-4 w-4" />
@@ -175,12 +175,12 @@ export const AlertToast: React.FC<AlertToastProps> = ({
       </CardHeader>
       
       <CardContent className="pt-0 pb-3">
-        <p className="text-sm text-gray-700 mb-2 line-clamp-3">
+        <p className="text-sm text-ink mb-2 line-clamp-3">
           {alert.message}
         </p>
         
         {alert.suggestion && (
-          <p className="text-xs text-gray-600 italic">
+          <p className="text-xs text-ink-2 italic">
             <strong>Suggestion:</strong> {alert.suggestion}
           </p>
         )}
@@ -191,16 +191,16 @@ export const AlertToast: React.FC<AlertToastProps> = ({
           </Badge>
           
           {alert.confidenceScore && (
-            <span className="text-xs text-gray-500">
+            <span className="text-xs text-muted-foreground">
               {Math.round(alert.confidenceScore * 100)}% confidence
             </span>
           )}
         </div>
         
         {/* Progress bar */}
-        <div className="w-full bg-gray-200 rounded-full h-1 mt-3">
+        <div className="w-full bg-well rounded-full h-1 mt-3">
           <div 
-            className="bg-gray-400 h-1 rounded-full transition-all duration-75"
+            className="bg-hairline h-1 rounded-full transition-all duration-75"
             style={{ width: `${progress}%` }}
           />
         </div>

@@ -24,11 +24,11 @@ const CopilotDisplay: React.FC<CopilotDisplayProps> = ({
   const getLegacySeverityIcon = (severity: CopilotAlertSeverity) => {
     switch (severity) {
       case CopilotAlertSeverity.INFO:
-        return <Lightbulb className="h-5 w-5 text-blue-500" />;
+        return <Lightbulb className="h-5 w-5 text-info" />;
       case CopilotAlertSeverity.WARNING:
-        return <AlertTriangle className="h-5 w-5 text-yellow-500" />;
+        return <AlertTriangle className="h-5 w-5 text-flag" />;
       case CopilotAlertSeverity.CRITICAL:
-        return <Skull className="h-5 w-5 text-red-500" />;
+        return <Skull className="h-5 w-5 text-critical" />;
       default:
         return null;
     }
@@ -38,13 +38,13 @@ const CopilotDisplay: React.FC<CopilotDisplayProps> = ({
   const getUnifiedSeverityIcon = (severity: AlertSeverity) => {
     switch (severity) {
       case AlertSeverity.INFO:
-        return <Info className="h-5 w-5 text-blue-500" />;
+        return <Info className="h-5 w-5 text-info" />;
       case AlertSeverity.WARNING:
-        return <AlertTriangle className="h-5 w-5 text-yellow-500" />;
+        return <AlertTriangle className="h-5 w-5 text-flag" />;
       case AlertSeverity.CRITICAL:
-        return <AlertCircle className="h-5 w-5 text-red-500" />;
+        return <AlertCircle className="h-5 w-5 text-critical" />;
       default:
-        return <Info className="h-5 w-5 text-gray-500" />;
+        return <Info className="h-5 w-5 text-muted-foreground" />;
     }
   };
 
@@ -147,7 +147,7 @@ const CopilotDisplay: React.FC<CopilotDisplayProps> = ({
                   size="sm"
                   variant="outline"
                   onClick={() => onAlertAction(alert.id, 'accept')}
-                  className="text-green-600 hover:text-green-700"
+                  className="text-ok hover:text-ok"
                 >
                   <Check className="h-3 w-3 mr-1" />
                   Accept
@@ -156,7 +156,7 @@ const CopilotDisplay: React.FC<CopilotDisplayProps> = ({
                   size="sm"
                   variant="outline"
                   onClick={() => onAlertAction(alert.id, 'dismiss')}
-                  className="text-red-600 hover:text-red-700"
+                  className="text-critical hover:text-critical"
                 >
                   <X className="h-3 w-3 mr-1" />
                   Dismiss

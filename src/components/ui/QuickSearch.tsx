@@ -241,7 +241,7 @@ export default function QuickSearch({ className, inputClassName, dropdownClassNa
         key={result.patient.id} // Use a stable key like patient.id
         type="button"
         onClick={() => onSelect(result)}
-        className="flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-white/10 focus:bg-white/10 focus:outline-none"
+        className="flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-well focus:bg-well focus:outline-none"
       >
         {result.patient.photo && !imageError ? (
           <Image
@@ -253,7 +253,7 @@ export default function QuickSearch({ className, inputClassName, dropdownClassNa
             onError={handleImageError}
           />
         ) : (
-          <div className="h-6 w-6 rounded-full bg-gray-600 flex items-center justify-center text-xs font-medium text-white">
+          <div className="h-6 w-6 rounded-full bg-ink flex items-center justify-center text-xs font-medium text-white">
             {(result.patient.firstName?.charAt(0) || "").toUpperCase()}
             {(result.patient.lastName?.charAt(0) || "").toUpperCase() || "?"}
           </div>
@@ -279,7 +279,7 @@ export default function QuickSearch({ className, inputClassName, dropdownClassNa
         placeholder="Quick search"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        className={cn("placeholder:text-white/60", inputClassName)}
+        className={cn("placeholder:text-muted-foreground", inputClassName)}
         onFocus={() => {
           if (results.length > 0) setIsOpen(true);
         }}
@@ -289,7 +289,7 @@ export default function QuickSearch({ className, inputClassName, dropdownClassNa
           <div
             ref={dropdownRef}
             className={cn(
-              "absolute left-0 mt-1 max-h-80 overflow-auto z-50 rounded-xl bg-[rgba(255,255,255,0.55)] backdrop-blur-lg border border-white/25 shadow-lg animate-fade-in-down",
+              "absolute left-0 mt-1 max-h-80 overflow-auto z-50 rounded-xl bg-[rgba(255,255,255,0.55)] border border-border shadow-lg animate-fade-in-down",
               dropdownClassName
             )}
           >
@@ -305,7 +305,7 @@ export default function QuickSearch({ className, inputClassName, dropdownClassNa
             ref={dropdownRef}
             style={portalStyle || {}}
             className={cn(
-              "max-h-80 overflow-auto rounded-xl bg-[rgba(255,255,255,0.55)] backdrop-blur-lg border border-white/25 shadow-lg animate-fade-in-down",
+              "max-h-80 overflow-auto rounded-xl bg-[rgba(255,255,255,0.55)] border border-border shadow-lg animate-fade-in-down",
               dropdownClassName
             )}
           >

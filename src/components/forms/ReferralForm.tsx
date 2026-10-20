@@ -138,12 +138,12 @@ export default function ReferralForm({
     <Card>
       <CardHeader>
         <CardTitle className="text-xl font-semibold text-foreground flex items-center justify-between">
-          📝 Referral
+          Referral
           <div className="flex items-center gap-2">
             {isFormValid ? (
-              <CheckCircle className="h-5 w-5 text-green-500" />
+              <CheckCircle className="h-5 w-5 text-ok" />
             ) : (
-              <Warning className="h-5 w-5 text-yellow-500" />
+              <Warning className="h-5 w-5 text-flag" />
             )}
             <Button
               variant="outline"
@@ -251,7 +251,7 @@ export default function ReferralForm({
               <label className="block text-sm font-medium text-muted-foreground mb-1">
                 Provider Name
                 {errors.providerName && (
-                  <span className="text-yellow-600 ml-1">⚠</span>
+                  <span className="text-flag ml-1">⚠</span>
                 )}
               </label>
               <Input
@@ -260,7 +260,7 @@ export default function ReferralForm({
                 placeholder="Enter provider name"
               />
               {errors.providerName && (
-                <p className="text-xs text-yellow-600 mt-1">{errors.providerName}</p>
+                <p className="text-xs text-flag mt-1">{errors.providerName}</p>
               )}
             </div>
 
@@ -268,7 +268,7 @@ export default function ReferralForm({
               <label className="block text-sm font-medium text-muted-foreground mb-1">
                 NPI Number
                 {errors.providerNPI && (
-                  <span className="text-yellow-600 ml-1">⚠</span>
+                  <span className="text-flag ml-1">⚠</span>
                 )}
               </label>
               <Input
@@ -277,7 +277,7 @@ export default function ReferralForm({
                 placeholder="Enter NPI number"
               />
               {errors.providerNPI && (
-                <p className="text-xs text-yellow-600 mt-1">{errors.providerNPI}</p>
+                <p className="text-xs text-flag mt-1">{errors.providerNPI}</p>
               )}
             </div>
 
@@ -342,7 +342,7 @@ export default function ReferralForm({
               <label className="block text-sm font-medium text-muted-foreground mb-1">
                 Preferred Facility
                 {errors.specialistFacility && (
-                  <span className="text-yellow-600 ml-1">⚠</span>
+                  <span className="text-flag ml-1">⚠</span>
                 )}
               </label>
               <Input
@@ -351,7 +351,7 @@ export default function ReferralForm({
                 placeholder="Enter preferred facility"
               />
               {errors.specialistFacility && (
-                <p className="text-xs text-yellow-600 mt-1">{errors.specialistFacility}</p>
+                <p className="text-xs text-flag mt-1">{errors.specialistFacility}</p>
               )}
             </div>
 
@@ -437,7 +437,7 @@ export default function ReferralForm({
             <label className="block text-sm font-medium text-muted-foreground mb-1">
               History of Present Illness
               {errors.clinicalHistory && (
-                <span className="text-yellow-600 ml-1">⚠</span>
+                <span className="text-flag ml-1">⚠</span>
               )}
             </label>
             <EditableTextField
@@ -448,7 +448,7 @@ export default function ReferralForm({
               displayClassName="text-sm"
             />
             {errors.clinicalHistory && (
-              <p className="text-xs text-yellow-600 mt-1">{errors.clinicalHistory}</p>
+              <p className="text-xs text-flag mt-1">{errors.clinicalHistory}</p>
             )}
           </div>
 

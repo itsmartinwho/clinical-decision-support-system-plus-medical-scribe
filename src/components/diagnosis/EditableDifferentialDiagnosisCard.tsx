@@ -241,7 +241,7 @@ export default function EditableDifferentialDiagnosisCard({
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3 flex-1">
-            <div className="flex items-center justify-center w-8 h-8 bg-blue-100 text-blue-800 rounded-full text-sm font-semibold">
+            <div className="flex items-center justify-center w-8 h-8 bg-info-soft text-info rounded-full text-sm font-semibold">
               #{diagnosis.rank}
             </div>
             
@@ -259,7 +259,7 @@ export default function EditableDifferentialDiagnosisCard({
               </div>
             ) : (
               <div className="flex-1">
-                <CardTitle className="text-lg font-semibold text-gray-900">
+                <CardTitle className="text-lg font-semibold text-ink">
                   {diagnosis.name}
                 </CardTitle>
               </div>
@@ -283,7 +283,7 @@ export default function EditableDifferentialDiagnosisCard({
                   size="sm"
                   onClick={handleDelete}
                   title="Delete"
-                  className="text-red-600 hover:text-red-700"
+                  className="text-critical hover:text-critical"
                 >
                   <X className="h-4 w-4" />
                 </Button>
@@ -305,7 +305,7 @@ export default function EditableDifferentialDiagnosisCard({
       <CardContent className="space-y-3">
         {/* Likelihood */}
         <div>
-          <label className="text-sm font-medium text-gray-600 block mb-1">
+          <label className="text-sm font-medium text-ink-2 block mb-1">
             Likelihood
           </label>
           {isEditing ? (
@@ -327,7 +327,7 @@ export default function EditableDifferentialDiagnosisCard({
 
         {/* Key Factors */}
         <div>
-          <label className="text-sm font-medium text-gray-600 block mb-1">
+          <label className="text-sm font-medium text-ink-2 block mb-1">
             Key Factors
           </label>
           {isEditing ? (
@@ -340,7 +340,7 @@ export default function EditableDifferentialDiagnosisCard({
               placeholder="Key factors supporting this diagnosis"
             />
           ) : (
-            <p className="text-sm text-gray-700">
+            <p className="text-sm text-ink">
               {diagnosis.keyFactors || 'No key factors recorded'}
             </p>
           )}
@@ -349,19 +349,19 @@ export default function EditableDifferentialDiagnosisCard({
         {/* Additional fields (if they exist in the diagnosis) */}
         {diagnosis.explanation && !isEditing && (
           <div>
-            <label className="text-sm font-medium text-gray-600 block mb-1">
+            <label className="text-sm font-medium text-ink-2 block mb-1">
               Explanation
             </label>
-            <p className="text-sm text-gray-700">{diagnosis.explanation}</p>
+            <p className="text-sm text-ink">{diagnosis.explanation}</p>
           </div>
         )}
 
         {Array.isArray(diagnosis.supportingEvidence) && diagnosis.supportingEvidence.length > 0 && !isEditing && (
           <div>
-            <label className="text-sm font-medium text-gray-600 block mb-1">
+            <label className="text-sm font-medium text-ink-2 block mb-1">
               Supporting Evidence
             </label>
-            <ul className="text-sm text-gray-700 list-disc list-inside space-y-1">
+            <ul className="text-sm text-ink list-disc list-inside space-y-1">
               {(diagnosis.supportingEvidence || []).map((evidence, index) => (
                 <li key={index}>{evidence}</li>
               ))}
@@ -371,7 +371,7 @@ export default function EditableDifferentialDiagnosisCard({
 
         {Array.isArray(diagnosis.icdCodes) && diagnosis.icdCodes.length > 0 && !isEditing && (
           <div>
-            <label className="text-sm font-medium text-gray-600 block mb-1">
+            <label className="text-sm font-medium text-ink-2 block mb-1">
               ICD Codes
             </label>
             <div className="flex flex-wrap gap-2">

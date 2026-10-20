@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { X } from '@phosphor-icons/react';
 import AllDataViewTab from '@/components/patient-workspace-tabs/AllDataViewTab';
 import { supabaseDataService } from '@/lib/supabaseDataService';
-import LoadingAnimation from '@/components/LoadingAnimation';
+import { ErrorState, LoadingState } from '@/components/ui/states';
 import type { Patient, EncounterDetailsWrapper } from '@/lib/types';
 
 interface PatientDataModalProps {
@@ -17,6 +17,7 @@ interface PatientDataModalProps {
 export default function PatientDataModal({ isOpen, onClose, patient }: PatientDataModalProps) {
   const [detailedPatientData, setDetailedPatientData] = useState<{ patient: Patient; encounters: EncounterDetailsWrapper[] } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [failed, setFailed] = useState(false);
 
   useEffect(() => {
     if (isOpen && patient) {
@@ -28,11 +29,14 @@ export default function PatientDataModal({ isOpen, onClose, patient }: PatientDa
     if (!patient) return;
     
     setIsLoading(true);
+    setFailed(false);
     try {
       const detailedData = await supabaseDataService.getPatientData(patient.id);
       setDetailedPatientData(detailedData);
+      setFailed(!detailedData);
     } catch (error) {
       console.error('Failed to load patient data:', error);
+      setFailed(true);
     } finally {
       setIsLoading(false);
     }
@@ -42,11 +46,14 @@ export default function PatientDataModal({ isOpen, onClose, patient }: PatientDa
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-[95vw] max-h-[95vh] w-full h-full">
-        <DialogHeader className="flex flex-row items-center justify-between space-y-0 pb-4 border-b">
-          <DialogTitle className="text-xl font-semibold">
-            Prepare for Consultation: {patient?.name || `${patient?.firstName} ${patient?.lastName}`.trim()}
-          </DialogTitle>
+      <DialogContent className="h-[calc(100svh-2rem)] max-w-[min(72rem,calc(100vw-1.5rem))] grid-rows-[auto_1fr]">
+        <DialogHeader className="flex flex-row items-end justify-between space-y-0 border-b border-border pb-4 pr-8">
+          <div>
+            <p className="label-caps">Prepare for the consultation</p>
+            <DialogTitle className="mt-1">
+              {patient?.name || `${patient?.firstName} ${patient?.lastName}`.trim()}
+            </DialogTitle>
+          </div>
           <Button
             variant="ghost"
             size="icon"
@@ -57,11 +64,11 @@ export default function PatientDataModal({ isOpen, onClose, patient }: PatientDa
           </Button>
         </DialogHeader>
         
-        <div className="flex-1 overflow-hidden">
+        <div className="min-h-0 overflow-y-auto">
           {isLoading ? (
-            <div className="flex items-center justify-center h-full">
-              <LoadingAnimation />
-            </div>
+            <LoadingState label="Loading the chart" />
+          ) : failed || !detailedPatientData ? (
+            <ErrorState title="The chart did not load" message="The database may be unreachable." onRetry={loadPatientData} />
           ) : detailedPatientData ? (
             <AllDataViewTab 
               detailedPatientData={detailedPatientData}

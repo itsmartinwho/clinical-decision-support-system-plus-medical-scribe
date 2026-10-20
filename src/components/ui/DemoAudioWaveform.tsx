@@ -73,7 +73,7 @@ export const DemoAudioWaveform: React.FC<DemoAudioWaveformProps> = ({
   }, [barCount, barColor, height]);
 
   return (
-    <div className={`inline-flex items-center gap-2 px-3 py-1.5 bg-white/80 backdrop-blur-md border border-white/20 rounded-full shadow-lg ${className}`}>
+    <div className={`inline-flex items-center gap-2 px-3 py-1.5 bg-card border border-border rounded-full shadow-lg ${className}`}>
       {/* Waveform */}
       <div className="relative">
         <canvas
@@ -87,7 +87,7 @@ export const DemoAudioWaveform: React.FC<DemoAudioWaveformProps> = ({
       
       {/* Microphone indicator - always active in demo */}
       {showMicIcon && (
-        <div className="flex items-center text-green-500">
+        <div className="flex items-center text-ok">
           <Mic size={12} />
         </div>
       )}

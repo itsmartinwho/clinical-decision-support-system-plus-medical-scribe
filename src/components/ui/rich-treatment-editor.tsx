@@ -92,17 +92,17 @@ export const RichTreatmentEditor: React.FC<RichTreatmentEditorProps> = ({
     return (
       <div className="rich-treatment-editor space-y-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-medium text-gray-900">{label} (Editing)</h3>
+          <h3 className="text-lg font-medium text-ink">{label} (Editing)</h3>
           <div className="flex gap-2">
             <button
               onClick={handleSave}
-              className="px-3 py-1 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700"
+              className="px-3 py-1 bg-info text-white rounded-md text-sm hover:bg-info"
             >
               Save
             </button>
             <button
               onClick={handleCancel}
-              className="px-3 py-1 bg-gray-300 text-gray-700 rounded-md text-sm hover:bg-gray-400"
+              className="px-3 py-1 bg-hairline text-ink rounded-md text-sm hover:bg-hairline"
             >
               Cancel
             </button>
@@ -111,13 +111,13 @@ export const RichTreatmentEditor: React.FC<RichTreatmentEditorProps> = ({
 
         {/* Text Content Editor */}
         <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700">
+          <label className="block text-sm font-medium text-ink">
             Text Content
           </label>
           <textarea
             value={editedContent.text_content}
             onChange={(e) => handleTextContentChange(e.target.value)}
-            className="w-full h-64 p-3 border border-gray-300 rounded-md resize-vertical font-mono text-sm"
+            className="w-full h-64 p-3 border border-border rounded-md resize-vertical font-mono text-sm"
             placeholder="Enter treatment content in markdown format..."
           />
         </div>
@@ -125,7 +125,7 @@ export const RichTreatmentEditor: React.FC<RichTreatmentEditorProps> = ({
         {/* Rich Elements Editor */}
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-sm font-medium text-ink">
               Rich Elements ({editedContent.rich_elements.length})
             </label>
             <RichElementControls onAddElement={addRichElement} />
@@ -153,8 +153,8 @@ export const RichTreatmentEditor: React.FC<RichTreatmentEditorProps> = ({
 
         {/* Preview */}
         <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700">Preview</label>
-          <div className="border border-gray-300 rounded-md p-4 bg-gray-50">
+          <label className="block text-sm font-medium text-ink">Preview</label>
+          <div className="border border-border rounded-md p-4 bg-well/50">
             <TreatmentRenderer
               content={editedContent.text_content}
               richContent={editedContent}
@@ -172,7 +172,7 @@ export const RichTreatmentEditor: React.FC<RichTreatmentEditorProps> = ({
     <div className="rich-treatment-editor">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4 mb-4">
         <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 min-w-0">
-          <h3 className="text-base sm:text-lg font-medium text-gray-900 truncate">{label}</h3>
+          <h3 className="text-base sm:text-lg font-medium text-ink truncate">{label}</h3>
           {guidelines.length > 0 && (
             <ClinicalGuidelinesIndicator 
               guidelines={guidelines} 
@@ -183,7 +183,7 @@ export const RichTreatmentEditor: React.FC<RichTreatmentEditorProps> = ({
         {!isDemo && (
           <button
             onClick={handleStartEdit}
-            className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm hover:bg-gray-200 touch-manipulation whitespace-nowrap self-start sm:self-auto"
+            className="px-3 py-1.5 bg-well text-ink rounded-md text-sm hover:bg-well touch-manipulation whitespace-nowrap self-start sm:self-auto"
           >
             Edit
           </button>
@@ -251,22 +251,22 @@ const RichElementControls: React.FC<{
     <div className="relative">
       <button
         onClick={() => setShowAddMenu(!showAddMenu)}
-        className="px-2 py-1 bg-green-100 text-green-700 rounded text-xs hover:bg-green-200"
+        className="px-2 py-1 bg-ok-soft text-ok rounded text-xs hover:bg-ok-soft"
       >
         + Add Element
       </button>
       
       {showAddMenu && (
-        <div className="absolute top-full right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg z-10">
+        <div className="absolute top-full right-0 mt-1 bg-card border border-border rounded-md shadow-lg z-10">
           <button
             onClick={addTable}
-            className="block w-full px-4 py-2 text-left text-sm hover:bg-gray-50"
+            className="block w-full px-4 py-2 text-left text-sm hover:bg-well/50"
           >
             Add Table
           </button>
           <button
             onClick={addChart}
-            className="block w-full px-4 py-2 text-left text-sm hover:bg-gray-50"
+            className="block w-full px-4 py-2 text-left text-sm hover:bg-well/50"
           >
             Add Chart
           </button>
@@ -292,19 +292,19 @@ const RichElementEditor: React.FC<{
   }, [element, onUpdate]);
 
   return (
-    <div className="border border-gray-200 rounded-md p-3">
+    <div className="border border-border rounded-md p-3">
       <div className="flex items-center justify-between">
         <span className="text-sm font-medium capitalize">{element.type} Element</span>
         <div className="flex gap-2">
           <button
             onClick={() => setIsExpanded(!isExpanded)}
-            className="text-xs text-gray-500 hover:text-gray-700"
+            className="text-xs text-muted-foreground hover:text-ink"
           >
             {isExpanded ? 'Collapse' : 'Expand'}
           </button>
           <button
             onClick={onDelete}
-            className="text-xs text-red-500 hover:text-red-700"
+            className="text-xs text-critical hover:text-critical"
           >
             Delete
           </button>
@@ -355,13 +355,13 @@ const TableElementEditor: React.FC<{
 
   return (
     <div className="space-y-2">
-      <div className="text-xs text-gray-600">Table Editor</div>
+      <div className="text-xs text-ink-2">Table Editor</div>
       <div className="overflow-x-auto">
         <table className="min-w-full text-sm">
           <thead>
             <tr>
               {data.headers.map((header: string, index: number) => (
-                <th key={index} className="border border-gray-300 px-2 py-1 bg-gray-50">
+                <th key={index} className="border border-border px-2 py-1 bg-well/50">
                   <input
                     value={header}
                     onChange={(e) => {
@@ -379,7 +379,7 @@ const TableElementEditor: React.FC<{
             {data.rows.map((row: string[], rowIndex: number) => (
               <tr key={rowIndex}>
                 {row.map((cell: string, cellIndex: number) => (
-                  <td key={cellIndex} className="border border-gray-300 px-2 py-1">
+                  <td key={cellIndex} className="border border-border px-2 py-1">
                     <input
                       value={cell}
                       onChange={(e) => updateCell(rowIndex, cellIndex, e.target.value)}
@@ -394,7 +394,7 @@ const TableElementEditor: React.FC<{
       </div>
       <button
         onClick={addRow}
-        className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs hover:bg-blue-200"
+        className="px-2 py-1 bg-info-soft text-info rounded text-xs hover:bg-info-soft"
       >
         Add Row
       </button>
@@ -409,15 +409,15 @@ const ChartElementEditor: React.FC<{
 }> = ({ data, onUpdate }) => {
   return (
     <div className="space-y-2">
-      <div className="text-xs text-gray-600">Chart Configuration</div>
+      <div className="text-xs text-ink-2">Chart Configuration</div>
       <div className="space-y-2">
         <input
           value={data.title || ''}
           onChange={(e) => onUpdate({ ...data, title: e.target.value })}
           placeholder="Chart title"
-          className="w-full p-2 border border-gray-300 rounded text-sm"
+          className="w-full p-2 border border-border rounded text-sm"
         />
-        <div className="text-xs text-gray-500">
+        <div className="text-xs text-muted-foreground">
           Chart data and visualization settings would be configured here.
         </div>
       </div>

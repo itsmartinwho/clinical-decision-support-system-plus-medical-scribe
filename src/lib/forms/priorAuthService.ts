@@ -1,4 +1,5 @@
 import { Patient, Encounter, Diagnosis, PriorAuthFormData, FHIRResourceType, FormValidationResult } from '@/lib/types';
+import { PRODUCT_NAME } from '@/lib/brand';
 
 // FHIR Resource Types for Prior Authorization
 export const PRIOR_AUTH_RESOURCE_TYPES: FHIRResourceType[] = [
@@ -48,7 +49,7 @@ export class PriorAuthService {
       providerInformation: {
         name: '', // Placeholder - not available in current system
         npi: '', // Placeholder - not available in current system
-        facility: 'Foresight CDSS', // Default facility
+        facility: PRODUCT_NAME, // Default facility
         contactPhone: '', // Placeholder
         contactEmail: '' // Placeholder
       },

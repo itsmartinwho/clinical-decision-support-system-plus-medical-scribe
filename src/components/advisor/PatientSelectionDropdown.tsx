@@ -28,10 +28,14 @@ export default function PatientSelectionDropdown({ onPatientSelect, onFileUpload
 
   useEffect(() => {
     const loadPatients = async () => {
-      if (supabaseDataService.getAllPatients().length === 0) {
-        await supabaseDataService.loadPatientData();
+      try {
+        if (supabaseDataService.getAllPatients().length === 0) {
+          await supabaseDataService.loadPatientData();
+        }
+        setAllPatients(supabaseDataService.getAllPatients());
+      } catch {
+        setAllPatients([]); // the list shows its empty state
       }
-      setAllPatients(supabaseDataService.getAllPatients());
     };
     loadPatients();
   }, []);

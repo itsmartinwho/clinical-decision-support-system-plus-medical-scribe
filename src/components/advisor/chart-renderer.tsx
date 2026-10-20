@@ -180,13 +180,13 @@ except Exception as e:
   }, []);
 
   return (
-    <div className="border rounded-lg p-4 bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-blue-950">
+    <div className="border rounded-lg p-4 bg-gradient-to-br from-well/50 to-info-soft dark:from-slate-900 dark:to-blue-950">
       {description && (
         <p className="text-sm text-muted-foreground mb-3">{description}</p>
       )}
       
       {/* Python Code Display */}
-      <div className="bg-slate-900 text-green-400 p-3 rounded-md mb-4 overflow-x-auto">
+      <div className="bg-ink text-ok p-3 rounded-md mb-4 overflow-x-auto">
         <pre className="text-xs font-mono whitespace-pre-wrap">{pythonCode}</pre>
       </div>
 
@@ -196,7 +196,7 @@ except Exception as e:
           <Button 
             onClick={executeCode} 
             disabled={loading}
-            className="bg-blue-600 hover:bg-blue-700"
+            className="bg-info hover:bg-info"
           >
             <PlayIcon className="w-4 h-4 mr-2" />
             {loading ? 'Generating Chart...' : executed ? 'Re-generate Chart' : 'Execute & Render Chart'}
@@ -219,7 +219,7 @@ except Exception as e:
 
       {/* Error Display */}
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 p-3 rounded-md mb-4">
+        <div className="bg-critical-soft border border-critical-line text-critical p-3 rounded-md mb-4">
           <strong>Error:</strong> {error}
         </div>
       )}
@@ -241,7 +241,7 @@ except Exception as e:
       {/* Placeholder while awaiting chart generation */}
       {!chartUrl && (loading || !executed) && (
         <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-info/30"></div>
           <span className="ml-2 text-sm text-muted-foreground">
             {loading ? 'Generating chart...' : 'Preparing chart...'}
           </span>
@@ -251,7 +251,7 @@ except Exception as e:
       {/* Loading State */}
       {loading && (
         <div className="flex items-center justify-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-info/30"></div>
           <span className="ml-2 text-sm text-muted-foreground">
             {pyodide ? 'Executing Python code...' : 'Loading Python environment...'}
           </span>
@@ -260,7 +260,7 @@ except Exception as e:
 
       {/* Success State */}
       {executed && chartUrl && (
-        <div className="text-sm text-green-600 mt-2 flex items-center">
+        <div className="text-sm text-ok mt-2 flex items-center">
           ✓ Chart generated successfully! Use the buttons above to view or download.
         </div>
       )}

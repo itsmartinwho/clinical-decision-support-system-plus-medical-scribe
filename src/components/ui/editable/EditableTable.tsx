@@ -280,11 +280,11 @@ export function EditableTable({
                     </div>
                     <div className="col-span-3">
                       <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                        treatment.status === 'active' ? 'bg-green-100 text-green-800' :
-                        treatment.status === 'completed' ? 'bg-blue-100 text-blue-800' :
-                        treatment.status === 'discontinued' ? 'bg-red-100 text-red-800' :
-                        treatment.status === 'on-hold' ? 'bg-yellow-100 text-yellow-800' :
-                        'bg-gray-100 text-gray-800'
+                        treatment.status === 'active' ? 'bg-ok-soft text-ok' :
+                        treatment.status === 'completed' ? 'bg-info-soft text-info' :
+                        treatment.status === 'discontinued' ? 'bg-critical-soft text-critical' :
+                        treatment.status === 'on-hold' ? 'bg-flag-soft text-flag' :
+                        'bg-well text-ink'
                       }`}>
                         {statusOptions.find(opt => opt.value === treatment.status)?.label || treatment.status || 'Unknown'}
                       </span>

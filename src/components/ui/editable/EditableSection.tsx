@@ -130,7 +130,7 @@ export default function EditableSection({
           variant="ghost"
           size="sm"
           onClick={onEdit}
-          className="absolute top-2 right-2 z-10 h-8 w-8 p-0 opacity-80 hover:opacity-100 bg-white/60 backdrop-blur-md border border-white/40"
+          className="absolute top-2 right-2 z-10 h-8 w-8 p-0 opacity-80 hover:opacity-100 bg-card border border-border"
           title="Edit"
         >
           <PencilSimple className="h-4 w-4" />

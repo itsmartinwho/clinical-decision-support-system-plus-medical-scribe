@@ -4,6 +4,8 @@ import type { Patient, Encounter, Diagnosis, LabResult, EncounterDetailsWrapper 
 import { Button } from "@/components/ui/button";
 import { ArrowCounterClockwise, Trash } from '@phosphor-icons/react';
 import RenderDetailTable from "@/components/ui/RenderDetailTable";
+import TranscriptView from "@/components/transcript/TranscriptView";
+import { formatDate, formatTime, sexLabel } from "@/lib/format";
 import { supabaseDataService } from "@/lib/supabaseDataService"; // For restore/delete
 import { toast } from "@/hooks/use-toast";
 
@@ -102,94 +104,100 @@ export default function AllDataViewTab({ detailedPatientData, setDetailedPatient
     }
   };
 
+  const facts: Array<[string, string]> = [
+    ['Name', patient.name || `${patient.firstName ?? ''} ${patient.lastName ?? ''}`.trim()],
+    ['Born', formatDate(patient.dateOfBirth)],
+    ['Sex', sexLabel(patient.gender)],
+    ['Race', patient.race || '—'],
+    ['Ethnicity', patient.ethnicity || '—'],
+    ['Marital status', patient.maritalStatus || '—'],
+    ['Language', patient.language || '—'],
+    ['Below poverty line', patient.povertyPercentage !== undefined ? `${patient.povertyPercentage}% of area` : '—'],
+    ['Patient ID', patient.id],
+  ];
+  const active = encounters
+    .filter(ew => !ew.encounter.isDeleted)
+    .sort((a, b) => new Date(b.encounter.scheduledStart).getTime() - new Date(a.encounter.scheduledStart).getTime());
+
   return (
-    <div className="space-y-6 max-h-[calc(100vh-20rem)] overflow-y-auto">
-      {/* Demographics */}
-      <div className="glass-dense rounded-lg p-4">
-        <h2 className="text-xl font-semibold text-foreground mb-3">Patient Demographics</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
-          {Object.entries(patient).map(([key, value]) => (
-            (typeof value !== 'object' || value === null) && (
-              <div key={key} className="flex flex-col sm:flex-row sm:gap-2">
-                <span className="font-medium text-muted-foreground capitalize min-w-24">
-                  {key.replace(/([A-Z])/g, ' $1')}:
-                </span>
-                <span className="text-foreground">{String(value)}</span>
-              </div>
-            )
-          ))}
-        </div>
-      </div>
-
-      {/* Active Encounters History */}
-      <div className="space-y-4">
-        <h2 className="text-xl font-semibold text-foreground">Encounters History</h2>
-        {encounters.filter(ew => !ew.encounter.isDeleted)
-          .sort((a, b) => new Date(b.encounter.scheduledStart).getTime() - new Date(a.encounter.scheduledStart).getTime())
-          .map((encounterWrapper: EncounterDetailsWrapper, index: number) => {
-          const { encounter, diagnoses, labResults } = encounterWrapper;
-
-          return (
-            <div key={encounter.id || index} className="glass-dense rounded-lg p-4 space-y-4">
-              <div>
-                <h3 className="text-lg font-medium text-foreground">
-                  Encounter on {new Date(encounter.scheduledStart).toLocaleDateString()}
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  ID: {encounter.encounterIdentifier} • Reason: {encounter.reasonDisplayText || encounter.reasonCode || 'N/A'}
-                </p>
-              </div>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-                <div>
-                  <span className="font-medium text-muted-foreground">Actual Start:</span>
-                  <span className="ml-2 text-foreground">
-                    {encounter.actualStart ? new Date(encounter.actualStart).toLocaleString() : 'N/A'}
-                  </span>
-                </div>
-                <div>
-                  <span className="font-medium text-muted-foreground">Actual End:</span>
-                  <span className="ml-2 text-foreground">
-                    {encounter.actualEnd ? new Date(encounter.actualEnd).toLocaleString() : 'N/A'}
-                  </span>
-                </div>
-              </div>
-
-              {encounter.transcript && (
-                <div className="bg-white/5 border border-white/10 rounded-lg p-3">
-                  <h4 className="text-lg font-medium text-foreground mb-2">Transcript</h4>
-                                      <pre className="whitespace-pre-wrap text-sm text-foreground">{encounter.transcript}</pre>
-                </div>
-              )}
-
-              {encounter.soapNote && (
-                <div className="bg-white/5 border border-white/10 rounded-lg p-3">
-                  <h4 className="text-lg font-medium text-foreground mb-2">SOAP Note</h4>
-                                      <pre className="whitespace-pre-wrap text-sm text-foreground">{encounter.soapNote}</pre>
-                </div>
-              )}
-
-              <div className="space-y-3">
-                <RenderDetailTable title="Diagnoses" dataArray={diagnoses || []} headers={['Code', 'Description']} columnAccessors={['code', 'description']} />
-                <RenderDetailTable title="Lab Results" dataArray={labResults || []} headers={['Test Name', 'Value', 'Units', 'Date/Time', 'Ref. Range', 'Flag']} columnAccessors={['name', 'value', 'units', 'dateTime', 'referenceRange', 'flag']} />
-                <RenderDetailTable title="Treatments" dataArray={encounter.treatments || []} headers={['Drug', 'Status', 'Rationale']} columnAccessors={['drug', 'status', 'rationale']} />
-              </div>
+    <div className="space-y-10">
+      <section>
+        <h2 className="label-caps border-b border-ink/70 pb-2 !text-ink">Demographics</h2>
+        <dl className="grid grid-cols-1 gap-x-8 sm:grid-cols-2 lg:grid-cols-3">
+          {facts.map(([label, value]) => (
+            <div key={label} className="flex items-baseline justify-between gap-4 border-b border-border py-2 text-sm">
+              <dt className="text-muted-foreground">{label}</dt>
+              <dd className={label === 'Patient ID' || label === 'Born' ? 'data-mono min-w-0 break-all text-right text-[0.8125rem] text-ink' : 'text-right text-ink'}>{value}</dd>
             </div>
+          ))}
+        </dl>
+      </section>
+
+      <section className="space-y-8">
+        <h2 className="label-caps flex items-center gap-2 border-b border-ink/70 pb-2 !text-ink">
+          Encounters
+          <span className="data-mono rounded border border-border px-1.5 text-[0.6875rem] font-medium tracking-normal text-muted-foreground">{active.length}</span>
+        </h2>
+        {active.map((encounterWrapper: EncounterDetailsWrapper, index: number) => {
+          const { encounter, diagnoses, labResults } = encounterWrapper;
+          const treatments = (encounter.treatments || []) as any[];
+          const seedShape = treatments.some((t) => t && 'treatment_name' in t);
+          const terms = [
+            ...(diagnoses || []).map((d) => d.description || ''),
+            ...treatments.map((t) => t?.treatment_name || t?.drug || ''),
+            ...(labResults || []).map((l) => l.name || ''),
+          ];
+          return (
+            <article key={encounter.id || index} className="rounded-[var(--radius-lg)] border border-border bg-card p-4 sm:p-6">
+              <header className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
+                <div className="min-w-0">
+                  <p className="data-mono text-xs text-muted-foreground">{formatDate(encounter.actualStart || encounter.scheduledStart)} · {formatTime(encounter.actualStart || encounter.scheduledStart)}–{formatTime(encounter.actualEnd || encounter.scheduledEnd)}</p>
+                  <h3 className="mt-1 font-display text-xl leading-snug text-ink">{encounter.reasonDisplayText || encounter.reasonCode || 'Consultation'}</h3>
+                </div>
+                <p className="data-mono text-xs text-muted-foreground">{encounter.reasonCode ? `${encounter.reasonCode} · ` : ''}{encounter.encounterIdentifier}</p>
+              </header>
+
+              {encounter.transcript ? (
+                <details className="group mt-5 border-t border-border pt-3">
+                  <summary className="label-caps cursor-pointer list-none !text-ink [&::-webkit-details-marker]:hidden">
+                    <span className="mr-1 inline-block transition-transform group-open:rotate-90">›</span> Transcript
+                  </summary>
+                  <TranscriptView className="mt-3 max-h-[28rem]" transcript={encounter.transcript} terms={terms} />
+                </details>
+              ) : null}
+
+              {encounter.soapNote ? (
+                <details className="group mt-3 border-t border-border pt-3">
+                  <summary className="label-caps cursor-pointer list-none !text-ink [&::-webkit-details-marker]:hidden">
+                    <span className="mr-1 inline-block transition-transform group-open:rotate-90">›</span> SOAP note
+                  </summary>
+                  <p className="mt-3 max-w-[75ch] whitespace-pre-line text-[0.9375rem] leading-relaxed text-ink">{encounter.soapNote}</p>
+                </details>
+              ) : null}
+
+              <RenderDetailTable title="Diagnoses" dataArray={diagnoses || []} headers={['Code', 'Description']} columnAccessors={['code', 'description']} />
+              <RenderDetailTable title="Lab results" dataArray={labResults || []} headers={['Test', 'Value', 'Units', 'Taken', 'Range', 'Flag']} columnAccessors={['name', 'value', 'units', 'dateTime', 'referenceRange', 'flag']} />
+              {seedShape ? (
+                <RenderDetailTable title="Treatments" dataArray={treatments} headers={['Treatment', 'Dose', 'Instructions', 'Kind']} columnAccessors={['treatment_name', 'dosage', 'instructions', 'treatment_type']} />
+              ) : (
+                <RenderDetailTable title="Treatments" dataArray={treatments} headers={['Drug', 'Status', 'Rationale']} columnAccessors={['drug', 'status', 'rationale']} />
+              )}
+            </article>
           );
         })}
-        {encounters.filter(ew => !ew.encounter.isDeleted).length === 0 && (
-          <p className="text-sm text-muted-foreground/70 text-center py-8">No active encounter history for this patient</p>
+        {active.length === 0 && (
+          <p className="text-sm text-muted-foreground">No encounters on this chart.</p>
         )}
-      </div>
+      </section>
 
       {/* Deleted Items Section */}
       {deletedEncounters.length > 0 && (
         <div className="space-y-4">
-          <h2 className="text-xl font-semibold text-destructive">Deleted Items</h2>
+          <h2 className="label-caps border-b border-critical/60 pb-2 !text-critical">Deleted</h2>
           {deletedEncounters.map((encounterWrapper: EncounterDetailsWrapper, index: number) => {
             const { encounter } = encounterWrapper;
             return (
-              <div key={encounter.id || index} className="bg-destructive/10 border border-destructive/30 hover:bg-destructive/20 transition-colors rounded-lg p-4">
+              <div key={encounter.id || index} className="rounded-md border border-critical-line bg-critical-soft/50 p-4">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                   <div>
                     <h3 className="font-semibold text-foreground">

@@ -61,7 +61,7 @@ export const DraggableModalWrapper: React.FC<DraggableModalWrapperProps> = ({
       <div 
         {...dragHandleProps}
         className={cn(
-          "modal-title-bar flex items-center justify-between p-4 border-b border-white/10",
+          "modal-title-bar flex items-center justify-between p-4 border-b border-border",
           allowDragging ? "cursor-move" : "cursor-default", // Make the entire title bar show move cursor only if dragging is allowed
           dragHandleProps.className
         )}

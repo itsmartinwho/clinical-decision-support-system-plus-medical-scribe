@@ -1,50 +1,50 @@
 :root {
-  /* ------------------------------------------------------------------*/
-  /* Global Design Tokens – colours, radii, motion, etc.               */
-  /* These values are taken from the new UI brief (see conversation).  */
-  /* ------------------------------------------------------------------*/
+  /* ------------------------------------------------------------------
+     The palette: chart paper and ink, hairlines for structure,
+     and three semantic colours a clinician reads at a glance:
+       sage    done, normal, within range
+       amber   flagged, needs a look
+       red     critical
+     Blue is the one interactive colour: links, focus, the selected row.
+     Every text pairing below is WCAG AA (4.5:1) or better on paper and on
+     its own tint; --input-border is 3:1 against the card for UI edges.
+     ------------------------------------------------------------------ */
+  --paper: 43 28% 95%;        /* #F6F4EF  the page */
+  --card: 45 40% 98%;         /* #FCFBF8  raised surfaces */
+  --well: 42 23% 91%;         /* #EEEBE4  wells, hover, selected */
+  --ink: 156 8% 12%;          /* #1C211F  text, primary actions (14.9:1) */
+  --ink-2: 150 5% 24%;        /* #3A403D  secondary text */
+  --muted-ink: 108 3% 37%;    /* #5E625D  labels, meta (5.6:1) */
+  --hairline: 43 17% 84%;     /* #DDD9CF  rules and card edges */
+  --input-border: 44 6% 53%;  /* #8E8A7F  form edges (3:1) */
 
-  /* ----- New surface tokens (UI refresh) ----- */
-  --surface-0: 218 16% 10%;   /* near black (dialogs etc) */
-  --surface-1: 218 16% 15%;   /* dark grey (cards etc) */
-  --surface-2: 218 16% 20%;   /* medium grey (hovers etc) */
-  --surface-3: 218 16% 25%;   /* light grey (borders etc) */
+  --blue: 204 61% 32%;        /* #1F5A82  links, focus (6.7:1) */
+  --blue-soft: 207 47% 93%;   /* #E3EDF5 */
 
-  /* ----- New accent tokens (UI refresh) ----- */
-  --accent-primary: 329 84% 59%;   /* pink-500 */
-  --accent-secondary: 271 100% 62%; /* purple-500 */
-  --accent-tertiary: 217 89% 65%;  /* blue-500 */
-  /* Primary is still --accent / --neon-val */
-  --custom-blue-teal: 209 70% 46%; /* New custom blue-teal */
-  --neon-teal: 209 70% 46%; /* Vivid Teal -> New custom blue-teal */
-  --whitish-yellow: 0 0% 100%; /* Light, slightly desaturated Yellow -> White */
-  --white-val: 0 0% 100%; /* Explicit white variable */
-  
-  
-  
+  --sage: 153 40% 30%;        /* #2D6A4F */
+  --sage-soft: 140 29% 92%;   /* #E4F0E8 */
+  --sage-line: 149 32% 75%;   /* #A9D3BD */
 
-  /* Legacy colors (gradual phase-out) */
-  --legacy-blue-primary: 217 89% 61%;
+  --amber: 37 78% 28%;        /* #7F5410 */
+  --amber-soft: 41 73% 90%;   /* #F8ECD2 */
+  --amber-line: 38 75% 64%;   /* #E8B65E */
 
-  /* Neutral surface stack (light theme) */
-  --surface-0: 0 0% 100%;     /* pure white – intended to be used with /alpha */
-  --surface-1: 210 20% 99%;   /* very light cool gray */
-  --surface-2: 210 16% 96%;   /* light cool gray */
-  --surface-3: 210 14% 93%;   /* mid-light cool gray */
+  --red: 4 60% 39%;           /* #9E2F27 */
+  --red-soft: 10 60% 92%;     /* #F7E3DF */
+  --red-line: 7 55% 76%;      /* #E3A79F */
 
-  /* Accent / brand hues */
-  
-  
-  
+  /* Legacy names, kept so older components resolve to the new palette */
+  --custom-blue-teal: var(--blue);
+  --neon-teal: var(--blue);
+  --surface-0: var(--card);
+  --surface-1: var(--card);
+  --surface-2: var(--well);
+  --surface-3: var(--hairline);
+  --shadow: 156 8% 12%;
 
-  /* Shadow colour (used for translucent shadows) */
-  --shadow: 210 10% 34%;
+  --radius-lg: 0.875rem;
 
-  /* Radius scale */
-  --radius-lg: 1.25rem;
-
-  /* Motion durations – will be referenced in animation utilities */
   --motion-fast: 120ms;
-  --motion-medium: 200ms;
-  --motion-slow: 320ms;
-} 
+  --motion-medium: 180ms;
+  --motion-slow: 260ms;
+}

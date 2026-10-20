@@ -144,8 +144,8 @@ export const MemoizedDecisionTreeNode: React.FC<{
     >
       <div className="node-content p-2 border rounded">
         <div className="node-label font-medium">{node.label}</div>
-        {node.action && <div className="node-action text-sm text-gray-600">{node.action}</div>}
-        {node.condition && <div className="node-condition text-sm text-blue-600">{node.condition}</div>}
+        {node.action && <div className="node-action text-sm text-ink-2">{node.action}</div>}
+        {node.condition && <div className="node-condition text-sm text-info">{node.condition}</div>}
       </div>
     </div>
   );
@@ -173,8 +173,8 @@ export const ProgressiveImage: React.FC<{
 
   if (hasError) {
     return (
-      <div className={`bg-gray-200 flex items-center justify-center ${className}`}>
-        <span className="text-gray-500">Image failed to load</span>
+      <div className={`bg-well flex items-center justify-center ${className}`}>
+        <span className="text-muted-foreground">Image failed to load</span>
       </div>
     );
   }
@@ -262,7 +262,7 @@ export const ChunkedContentRenderer: React.FC<{
       {visibleChunks < chunks.length && (
         <button
           onClick={loadMoreChunks}
-          className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          className="mt-4 px-4 py-2 bg-info text-white rounded hover:bg-info focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
         >
           Load More Content ({chunks.length - visibleChunks} chunks remaining)
         </button>

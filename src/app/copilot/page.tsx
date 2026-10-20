@@ -129,17 +129,17 @@ export default function CopilotPage() {
     <div className="container mx-auto p-6 space-y-6">
       {/* Page Header */}
       <div className="text-center space-y-2">
-        <h1 className="text-3xl font-bold text-gray-900 flex items-center justify-center gap-2">
-          <Bot className="h-8 w-8 text-blue-600" />
+        <h1 className="text-3xl font-bold text-ink flex items-center justify-center gap-2">
+          <Bot className="h-8 w-8 text-info" />
           Medical Co-pilot Testing Environment
         </h1>
-        <p className="text-gray-600">
+        <p className="text-ink-2">
           Real-time AI-powered medical assistance during consultations
         </p>
       </div>
 
       {/* Consultation Control */}
-      <Card className="border-2 border-dashed border-blue-200">
+      <Card className="border-2 border-dashed border-info/30">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Stethoscope className="h-5 w-5" />
@@ -150,20 +150,20 @@ export default function CopilotPage() {
           <div className="flex items-center justify-between">
             <div className="space-y-1">
               <div className="flex items-center gap-2">
-                <Activity className={`h-4 w-4 ${isInConsultation ? 'text-green-500' : 'text-gray-400'}`} />
+                <Activity className={`h-4 w-4 ${isInConsultation ? 'text-ok' : 'text-muted-foreground'}`} />
                 <span className="font-medium">
                   Status: {isInConsultation ? 'In Consultation' : 'Not Started'}
                 </span>
               </div>
               {consultationId && (
-                <p className="text-sm text-gray-500">ID: {consultationId}</p>
+                <p className="text-sm text-muted-foreground">ID: {consultationId}</p>
               )}
-              <p className="text-sm text-gray-500">Patient: {patientId}</p>
+              <p className="text-sm text-muted-foreground">Patient: {patientId}</p>
             </div>
             
             <div className="flex gap-2">
               {!isInConsultation ? (
-                <Button onClick={startConsultation} className="bg-green-600 hover:bg-green-700">
+                <Button onClick={startConsultation} className="bg-ok hover:bg-ok">
                   Start Consultation
                 </Button>
               ) : (
@@ -188,8 +188,8 @@ export default function CopilotPage() {
           </div>
 
           {isInConsultation && (
-            <div className="p-3 bg-green-50 border border-green-200 rounded-md">
-              <div className="flex items-center gap-2 text-green-800">
+            <div className="p-3 bg-ok-soft border border-ok-line rounded-md">
+              <div className="flex items-center gap-2 text-ok">
                 <CheckCircle className="h-4 w-4" />
                 <span className="text-sm font-medium">
                   Real-time alerts active - Processing every minute automatically
@@ -226,10 +226,10 @@ export default function CopilotPage() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Activity className="h-5 w-5 text-blue-500" />
+                <Activity className="h-5 w-5 text-info" />
                 Real-time Alert System
               </CardTitle>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-ink-2">
                 {isInConsultation 
                   ? 'Active during consultation - Processing transcript changes automatically'
                   : 'Start a consultation to enable real-time alerts'
@@ -261,10 +261,10 @@ export default function CopilotPage() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Clock className="h-5 w-5 text-amber-500" />
+                <Clock className="h-5 w-5 text-flag" />
                 Legacy Copilot System
               </CardTitle>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-ink-2">
                 Original copilot functionality for testing and comparison
               </p>
             </CardHeader>
@@ -288,18 +288,18 @@ export default function CopilotPage() {
 
               {legacyAlerts.length > 0 && (
                 <div className="space-y-2">
-                  <h3 className="font-medium text-gray-900">Legacy Alerts:</h3>
+                  <h3 className="font-medium text-ink">Legacy Alerts:</h3>
                   {legacyAlerts.map((alert, index) => (
                     <div 
                       key={index}
-                      className="p-3 border rounded-md bg-amber-50 border-amber-200"
+                      className="p-3 border rounded-md bg-flag-soft border-flag-line"
                     >
                       <div className="flex items-start justify-between">
                         <div>
-                          <h4 className="font-medium text-amber-900">{alert.type}</h4>
-                          <p className="text-sm text-amber-800">{alert.message}</p>
+                          <h4 className="font-medium text-flag">{alert.type}</h4>
+                          <p className="text-sm text-flag">{alert.message}</p>
                           {alert.suggestion && (
-                            <p className="text-xs text-amber-700 mt-1">
+                            <p className="text-xs text-flag mt-1">
                               <strong>Suggestion:</strong> {alert.suggestion}
                             </p>
                           )}
@@ -321,10 +321,10 @@ export default function CopilotPage() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <AlertTriangle className="h-5 w-5 text-purple-500" />
+                <AlertTriangle className="h-5 w-5 text-info" />
                 Alert History ({alertHistory.length})
               </CardTitle>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-ink-2">
                 Real-time alerts received during this session
               </p>
             </CardHeader>
@@ -334,13 +334,13 @@ export default function CopilotPage() {
                   {alertHistory.map((alert) => (
                     <div 
                       key={alert.id}
-                      className="p-3 border rounded-md bg-gray-50"
+                      className="p-3 border rounded-md bg-well/50"
                     >
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
-                          <h4 className="font-medium text-gray-900">{alert.title}</h4>
-                          <p className="text-sm text-gray-700">{alert.message}</p>
-                          <p className="text-xs text-gray-500 mt-1">
+                          <h4 className="font-medium text-ink">{alert.title}</h4>
+                          <p className="text-sm text-ink">{alert.message}</p>
+                          <p className="text-xs text-muted-foreground mt-1">
                             {new Date(alert.createdAt).toLocaleTimeString()}
                           </p>
                         </div>
@@ -352,8 +352,8 @@ export default function CopilotPage() {
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-8 text-gray-500">
-                  <AlertTriangle className="h-12 w-12 mx-auto mb-3 text-gray-300" />
+                <div className="text-center py-8 text-muted-foreground">
+                  <AlertTriangle className="h-12 w-12 mx-auto mb-3 text-muted-foreground" />
                   <p>No alerts received yet</p>
                   <p className="text-sm">Start a consultation to see real-time alerts</p>
                 </div>

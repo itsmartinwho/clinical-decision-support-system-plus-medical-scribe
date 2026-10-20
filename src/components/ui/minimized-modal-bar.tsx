@@ -81,7 +81,7 @@ export function MinimizedModalBar({ className }: MinimizedModalBarProps) {
                 <span className="text-sm">{modal.icon}</span>
               )}
               {!modal.icon && (
-                <div className="w-full h-full bg-white/20 rounded-sm flex items-center justify-center">
+                <div className="w-full h-full bg-card rounded-sm flex items-center justify-center">
                   <span className="text-xs font-semibold">
                     {modal.title.charAt(0).toUpperCase()}
                   </span>

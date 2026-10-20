@@ -38,13 +38,13 @@ export const ClinicalGuidelinesIndicator: React.FC<ClinicalGuidelinesIndicatorPr
   const getLevelColor = (level?: string) => {
     switch (level) {
       case 'high':
-        return 'bg-green-100 text-green-800 border-green-200';
+        return 'bg-ok-soft text-ok border-ok-line';
       case 'medium':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+        return 'bg-flag-soft text-flag border-flag-line';
       case 'low':
-        return 'bg-gray-100 text-gray-800 border-gray-200';
+        return 'bg-well text-ink border-border';
       default:
-        return 'bg-blue-100 text-blue-800 border-blue-200';
+        return 'bg-info-soft text-info border-info/30';
     }
   };
 
@@ -63,7 +63,7 @@ export const ClinicalGuidelinesIndicator: React.FC<ClinicalGuidelinesIndicatorPr
   if (variant === 'compact') {
     return (
       <div className={cn("flex items-center gap-1", className)}>
-        <BookOpen className="h-3 w-3 text-blue-600" />
+        <BookOpen className="h-3 w-3 text-info" />
         <Badge variant="outline" className="text-xs">
           {guidelines.length} guideline{guidelines.length !== 1 ? 's' : ''}
         </Badge>
@@ -73,7 +73,7 @@ export const ClinicalGuidelinesIndicator: React.FC<ClinicalGuidelinesIndicatorPr
 
   return (
     <div className={cn("space-y-2", className)}>
-      <div className="flex items-center gap-2 text-sm font-medium text-gray-700">
+      <div className="flex items-center gap-2 text-sm font-medium text-ink">
         <BookOpen className="h-4 w-4 flex-shrink-0" />
         <span className="truncate">Clinical Guidelines ({guidelines.length})</span>
       </div>

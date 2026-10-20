@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -18,7 +18,8 @@ import AlertDashboard from "@/components/alerts/AlertDashboard";
 import ContentSurface from '@/components/layout/ContentSurface';
 import AnalyticsScreenView from "@/components/views/AnalyticsScreenView";
 import SettingsScreenView from "@/components/views/SettingsScreenView";
-import LoadingAnimation from '@/components/LoadingAnimation';
+import { ErrorState, LoadingState } from '@/components/ui/states';
+import PageHeader from '@/components/layout/PageHeader';
 import { useDemo } from "@/contexts/DemoContext";
 
 function ForesightApp() {
@@ -33,14 +34,13 @@ function ForesightApp() {
   const [selectedPatientTab, setSelectedPatientTab] = useState<string>("consultation");
   const [complexCaseAlerts, setComplexCaseAlerts] = useState<Array<ComplexCaseAlert & { patientName?: string }>>([]);
   const [isAppLoading, setIsAppLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
     if (patientIdFromPath && patientIdFromPath !== activePatient?.id) {
-      supabaseDataService.loadPatientData().then(() => {
-        const p = supabaseDataService.getPatient(patientIdFromPath);
-        if (p) setActivePatient(p);
-        else setActivePatient(null);
-      });
+      supabaseDataService.loadPatientData()
+        .then(() => setActivePatient(supabaseDataService.getPatient(patientIdFromPath) ?? null))
+        .catch(() => setActivePatient(null)); // the workspace shows its own error
     } else if (!patientIdFromPath && activeView === "patients") {
       setActivePatient(null);
     }
@@ -55,24 +55,28 @@ function ForesightApp() {
     }
   }, [patientIdFromPath, searchParams, selectedPatientTab]);
 
-  useEffect(() => {
-    const loadInitialData = async () => {
-        setIsAppLoading(true);
-        await supabaseDataService.loadPatientData(); 
-        const allPatients = supabaseDataService.getAllPatients();
-        const collectedAlerts: Array<ComplexCaseAlert & { patientName?: string }> = [];
-        allPatients.forEach(p => {
-            if (p.alerts && p.alerts.length > 0) {
-                p.alerts.forEach(alert => {
-                    collectedAlerts.push({ ...alert, patientName: p.name || p.id });
-                });
-            }
+  const loadInitialData = useCallback(async () => {
+    setIsAppLoading(true);
+    setLoadError(null);
+    try {
+      await supabaseDataService.loadPatientData();
+      const collectedAlerts: Array<ComplexCaseAlert & { patientName?: string }> = [];
+      supabaseDataService.getAllPatients().forEach(p => {
+        (p.alerts ?? []).forEach(alert => {
+          collectedAlerts.push({ ...alert, patientName: p.name || p.id });
         });
-        setComplexCaseAlerts(collectedAlerts);
-        setIsAppLoading(false);
-    };
-    loadInitialData();
+      });
+      setComplexCaseAlerts(collectedAlerts);
+    } catch (error) {
+      setLoadError(error instanceof Error ? error.message : String(error));
+    } finally {
+      setIsAppLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    loadInitialData();
+  }, [loadInitialData]);
 
   const handleAlertClick = (patientId: string) => {
     router.push(`/patients/${patientId}?tab=diagnosis`);
@@ -90,7 +94,19 @@ function ForesightApp() {
   };
 
   if (isAppLoading) {
-    return <LoadingAnimation />;
+    return <LoadingState label="Loading patients" />;
+  }
+
+  if (loadError) {
+    return (
+      <ContentSurface>
+        <ErrorState
+          title="The patient records did not load"
+          message={<>The database answered with an error: <span className="data-mono">{loadError}</span></>}
+          onRetry={loadInitialData}
+        />
+      </ContentSurface>
+    );
   }
 
   let currentView;
@@ -114,10 +130,8 @@ function ForesightApp() {
       break;
     case "alerts":
       currentView = (
-        <ContentSurface fullBleed className="p-6 flex flex-col">
-          <div className="flex items-center justify-between mb-6">
-            <h1 className="text-2xl font-semibold">Post Consultation Alerts</h1>
-          </div>
+        <ContentSurface>
+          <PageHeader eyebrow="Alerts" title="After the consultation" meta="What the review of each finished consultation flagged, by kind and severity." />
           <AlertDashboard 
             onAlertAction={(alertId, action) => {
               console.log(`Alert ${alertId} ${action}ed`);

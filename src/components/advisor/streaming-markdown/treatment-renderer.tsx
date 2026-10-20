@@ -121,19 +121,19 @@ export const TreatmentRenderer: React.FC<TreatmentRendererProps> = ({
           <textarea
             value={editContent}
             onChange={(e) => setEditContent(e.target.value)}
-            className="w-full h-64 p-3 border border-gray-300 rounded-md resize-vertical font-mono text-sm"
+            className="w-full h-64 p-3 border border-border rounded-md resize-vertical font-mono text-sm"
             placeholder="Edit treatment content..."
           />
           <div className="flex gap-2">
             <button
               onClick={handleSave}
-              className="px-3 py-1 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700"
+              className="px-3 py-1 bg-info text-white rounded-md text-sm hover:bg-info"
             >
               Save
             </button>
             <button
               onClick={handleCancel}
-              className="px-3 py-1 bg-gray-300 text-gray-700 rounded-md text-sm hover:bg-gray-400"
+              className="px-3 py-1 bg-hairline text-ink rounded-md text-sm hover:bg-hairline"
             >
               Cancel
             </button>
@@ -148,7 +148,7 @@ export const TreatmentRenderer: React.FC<TreatmentRendererProps> = ({
           {editable && (
             <button
               onClick={handleEdit}
-              className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity p-1 bg-gray-100 rounded text-xs text-gray-600 hover:bg-gray-200"
+              className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity p-1 bg-well rounded text-xs text-ink-2 hover:bg-well"
             >
               Edit
             </button>
@@ -189,10 +189,10 @@ const RichElementRenderer: React.FC<{
       
       case 'chart':
         return (
-          <div className="bg-gray-50 p-4 rounded-md">
-            <div className="text-sm text-gray-600 mb-2">Chart: {element.data.title || 'Untitled'}</div>
+          <div className="bg-well/50 p-4 rounded-md">
+            <div className="text-sm text-ink-2 mb-2">Chart: {element.data.title || 'Untitled'}</div>
             {/* Chart rendering would go here - could be Chart.js, D3, etc. */}
-            <div className="h-64 bg-white border-2 border-dashed border-gray-300 rounded flex items-center justify-center">
+            <div className="h-64 bg-card border-2 border-dashed border-border rounded flex items-center justify-center">
               Chart Placeholder
             </div>
           </div>
@@ -201,14 +201,14 @@ const RichElementRenderer: React.FC<{
       case 'table':
         return (
           <div className="overflow-x-auto">
-            <div className="text-sm font-medium text-gray-700 mb-2">
+            <div className="text-sm font-medium text-ink mb-2">
               {element.data.title || 'Table'}
             </div>
-            <table className="min-w-full border border-gray-300">
-              <thead className="bg-gray-50">
+            <table className="min-w-full border border-border">
+              <thead className="bg-well/50">
                 <tr>
                   {element.data.headers?.map((header: string, index: number) => (
-                    <th key={index} className="px-4 py-2 border-b border-gray-300 text-left font-medium">
+                    <th key={index} className="px-4 py-2 border-b border-border text-left font-medium">
                       {header}
                     </th>
                   ))}
@@ -216,9 +216,9 @@ const RichElementRenderer: React.FC<{
               </thead>
               <tbody>
                 {element.data.rows?.map((row: string[], rowIndex: number) => (
-                  <tr key={rowIndex} className={rowIndex % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                  <tr key={rowIndex} className={rowIndex % 2 === 0 ? 'bg-card' : 'bg-well/50'}>
                     {row.map((cell, cellIndex) => (
-                      <td key={cellIndex} className="px-4 py-2 border-b border-gray-200">
+                      <td key={cellIndex} className="px-4 py-2 border-b border-border">
                         {cell}
                       </td>
                     ))}
@@ -231,8 +231,8 @@ const RichElementRenderer: React.FC<{
       
       default:
         return (
-          <div className="bg-yellow-50 p-4 rounded-md border border-yellow-200">
-            <div className="text-yellow-800">Unknown element type: {element.type}</div>
+          <div className="bg-flag-soft p-4 rounded-md border border-flag-line">
+            <div className="text-flag">Unknown element type: {element.type}</div>
           </div>
         );
     }
@@ -246,7 +246,7 @@ const RichElementRenderer: React.FC<{
       {editable && !element.editable && (
         <button
           onClick={handleDelete}
-          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-red-100 hover:bg-red-200 text-red-600 p-1 rounded text-xs"
+          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-critical-soft hover:bg-critical-soft text-critical p-1 rounded text-xs"
           title="Delete this element"
         >
           ✕

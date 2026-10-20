@@ -78,7 +78,7 @@ export const PatientList = () => {
     return (
       <div className="overflow-x-auto">
         <table className="w-full text-sm text-left">
-          <thead className="text-xs text-gray-700 uppercase bg-gray-50">
+          <thead className="text-xs text-ink uppercase bg-well/50">
             <tr>
               <th className="px-6 py-3">ID</th>
               <th className="px-6 py-3">Name</th>
@@ -90,7 +90,7 @@ export const PatientList = () => {
           </thead>
           <tbody>
             {patientList.map((patient) => (
-              <tr key={patient.id} className="bg-white border-b hover:bg-gray-50">
+              <tr key={patient.id} className="bg-card border-b hover:bg-well/50">
                 <td className="px-6 py-4">{patient.id}</td>
                 <td className="px-6 py-4">{patient.name || 'N/A'}</td>
                 <td className="px-6 py-4">{patient.gender || 'N/A'}</td>
@@ -101,13 +101,13 @@ export const PatientList = () => {
                 <td className="px-6 py-4 space-x-2">
                   <Link
                     href={`/patients/${patient.id}`}
-                    className="text-blue-600 hover:underline"
+                    className="text-info hover:underline"
                   >
                     View
                   </Link>
                   <Link
                     href={`/patients/${patient.id}`}
-                    className="text-green-600 hover:underline"
+                    className="text-ok hover:underline"
                   >
                     Start Consultation
                   </Link>

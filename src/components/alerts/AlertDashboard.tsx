@@ -57,47 +57,47 @@ export const AlertDashboard: React.FC<AlertDashboardProps> = ({
     [AlertType.DRUG_INTERACTION]: {
       label: 'Drug Interactions',
       icon: Pill,
-      color: 'bg-red-100 text-red-800 border-red-200'
+      color: 'bg-critical-soft text-critical border-critical-line'
     },
     [AlertType.COMORBIDITY]: {
       label: 'Comorbidity Analysis',
       icon: TrendingUp,
-      color: 'bg-blue-100 text-blue-800 border-blue-200'
+      color: 'bg-info-soft text-info border-info/30'
     },
     [AlertType.ASSESSMENT_QUESTION]: {
       label: 'Assessment Questions',
       icon: FileQuestion,
-      color: 'bg-green-100 text-green-800 border-green-200'
+      color: 'bg-ok-soft text-ok border-ok-line'
     },
     [AlertType.DIAGNOSTIC_GAP]: {
       label: 'Diagnostic Gaps',
       icon: Brain,
-      color: 'bg-purple-100 text-purple-800 border-purple-200'
+      color: 'bg-info-soft text-info border-info/30'
     },
     [AlertType.COMPLEX_CONDITION]: {
       label: 'Complex Conditions',
       icon: Stethoscope,
-      color: 'bg-indigo-100 text-indigo-800 border-indigo-200'
+      color: 'bg-info-soft text-info border-info/30'
     },
     [AlertType.MISSING_LAB_RESULT]: {
       label: 'Missing Lab Results',
       icon: AlertTriangle,
-      color: 'bg-amber-100 text-amber-800 border-amber-200'
+      color: 'bg-flag-soft text-flag border-flag-line'
     },
     [AlertType.CLINICAL_GUIDELINE]: {
       label: 'Clinical Guidelines',
       icon: FileQuestion,
-      color: 'bg-cyan-100 text-cyan-800 border-cyan-200'
+      color: 'bg-info-soft text-info border-info/30'
     },
     [AlertType.ABNORMAL_VITAL]: {
       label: 'Abnormal Vitals',
       icon: AlertTriangle,
-      color: 'bg-orange-100 text-orange-800 border-orange-200'
+      color: 'bg-flag-soft text-flag border-flag-line'
     },
     [AlertType.COMORBIDITY_REMINDER]: {
       label: 'Comorbidity Reminders',
       icon: TrendingUp,
-      color: 'bg-gray-100 text-gray-800 border-gray-200'
+      color: 'bg-well text-ink border-border'
     }
   };
 
@@ -422,7 +422,7 @@ export const AlertDashboard: React.FC<AlertDashboardProps> = ({
 
   const getAlertTypeColor = (type: AlertType) => {
     const config = alertTypeConfig[type];
-    return config?.color || 'bg-gray-100 text-gray-800 border-gray-200';
+    return config?.color || 'bg-well text-ink border-border';
   };
 
   const totalAlerts = alerts.length;
@@ -436,9 +436,9 @@ export const AlertDashboard: React.FC<AlertDashboardProps> = ({
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
-                <BarChart3 className="h-5 w-5 text-blue-500" />
+                <BarChart3 className="h-5 w-5 text-info" />
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Total Alerts</p>
+                  <p className="text-sm font-medium text-ink-2">Total Alerts</p>
                   <p className="text-2xl font-bold">{totalAlerts}</p>
                 </div>
               </div>
@@ -446,7 +446,7 @@ export const AlertDashboard: React.FC<AlertDashboardProps> = ({
                 <select
                   value={sortBy}
                   onChange={(e) => handleSortChange(e.target.value as 'date' | 'severity')}
-                  className="px-2 py-1 border border-gray-200 rounded text-xs bg-white"
+                  className="px-2 py-1 border border-border rounded text-xs bg-card"
                 >
                   <option value="date">{getSortLabel('date')}</option>
                   <option value="severity">{getSortLabel('severity')}</option>
@@ -460,9 +460,9 @@ export const AlertDashboard: React.FC<AlertDashboardProps> = ({
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
-                <Filter className="h-5 w-5 text-green-500" />
+                <Filter className="h-5 w-5 text-ok" />
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Alert Types</p>
+                  <p className="text-sm font-medium text-ink-2">Alert Types</p>
                   <p className="text-2xl font-bold">{uniqueTypes}</p>
                 </div>
               </div>
@@ -470,7 +470,7 @@ export const AlertDashboard: React.FC<AlertDashboardProps> = ({
                 <select
                   value={selectedType}
                   onChange={(e) => setSelectedType(e.target.value)}
-                  className="px-2 py-1 border border-gray-200 rounded text-xs bg-white"
+                  className="px-2 py-1 border border-border rounded text-xs bg-card"
                 >
                   <option value="all">All Types</option>
                   {Object.entries(alertTypeConfig).map(([type, config]) => (
@@ -540,8 +540,8 @@ export const AlertDashboard: React.FC<AlertDashboardProps> = ({
               {Object.keys(alertsByType).length === 0 && !isLoading && (
                 <Card>
                   <CardContent className="py-8 text-center">
-                    <AlertTriangle className="h-12 w-12 text-gray-400 mx-auto mb-3" />
-                    <p className="text-gray-500">No alerts found</p>
+                    <AlertTriangle className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
+                    <p className="text-muted-foreground">No alerts found</p>
                   </CardContent>
                 </Card>
               )}
@@ -565,8 +565,8 @@ export const AlertDashboard: React.FC<AlertDashboardProps> = ({
       {isLoading && (
         <Card>
           <CardContent className="py-8 text-center">
-            <RefreshCw className="h-8 w-8 text-gray-400 mx-auto mb-3 animate-spin" />
-            <p className="text-gray-500">Loading alerts...</p>
+            <RefreshCw className="h-8 w-8 text-muted-foreground mx-auto mb-3 animate-spin" />
+            <p className="text-muted-foreground">Loading alerts...</p>
           </CardContent>
         </Card>
       )}
