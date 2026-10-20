@@ -17,7 +17,7 @@ import { PRODUCT_DESCRIPTION, PRODUCT_NAME } from '@/lib/brand';
 
 const DynamicDemoProvider = dynamic(
   () => import('@/contexts/DemoContext').then((mod) => mod.DemoProvider),
-  { ssr: false, loading: () => <LoadingState label="Opening" /> },
+  { ssr: false, loading: () => <LoadingState /> },
 );
 
 export default function RootLayout({
@@ -36,7 +36,7 @@ export default function RootLayout({
         <link rel="icon" href="/mark.svg" type="image/svg+xml" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <link rel="manifest" href="/manifest.webmanifest" />
-        <meta name="theme-color" content="#F6F4EF" />
+        <meta name="theme-color" content="#14161B" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>{PRODUCT_NAME}</title>
         <meta name="description" content={PRODUCT_DESCRIPTION} />
@@ -54,11 +54,11 @@ export default function RootLayout({
       <body>
         <DynamicDemoProvider>
           <ModalManagerProvider>
-            <div className="flex h-[100svh] flex-col">
-              <GlassHeader />
-              <div className="flex min-h-0 flex-1">
-                <GlassSidebar />
-                <main id="main" className="relative flex min-w-0 flex-1 flex-col overflow-y-auto overflow-x-hidden">
+            <div className="flex h-[100svh]">
+              <GlassSidebar />
+              <div className="flex min-w-0 flex-1 flex-col">
+                <GlassHeader />
+                <main id="main" className="relative flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden">
                   <React.Suspense fallback={<LoadingState />}>
                     <MotionWrapper>{children}</MotionWrapper>
                   </React.Suspense>

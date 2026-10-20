@@ -128,7 +128,7 @@ function GuidelineModalContent({
               <Star 
                 className={cn(
                   "h-4 w-4",
-                  isBookmarked ? "fill-yellow-400 text-flag" : "text-muted-foreground"
+                  isBookmarked ? "fill-flag-line text-flag" : "text-muted-foreground"
                 )}
               />
             </Button>

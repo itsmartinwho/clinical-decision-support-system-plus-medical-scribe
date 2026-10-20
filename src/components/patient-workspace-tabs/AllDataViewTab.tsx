@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { ArrowCounterClockwise, Trash } from '@phosphor-icons/react';
 import RenderDetailTable from "@/components/ui/RenderDetailTable";
 import TranscriptView from "@/components/transcript/TranscriptView";
-import { formatDate, formatTime, sexLabel } from "@/lib/format";
+import { formatDate, formatTime } from "@/lib/format";
+import { CaretRight } from '@phosphor-icons/react';
 import { supabaseDataService } from "@/lib/supabaseDataService"; // For restore/delete
 import { toast } from "@/hooks/use-toast";
 
@@ -104,96 +105,104 @@ export default function AllDataViewTab({ detailedPatientData, setDetailedPatient
     }
   };
 
-  const facts: Array<[string, string]> = [
-    ['Name', patient.name || `${patient.firstName ?? ''} ${patient.lastName ?? ''}`.trim()],
-    ['Born', formatDate(patient.dateOfBirth)],
-    ['Sex', sexLabel(patient.gender)],
-    ['Race', patient.race || '—'],
-    ['Ethnicity', patient.ethnicity || '—'],
-    ['Marital status', patient.maritalStatus || '—'],
-    ['Language', patient.language || '—'],
-    ['Below poverty line', patient.povertyPercentage !== undefined ? `${patient.povertyPercentage}% of area` : '—'],
-    ['Patient ID', patient.id],
-  ];
+  const demographics = Object.entries(patient).filter(
+    ([key, value]) => (typeof value !== 'object' || value === null) && value !== undefined && value !== '' && key !== 'photo',
+  );
   const active = encounters
     .filter(ew => !ew.encounter.isDeleted)
     .sort((a, b) => new Date(b.encounter.scheduledStart).getTime() - new Date(a.encounter.scheduledStart).getTime());
+  const MONO_KEYS = new Set(['id', 'dateOfBirth', 'nextAppointment', 'povertyPercentage']);
 
   return (
-    <div className="space-y-10">
-      <section>
-        <h2 className="label-caps border-b border-ink/70 pb-2 !text-ink">Demographics</h2>
-        <dl className="grid grid-cols-1 gap-x-8 sm:grid-cols-2 lg:grid-cols-3">
-          {facts.map(([label, value]) => (
-            <div key={label} className="flex items-baseline justify-between gap-4 border-b border-border py-2 text-sm">
-              <dt className="text-muted-foreground">{label}</dt>
-              <dd className={label === 'Patient ID' || label === 'Born' ? 'data-mono min-w-0 break-all text-right text-[0.8125rem] text-ink' : 'text-right text-ink'}>{value}</dd>
+    <div className="space-y-6">
+      <section className="rounded-[var(--radius-lg)] border border-hairline bg-card p-5 shadow-card sm:p-6">
+        <h2 className="font-display text-xl text-ink">Patient Demographics</h2>
+        <dl className="mt-4 grid grid-cols-1 gap-x-8 gap-y-3 sm:grid-cols-2 lg:grid-cols-3">
+          {demographics.map(([key, value]) => (
+            <div key={key} className="min-w-0">
+              <dt className="text-xs capitalize text-muted-foreground">{key.replace(/([A-Z])/g, ' $1')}</dt>
+              <dd className={MONO_KEYS.has(key) ? 'data-mono mt-0.5 break-all text-sm text-ink' : 'mt-0.5 text-[0.9375rem] text-ink'}>
+                {key === 'dateOfBirth' ? formatDate(String(value)) : String(value)}
+              </dd>
             </div>
           ))}
         </dl>
       </section>
 
-      <section className="space-y-8">
-        <h2 className="label-caps flex items-center gap-2 border-b border-ink/70 pb-2 !text-ink">
-          Encounters
-          <span className="data-mono rounded border border-border px-1.5 text-[0.6875rem] font-medium tracking-normal text-muted-foreground">{active.length}</span>
+      <section className="space-y-4">
+        <h2 className="flex items-center gap-2.5 font-display text-xl text-ink">
+          Encounters History
+          <span className="data-mono inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-card px-2 text-xs font-medium text-muted-foreground ring-1 ring-hairline">{active.length}</span>
         </h2>
+        <div className="rise-in-stagger space-y-4">
         {active.map((encounterWrapper: EncounterDetailsWrapper, index: number) => {
           const { encounter, diagnoses, labResults } = encounterWrapper;
           const treatments = (encounter.treatments || []) as any[];
-          const seedShape = treatments.some((t) => t && 'treatment_name' in t);
           const terms = [
             ...(diagnoses || []).map((d) => d.description || ''),
-            ...treatments.map((t) => t?.treatment_name || t?.drug || ''),
+            ...treatments.map((t) => t?.drug || ''),
             ...(labResults || []).map((l) => l.name || ''),
           ];
           return (
-            <article key={encounter.id || index} className="rounded-[var(--radius-lg)] border border-border bg-card p-4 sm:p-6">
-              <header className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
+            <article key={encounter.id || index} className="rounded-[var(--radius-lg)] border border-hairline bg-card p-5 shadow-card sm:p-6">
+              <header className="flex flex-wrap items-start justify-between gap-x-6 gap-y-2">
                 <div className="min-w-0">
-                  <p className="data-mono text-xs text-muted-foreground">{formatDate(encounter.actualStart || encounter.scheduledStart)} · {formatTime(encounter.actualStart || encounter.scheduledStart)}–{formatTime(encounter.actualEnd || encounter.scheduledEnd)}</p>
-                  <h3 className="mt-1 font-display text-xl leading-snug text-ink">{encounter.reasonDisplayText || encounter.reasonCode || 'Consultation'}</h3>
+                  <h3 className="font-display text-[1.3rem] leading-snug text-ink">Encounter on {formatDate(encounter.scheduledStart)}</h3>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {encounter.reasonDisplayText || encounter.reasonCode || 'N/A'}
+                  </p>
                 </div>
-                <p className="data-mono text-xs text-muted-foreground">{encounter.reasonCode ? `${encounter.reasonCode} · ` : ''}{encounter.encounterIdentifier}</p>
+                <div className="flex flex-wrap items-center gap-2">
+                  {encounter.reasonCode ? <span className="data-mono rounded-md bg-iris-soft px-2 py-0.5 text-xs text-iris ring-1 ring-iris-line">{encounter.reasonCode}</span> : null}
+                  <span className="data-mono rounded-md bg-well px-2 py-0.5 text-xs text-muted-foreground ring-1 ring-hairline">{encounter.encounterIdentifier}</span>
+                </div>
               </header>
 
+              <dl className="mt-4 grid grid-cols-2 gap-4 text-sm sm:max-w-md">
+                <div>
+                  <dt className="text-xs text-muted-foreground">Actual Start</dt>
+                  <dd className="data-mono mt-0.5 text-ink">{encounter.actualStart ? `${formatDate(encounter.actualStart)} ${formatTime(encounter.actualStart)}` : 'N/A'}</dd>
+                </div>
+                <div>
+                  <dt className="text-xs text-muted-foreground">Actual End</dt>
+                  <dd className="data-mono mt-0.5 text-ink">{encounter.actualEnd ? `${formatDate(encounter.actualEnd)} ${formatTime(encounter.actualEnd)}` : 'N/A'}</dd>
+                </div>
+              </dl>
+
               {encounter.transcript ? (
-                <details className="group mt-5 border-t border-border pt-3">
-                  <summary className="label-caps cursor-pointer list-none !text-ink [&::-webkit-details-marker]:hidden">
-                    <span className="mr-1 inline-block transition-transform group-open:rotate-90">›</span> Transcript
+                <details className="group mt-5 rounded-xl border border-hairline">
+                  <summary className="flex cursor-pointer list-none items-center gap-2 px-4 py-3 text-sm font-medium text-ink [&::-webkit-details-marker]:hidden">
+                    <CaretRight size={13} weight="bold" className="text-muted-foreground transition-transform group-open:rotate-90" aria-hidden /> Transcript
                   </summary>
-                  <TranscriptView className="mt-3 max-h-[28rem]" transcript={encounter.transcript} terms={terms} />
+                  <TranscriptView className="max-h-[28rem] border-t border-hairline px-4 py-4" transcript={encounter.transcript} terms={terms} />
                 </details>
               ) : null}
 
               {encounter.soapNote ? (
-                <details className="group mt-3 border-t border-border pt-3">
-                  <summary className="label-caps cursor-pointer list-none !text-ink [&::-webkit-details-marker]:hidden">
-                    <span className="mr-1 inline-block transition-transform group-open:rotate-90">›</span> SOAP note
+                <details className="group mt-3 rounded-xl border border-hairline">
+                  <summary className="flex cursor-pointer list-none items-center gap-2 px-4 py-3 text-sm font-medium text-ink [&::-webkit-details-marker]:hidden">
+                    <CaretRight size={13} weight="bold" className="text-muted-foreground transition-transform group-open:rotate-90" aria-hidden /> SOAP Note
                   </summary>
-                  <p className="mt-3 max-w-[75ch] whitespace-pre-line text-[0.9375rem] leading-relaxed text-ink">{encounter.soapNote}</p>
+                  <p className="max-w-[75ch] whitespace-pre-line border-t border-hairline px-4 py-4 text-[0.9375rem] leading-relaxed text-ink">{encounter.soapNote}</p>
                 </details>
               ) : null}
 
               <RenderDetailTable title="Diagnoses" dataArray={diagnoses || []} headers={['Code', 'Description']} columnAccessors={['code', 'description']} />
-              <RenderDetailTable title="Lab results" dataArray={labResults || []} headers={['Test', 'Value', 'Units', 'Taken', 'Range', 'Flag']} columnAccessors={['name', 'value', 'units', 'dateTime', 'referenceRange', 'flag']} />
-              {seedShape ? (
-                <RenderDetailTable title="Treatments" dataArray={treatments} headers={['Treatment', 'Dose', 'Instructions', 'Kind']} columnAccessors={['treatment_name', 'dosage', 'instructions', 'treatment_type']} />
-              ) : (
-                <RenderDetailTable title="Treatments" dataArray={treatments} headers={['Drug', 'Status', 'Rationale']} columnAccessors={['drug', 'status', 'rationale']} />
-              )}
+              <RenderDetailTable title="Lab Results" dataArray={labResults || []} headers={['Test Name', 'Value', 'Units', 'Date/Time', 'Ref. Range', 'Flag']} columnAccessors={['name', 'value', 'units', 'dateTime', 'referenceRange', 'flag']} />
+              <RenderDetailTable title="Treatments" dataArray={treatments} headers={['Drug', 'Status', 'Rationale']} columnAccessors={['drug', 'status', 'rationale']} />
             </article>
           );
         })}
+        </div>
         {active.length === 0 && (
-          <p className="text-sm text-muted-foreground">No encounters on this chart.</p>
+          <p className="py-8 text-center text-sm text-muted-foreground">No active encounter history for this patient</p>
         )}
       </section>
 
       {/* Deleted Items Section */}
       {deletedEncounters.length > 0 && (
         <div className="space-y-4">
-          <h2 className="label-caps border-b border-critical/60 pb-2 !text-critical">Deleted</h2>
+          <h2 className="font-display text-xl text-critical">Deleted Items</h2>
           {deletedEncounters.map((encounterWrapper: EncounterDetailsWrapper, index: number) => {
             const { encounter } = encounterWrapper;
             return (

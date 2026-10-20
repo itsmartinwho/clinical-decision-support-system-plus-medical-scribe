@@ -66,6 +66,17 @@ module.exports = {
         info: {
           DEFAULT: "hsl(var(--blue) / <alpha-value>)",
           soft: "hsl(var(--blue-soft) / <alpha-value>)",
+          line: "hsl(var(--blue-line) / <alpha-value>)",
+        },
+        iris: {
+          DEFAULT: "hsl(var(--blue) / <alpha-value>)",
+          soft: "hsl(var(--blue-soft) / <alpha-value>)",
+          line: "hsl(var(--blue-line) / <alpha-value>)",
+        },
+        rail: {
+          DEFAULT: "hsl(var(--rail) / <alpha-value>)",
+          ink: "hsl(var(--rail-ink) / <alpha-value>)",
+          muted: "hsl(var(--rail-muted) / <alpha-value>)",
         },
         ok: {
           DEFAULT: "hsl(var(--sage) / <alpha-value>)",
@@ -120,10 +131,10 @@ module.exports = {
         "step-3": "var(--step-3)",
       },
       boxShadow: {
-        card: "0 1px 0 hsl(var(--hairline))",
-        "card-dark": "0 1px 0 hsl(var(--hairline))",
+        card: "var(--shadow-card)",
+        "card-dark": "var(--shadow-card)",
         "inner-glow": "none",
-        float: "0 1px 0 hsl(var(--hairline)), 0 24px 48px -24px hsl(var(--ink) / 0.35)",
+        float: "var(--shadow-float)",
       },
       backdropBlur: {
         none: '0',

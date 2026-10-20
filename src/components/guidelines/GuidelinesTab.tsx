@@ -78,10 +78,9 @@ export default function GuidelinesTab() {
       {/* Header */}
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="label-caps mb-1.5">Library</p>
-          <h1 className="title-display text-[1.875rem] sm:text-[2.25rem]">Clinical guidelines</h1>
+          <h1 className="title-display text-[2.125rem] sm:text-[2.6rem]">Clinical Guidelines</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            Recommendations from USPSTF, NICE, NCI PDQ and RxNorm, searchable by specialty.
+            Evidence-based recommendations from authoritative medical sources
           </p>
         </div>
         

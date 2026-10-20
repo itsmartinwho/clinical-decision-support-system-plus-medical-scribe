@@ -66,7 +66,7 @@ export const AlertList: React.FC<AlertListProps> = ({
           iconColor: 'text-critical',
           titleColor: 'text-critical',
           badgeColor: 'bg-critical-soft text-critical',
-          borderAccent: 'border-l-red-500'
+          borderAccent: 'border-l-critical'
         };
       case AlertSeverity.WARNING:
         return {
@@ -74,7 +74,7 @@ export const AlertList: React.FC<AlertListProps> = ({
           iconColor: 'text-flag',
           titleColor: 'text-flag',
           badgeColor: 'bg-flag-soft text-flag',
-          borderAccent: 'border-l-amber-500'
+          borderAccent: 'border-l-flag-line'
         };
       case AlertSeverity.INFO:
       default:
@@ -83,7 +83,7 @@ export const AlertList: React.FC<AlertListProps> = ({
           iconColor: 'text-info',
           titleColor: 'text-info',
           badgeColor: 'bg-info-soft text-info',
-          borderAccent: 'border-l-blue-500'
+          borderAccent: 'border-l-iris'
         };
     }
   };
@@ -147,7 +147,7 @@ export const AlertList: React.FC<AlertListProps> = ({
               return (
                 <div
                   key={alert.id}
-                  className={`rounded-lg border ${severityConfig.bgColor} ${severityConfig.borderAccent} border-l-4 p-4 transition-all hover:shadow-sm`}
+                  className={`rounded-lg border ${severityConfig.bgColor} ${severityConfig.borderAccent} border-l-[3px] p-4 transition-all hover:shadow-sm`}
                 >
                   <div className="flex items-start space-x-3">
                     {/* Alert Type Icon */}

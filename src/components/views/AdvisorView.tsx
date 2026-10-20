@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import type { Patient } from '@/lib/types';
-import { Microphone as Mic, PaperPlaneTilt as Send, BookOpen, Sparkle as Sparkles, WaveSine as Waves, Plus, Upload, X, CheckCircle, XCircle, Stethoscope, ArrowUpRight } from '@phosphor-icons/react';
+import { Microphone as Mic, PaperPlaneTilt as Send, BookOpen, Sparkle as Sparkles, WaveSine as Waves, Plus, Upload, X, CheckCircle, XCircle, Stethoscope, } from '@phosphor-icons/react';
 import Mark from '@/components/brand/Mark';
 import MarkLoader from '@/components/brand/MarkLoader';
 import { createPortal } from "react-dom";
@@ -72,7 +72,7 @@ const AssistantGeneratedImage = ({ imageId }: { imageId: string }) => {
   if (hasError) {
     return (
       <div className="mt-2 rounded-md border border-critical-line bg-critical-soft p-3">
-        <h4 className="label-caps mb-1 !text-critical">The chart did not load</h4>
+        <h4 className="label-caps mb-1 !text-critical">Chart Loading Error</h4>
         <p className="text-sm text-critical">
           Failed to load image: <code>{imageId}</code>
         </p>
@@ -82,7 +82,7 @@ const AssistantGeneratedImage = ({ imageId }: { imageId: string }) => {
   
   return (
     <div className="mt-3 rounded-md border border-border bg-card p-3">
-      <h4 className="label-caps mb-2">Chart</h4>
+      
       {/* Using aspect-video as a sensible default for chart visualizations */}
       <div className="relative aspect-video w-full mt-1"> 
         <Image 
@@ -98,13 +98,6 @@ const AssistantGeneratedImage = ({ imageId }: { imageId: string }) => {
   );
 };
 
-// Questions a visitor can start from.
-const ADVISOR_SUGGESTIONS = [
-  'A patient on warfarin was just started on glyburide. What should I check?',
-  'First-line management of migraine without aura in a 46-year-old',
-  'Which labs should follow-up include for AML in complete remission?',
-];
-
 function ToggleChip({ active, onClick, icon, label }: { active: boolean; onClick: () => void; icon: React.ReactNode; label: string }) {
   return (
     <button
@@ -113,7 +106,7 @@ function ToggleChip({ active, onClick, icon, label }: { active: boolean; onClick
       aria-pressed={active}
       className={cn(
         'inline-flex h-8 items-center gap-1.5 rounded-md px-2 text-[0.8125rem] transition-colors [&_svg]:size-4',
-        active ? 'bg-ink text-paper' : 'text-ink-2 hover:bg-well',
+        active ? 'bg-iris text-white' : 'text-ink-2 hover:bg-well',
       )}
     >
       {icon}
@@ -123,7 +116,7 @@ function ToggleChip({ active, onClick, icon, label }: { active: boolean; onClick
 }
 
 export default function AdvisorView() {
-  const [messages, setMessages] = useState<ChatMessage[]>([{ id: uuidv4(), role: "system", content: "Ask a clinical question" }]);
+  const [messages, setMessages] = useState<ChatMessage[]>([{ id: uuidv4(), role: "system", content: "" }]);
   const [input, setInput] = useState("");
   const [isSending, setIsSending] = useState(false);
   const scrollRef = useRef<HTMLDivElement | null>(null);
@@ -648,27 +641,12 @@ export default function AdvisorView() {
         <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto px-4 pt-6 sm:px-6">
           <div className="mx-auto w-full max-w-3xl space-y-8 pb-56">
             {messages.length <= 1 ? (
-              <div className="pt-[8vh]">
-                <Mark size={30} className="text-ink" />
-                <h1 className="title-display mt-5 text-[2rem] sm:text-[2.5rem]">Ask a clinical question</h1>
-                <p className="mt-3 max-w-xl text-[0.9375rem] leading-relaxed text-ink-2">
-                  Answers draw on clinical guidelines and, when you attach one with <span className="whitespace-nowrap">+</span>, a patient&apos;s chart.
-                  It can run Python to chart a patient&apos;s labs.
-                </p>
-                <ul className="mt-8 divide-y divide-border border-y border-border">
-                  {ADVISOR_SUGGESTIONS.map((q) => (
-                    <li key={q}>
-                      <button
-                        type="button"
-                        onClick={() => { setInput(q); textareaRef.current?.focus(); }}
-                        className="row-link flex w-full items-center justify-between gap-4 px-1 py-3 text-left text-sm text-ink"
-                      >
-                        {q}
-                        <ArrowUpRight size={14} className="shrink-0 text-muted-foreground" aria-hidden />
-                      </button>
-                    </li>
-                  ))}
-                </ul>
+              <div className="flex min-h-[52vh] items-center justify-center">
+                <span className="relative inline-flex h-24 w-24 items-center justify-center">
+                  <span className="absolute inset-0 rounded-[1.75rem] bg-iris-soft ring-1 ring-iris-line" aria-hidden />
+                  <span className="dot-live absolute inset-2 rounded-[1.4rem] bg-iris/10" aria-hidden />
+                  <Mark size={40} className="relative text-iris" title="Advisor" />
+                </span>
               </div>
             ) : null}
 
@@ -677,7 +655,7 @@ export default function AdvisorView() {
               if (msg.role === 'user') {
                 return (
                   <div key={msg.id} className="flex justify-end">
-                    <div className="max-w-[85%] whitespace-pre-wrap rounded-xl rounded-br-sm bg-well px-4 py-3 text-[0.9375rem] text-ink sm:max-w-[75%]">
+                    <div className="rise-in max-w-[85%] whitespace-pre-wrap rounded-2xl rounded-br-md bg-ink px-4 py-3 text-[0.9375rem] text-white shadow-card sm:max-w-[75%]">
                       {typeof msg.content === 'string' ? msg.content : null}
                     </div>
                   </div>
@@ -687,10 +665,11 @@ export default function AdvisorView() {
               const content = msg.content as AssistantMessageContent;
               const waiting = msg.isStreaming && (content.content?.length ?? 0) === 0;
               return (
-                <article key={msg.id} className="text-[0.9375rem] leading-relaxed text-ink">
-                  <p className="label-caps mb-2 flex items-center gap-2">
-                    <Mark size={12} /> Answer
-                  </p>
+                <article key={msg.id} className="rise-in grid grid-cols-[2rem_minmax(0,1fr)] gap-3 text-[0.9375rem] leading-relaxed text-ink">
+                  <span className="mt-0.5 inline-flex h-8 w-8 items-center justify-center rounded-xl bg-iris-soft text-iris ring-1 ring-iris-line" aria-hidden>
+                    <Mark size={16} />
+                  </span>
+                  <div className="min-w-0">
                   <AssistantMessageRenderer
                     assistantMessage={content}
                     isStreaming={msg.isStreaming}
@@ -698,10 +677,11 @@ export default function AdvisorView() {
                     onGuidelineReferenceClick={handleGuidelineReferenceClick}
                   />
                   {waiting && isSending ? (
-                    <p className="mt-1 flex items-center gap-2 text-sm text-muted-foreground">
-                      <MarkLoader size={16} className="text-ink" /> {thinkMode ? 'Reasoning' : 'Writing'}
+                    <p className="mt-1 flex items-center gap-2 text-muted-foreground" role="status" aria-label="Writing">
+                      <MarkLoader size={18} className="text-iris" />
                     </p>
                   ) : null}
+                  </div>
                 </article>
               );
             })}
@@ -725,7 +705,7 @@ export default function AdvisorView() {
             transition: 'left 0.2s ease, width 0.2s ease',
           }}
         >
-          <div className="pointer-events-auto flex w-full max-w-3xl flex-col gap-1 rounded-xl border border-input bg-card px-3 pb-2 pt-2.5 shadow-float">
+          <div className="pointer-events-auto flex w-full max-w-3xl flex-col gap-1 rounded-2xl border border-hairline bg-card px-3 pb-2 pt-2.5 shadow-float transition-shadow focus-within:ring-2 focus-within:ring-iris/30">
             <label htmlFor="advisor-input" className="sr-only">Your question</label>
             <Textarea
               id="advisor-input"
@@ -733,10 +713,10 @@ export default function AdvisorView() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder={includePapers
-                ? "Ask, and recent research papers will be searched too"
+                ? "Ask anything, we'll look for recent research papers in the area"
                 : thinkMode
-                ? "Reasoning mode: for harder questions"
-                : "Ask a clinical question"}
+                ? "Reasoning mode selected for your harder medical queries"
+                : "Ask anything"}
               rows={1}
               className="max-h-32 min-h-[2.5rem] resize-none overflow-y-auto border-0 bg-transparent px-1.5 py-1 text-base shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
               style={{ height: 'auto', minHeight: '2.5rem' }}
@@ -757,7 +737,7 @@ export default function AdvisorView() {
               <div className="flex items-center gap-3 rounded-md border border-info/30 bg-info-soft px-3 py-2">
                 <Stethoscope className="h-4 w-4 shrink-0 text-info" aria-hidden />
                 <p className="min-w-0 flex-1 truncate text-sm text-ink">
-                  Suggested specialty for this patient: <span className="font-medium">{suggestedSpecialty}</span>
+                  Suggested specialty based on patient profile: <span className="font-medium">{suggestedSpecialty}</span>
                 </p>
                 <Button size="sm" variant="ghost" onClick={handleApplySuggestion} className="h-7 px-2" iconLeft={<CheckCircle />}>Apply</Button>
                 <Button size="icon" variant="ghost" onClick={handleDismissSuggestion} className="h-7 w-7" aria-label="Dismiss suggestion"><XCircle /></Button>
@@ -803,7 +783,7 @@ export default function AdvisorView() {
                     </Button>
                   )}
                 {input.trim().length > 0 ? (
-                  <Button size="icon" onClick={() => handleSend()} disabled={isSending} className="h-8 w-8" aria-label="Send">
+                  <Button size="icon" onClick={() => handleSend()} disabled={isSending} className="h-8 w-8 rounded-full" aria-label="Send">
                     <Send />
                   </Button>
                 ) : (
@@ -813,7 +793,6 @@ export default function AdvisorView() {
                 )}
               </div>
             </div>
-            <p className="hidden px-1.5 text-[0.6875rem] text-muted-foreground sm:block">Enter to send · Shift+Enter for a new line</p>
           </div>
         </div>,
         document.body
@@ -923,7 +902,7 @@ const AssistantMessageRenderer: React.FC<{
       {/* Hide code execution blocks - users only want to see results */}
       {assistantMessage.codeInterpreterTableData ? (
         <div className="mt-3 rounded-md border border-border bg-card p-3">
-          <h4 className="label-caps mb-2">Table</h4>
+          
           <DataTable
             columns={assistantMessage.codeInterpreterTableData.columns as ColumnDef<unknown, any>[]}
             data={assistantMessage.codeInterpreterTableData.data}
@@ -931,15 +910,14 @@ const AssistantMessageRenderer: React.FC<{
         </div>
       ) : assistantMessage.codeInterpreterOutputText && (
         <div className="mt-3 rounded-md border border-border bg-card p-3">
-          <h4 className="label-caps">Output</h4>
+          
           <pre className="data-mono mt-2 overflow-x-auto rounded bg-well p-2 text-xs">{assistantMessage.codeInterpreterOutputText}</pre>
         </div>
       )}
       {assistantMessage.chartLoading && !assistantMessage.codeInterpreterImageId && (
         <div className="mt-3 rounded-md border border-border bg-card p-3">
           <div className="flex items-center gap-2">
-            <MarkLoader size={16} className="text-ink" />
-            <span className="text-sm text-muted-foreground">Drawing the chart</span>
+            <MarkLoader size={18} className="text-iris" />
           </div>
         </div>
       )}
@@ -1013,7 +991,7 @@ const AssistantMessageRenderer: React.FC<{
         {renderGuidelineReferences()}
         {/* Show pulsing if no tool output yet and no heartbeat */}
         {!assistantMessage.toolCode && !assistantMessage.codeInterpreterOutputText && !assistantMessage.codeInterpreterImageId && !assistantMessage.heartbeatMessage && (
-            <div className="text-sm text-muted-foreground">Thinking</div>
+            <MarkLoader size={18} className="text-iris" />
         )}
       </>
     );
@@ -1038,7 +1016,7 @@ const AssistantMessageRenderer: React.FC<{
       
       {/* Loading indicator if nothing else is there but it's supposed to be streaming */}
       {isStreaming && !assistantMessage.finalMarkdown && !assistantMessage.fallbackMarkdown && (!assistantMessage.content || assistantMessage.content.length === 0) && !assistantMessage.toolCode && !assistantMessage.codeInterpreterOutputText && !assistantMessage.codeInterpreterImageId && (
-         <div className="text-sm text-muted-foreground">Writing</div>
+         <MarkLoader size={18} className="text-iris" />
       )}
     </div>
   );

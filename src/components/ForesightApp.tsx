@@ -94,17 +94,13 @@ function ForesightApp() {
   };
 
   if (isAppLoading) {
-    return <LoadingState label="Loading patients" />;
+    return <LoadingState />;
   }
 
   if (loadError) {
     return (
       <ContentSurface>
-        <ErrorState
-          title="The patient records did not load"
-          message={<>The database answered with an error: <span className="data-mono">{loadError}</span></>}
-          onRetry={loadInitialData}
-        />
+        <ErrorState message={loadError} onRetry={loadInitialData} />
       </ContentSurface>
     );
   }
@@ -131,7 +127,7 @@ function ForesightApp() {
     case "alerts":
       currentView = (
         <ContentSurface>
-          <PageHeader eyebrow="Alerts" title="After the consultation" meta="What the review of each finished consultation flagged, by kind and severity." />
+          <PageHeader title="Post Consultation Alerts" />
           <AlertDashboard 
             onAlertAction={(alertId, action) => {
               console.log(`Alert ${alertId} ${action}ed`);

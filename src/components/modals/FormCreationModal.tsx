@@ -270,7 +270,7 @@ export default function FormCreationModal({
   };
 
   /* -------------------- Render -------------------- */
-  const titleText = formType === 'priorAuth' ? 'Prior authorization' : 'Referral';
+  const titleText = formType === 'priorAuth' ? 'Prior Authorization' : 'Referral';
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>{/* hidden */}</DialogTrigger>

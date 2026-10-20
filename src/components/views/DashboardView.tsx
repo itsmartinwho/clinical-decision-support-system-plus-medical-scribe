@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from 'next/navigation';
-import { Plus, Eye, Play, CaretRight } from '@phosphor-icons/react';
+import { Stethoscope, ClipboardText, PaperPlaneTilt, Eye, Play, CaretRight, ArrowRight } from '@phosphor-icons/react';
 import { Button } from "@/components/ui/button";
 import { supabaseDataService } from "@/lib/supabaseDataService";
 import type { Patient, Encounter, ComplexCaseAlert } from "@/lib/types";
@@ -10,16 +10,17 @@ import NewConsultationModal from '../modals/NewConsultationModal';
 import ContentSurface from '@/components/layout/ContentSurface';
 import PageHeader from '@/components/layout/PageHeader';
 import PatientAvatar from '@/components/ui/PatientAvatar';
+import NotificationBell from '@/components/ui/NotificationBell';
+import AlertSidePanel from '@/components/ui/AlertSidePanel';
 import { EmptyState, ErrorState, LoadingState, SectionHeading } from '@/components/ui/states';
 import MarkLoader from '@/components/brand/MarkLoader';
 import { useDemo } from "@/contexts/DemoContext";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useModalManager } from "@/components/ui/modal-manager";
 import FormCreationModal from '@/components/modals/FormCreationModal';
 import PatientDataModal from '@/components/modals/PatientDataModal';
 import { encounterReason, encounterWhen, formatDate, formatTime, patientName, severityTone } from '@/lib/format';
 import { PRODUCT_NAME } from '@/lib/brand';
-import { cn } from '@/lib/utils';
 
 type Entry = { patient: Patient; encounter: Encounter };
 
@@ -28,22 +29,21 @@ interface DashboardViewProps {
   allAlerts: Array<ComplexCaseAlert & { patientName?: string }>;
 }
 
-const TONE_RULE = { critical: 'before:bg-critical', flag: 'before:bg-flag', info: 'before:bg-info' } as const;
-const TONE_TEXT = { critical: 'text-critical', flag: 'text-flag', info: 'text-info' } as const;
-
 export default function DashboardView({ onAlertClick, allAlerts }: DashboardViewProps) {
   const router = useRouter();
   const [upcoming, setUpcoming] = useState<Entry[]>([]);
-  const [recent, setRecent] = useState<Entry[]>([]);
-  const [counts, setCounts] = useState({ patients: 0, encounters: 0 });
+  const [past, setPast] = useState<Entry[]>([]);
+  const [pastCount, setPastCount] = useState(0);
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading');
   const [error, setError] = useState<string | null>(null);
+  const [isAlertPanelOpen, setIsAlertPanelOpen] = useState(false);
   const [showNewConsultModal, setShowNewConsultModal] = useState(false);
   const [showPriorAuthModal, setShowPriorAuthModal] = useState(false);
   const [showReferralModal, setShowReferralModal] = useState(false);
   const [selectedPatientForData, setSelectedPatientForData] = useState<Patient | null>(null);
 
   const { isDemoModalOpen, demoStage, startDemo, skipDemo, setDemoModalOpen } = useDemo();
+  const startButtonRef = React.useRef<HTMLButtonElement>(null);
 
   // Reopen the New Consultation modal when it was restored from another page.
   const { getModalState } = useModalManager();
@@ -59,12 +59,10 @@ export default function DashboardView({ onAlertClick, allAlerts }: DashboardView
     setError(null);
     try {
       await supabaseDataService.loadPatientData();
-      const patients = supabaseDataService.getAllPatients();
-      const past = supabaseDataService.getPastConsultations() as Entry[];
-      const next = supabaseDataService.getUpcomingConsultations() as Entry[];
-      setUpcoming(next);
-      setRecent(past.slice(0, 5));
-      setCounts({ patients: patients.length, encounters: past.length + next.length });
+      const pastAll = supabaseDataService.getPastConsultations() as Entry[];
+      setUpcoming(supabaseDataService.getUpcomingConsultations() as Entry[]);
+      setPast(pastAll.slice(0, 6));
+      setPastCount(pastAll.length);
       setStatus('ready');
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
@@ -79,206 +77,136 @@ export default function DashboardView({ onAlertClick, allAlerts }: DashboardView
     return () => supabaseDataService.unsubscribe(refresh);
   }, [load]);
 
-  const flags = useMemo(
-    () => [...allAlerts].sort((a, b) => (b.likelihood ?? 0) - (a.likelihood ?? 0)),
-    [allAlerts],
-  );
-
-  const today = useMemo(
-    () => new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }),
-    [],
-  );
+  const critical = useMemo(() => allAlerts.some((a) => severityTone(a.severity, a.likelihood) === 'critical'), [allAlerts]);
 
   return (
     <ContentSurface>
       <PageHeader
-        eyebrow={today}
-        title="Today"
-        aside={
-          <>
-            <Button iconLeft={<Plus />} onClick={() => setShowNewConsultModal(true)}>New consultation</Button>
-            <Button variant="secondary" onClick={() => setShowPriorAuthModal(true)}>Prior authorization</Button>
-            <Button variant="secondary" onClick={() => setShowReferralModal(true)}>Referral</Button>
-          </>
-        }
+        title="Upcoming Consultations"
+        aside={<NotificationBell count={allAlerts.length} critical={critical} onClick={() => setIsAlertPanelOpen(true)} />}
       />
 
-      {status === 'loading' ? <LoadingState label="Loading the schedule" /> : null}
-      {status === 'error' ? (
-        <ErrorState title="The schedule did not load" message={error} onRetry={() => load()} />
-      ) : null}
+      {status === 'loading' ? <LoadingState /> : null}
+      {status === 'error' ? <ErrorState message={error} onRetry={() => load()} /> : null}
 
       {status === 'ready' ? (
-        <>
-          <dl className="mb-8 grid grid-cols-2 overflow-hidden rounded-[var(--radius-lg)] border border-border bg-card sm:grid-cols-4">
-            <Stat label="Patients" value={counts.patients} />
-            <Stat label="Encounters" value={counts.encounters} />
-            <Stat label="Upcoming" value={upcoming.length} />
-            <Stat label="Flags" value={flags.length} tone={flags.length ? 'flag' : undefined} />
-          </dl>
-
-          <div className="grid gap-x-10 gap-y-10 lg:grid-cols-[minmax(0,1fr)_22rem]">
-            <div className="min-w-0 space-y-10">
-              <section aria-labelledby="upcoming-heading">
-                <SectionHeading id="upcoming-heading" count={upcoming.length}>Upcoming consultations</SectionHeading>
-                {upcoming.length === 0 ? (
-                  <EmptyState
-                    className="border-t-0"
-                    title="Nothing scheduled"
-                    message="No consultations are booked from now on. Start one now, or open a recent consultation below."
-                    action={<Button size="sm" variant="secondary" iconLeft={<Plus />} onClick={() => setShowNewConsultModal(true)}>New consultation</Button>}
-                  />
-                ) : (
-                  <ul className="divide-y divide-border">
-                    {upcoming.map(({ patient, encounter }) => (
-                      <li key={`${patient.id}_${encounter.id}`} className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-4 gap-y-2 py-3 sm:grid-cols-[4.5rem_minmax(0,1fr)_auto]">
-                        <div className="data-mono text-sm text-ink">
-                          {formatTime(encounter.scheduledStart)}
-                          <div className="text-xs text-muted-foreground">{formatDate(encounter.scheduledStart)}</div>
-                        </div>
-                        <Link href={`/patients/${patient.id}?tab=consultation&encounterId=${encounter.id}`} className="min-w-0 rounded-sm">
-                          <span className="block truncate font-display text-lg leading-tight text-ink">{patientName(patient)}</span>
-                          <span className="block truncate text-sm text-muted-foreground">{encounterReason(encounter)}</span>
-                        </Link>
-                        <div className="col-span-2 flex gap-2 sm:col-span-1">
-                          <Button size="sm" variant="secondary" iconLeft={<Eye />} onClick={() => setSelectedPatientForData(patient)}>Prepare</Button>
-                          <Button size="sm" iconLeft={<Play />} onClick={() => router.push(`/patients/${patient.id}?tab=consultation&encounterId=${encounter.id}&autoStartTranscription=true`)}>Start</Button>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </section>
-
-              <section aria-labelledby="recent-heading">
-                <SectionHeading
-                  id="recent-heading"
-                  count={recent.length}
-                  action={<Link href="/patients?view=consultations" className="text-sm text-info underline-offset-4 hover:underline">All consultations</Link>}
-                >
-                  Recent consultations
-                </SectionHeading>
-                {recent.length === 0 ? (
-                  <EmptyState className="border-t-0" title="No consultations yet" message="Finished consultations will be listed here." />
-                ) : (
-                  <ul className="divide-y divide-border">
-                    {recent.map(({ patient, encounter }) => (
-                      <li key={`${patient.id}_${encounter.id}`}>
-                        <Link
-                          href={`/patients/${patient.id}?tab=consultation&encounterId=${encounter.id}`}
-                          className="row-link grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 px-1 py-3 sm:grid-cols-[7rem_minmax(0,1fr)_auto]"
-                        >
-                          <span className="data-mono hidden text-sm text-muted-foreground sm:block">{formatDate(encounterWhen(encounter))}</span>
-                          <span className="min-w-0">
-                            <span className="block truncate text-sm font-medium text-ink">{encounterReason(encounter)}</span>
-                            <span className="block truncate text-sm text-muted-foreground">
-                              {patientName(patient)}
-                              <span className="data-mono sm:hidden"> · {formatDate(encounterWhen(encounter))}</span>
-                            </span>
-                          </span>
-                          <span className="flex items-center gap-2">
-                            {encounter.reasonCode ? (
-                              <span className="data-mono hidden rounded border border-border px-1.5 text-xs text-ink-2 sm:inline">{encounter.reasonCode}</span>
-                            ) : null}
-                            <CaretRight size={14} className="text-muted-foreground" aria-hidden />
-                          </span>
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </section>
-            </div>
-
-            <aside aria-labelledby="flags-heading" className="min-w-0">
-              <SectionHeading id="flags-heading" count={flags.length}>Flags</SectionHeading>
-              {flags.length === 0 ? (
-                <EmptyState className="border-t-0" title="Nothing flagged" message="Complex-case flags on any chart appear here." />
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_19rem] lg:gap-8">
+          <div className="min-w-0 space-y-6">
+            <section className="rounded-[var(--radius-lg)] border border-hairline bg-card shadow-card" aria-label="Upcoming Consultations">
+              {upcoming.length === 0 ? (
+                <EmptyState title="No upcoming consultations scheduled." />
               ) : (
-                <ul className="mt-3 space-y-2">
-                  {flags.map((alert) => {
-                    const tone = severityTone(alert.severity, alert.likelihood);
-                    return (
-                      <li key={alert.id}>
-                        <button
-                          type="button"
-                          onClick={() => onAlertClick(alert.patientId)}
-                          className={cn(
-                            'relative w-full overflow-hidden rounded-md border border-border bg-card py-3 pl-4 pr-3 text-left transition-colors hover:bg-well/50',
-                            "before:absolute before:inset-y-0 before:left-0 before:w-[3px] before:content-['']",
-                            TONE_RULE[tone],
-                          )}
-                        >
-                          <span className={cn('label-caps', TONE_TEXT[tone])}>
-                            {alert.conditionType || alert.type || 'Complex case'}{alert.severity ? ` · ${alert.severity}` : ''}
-                          </span>
-                          <span className="mt-1 block text-sm text-ink">{alert.msg}</span>
-                          <span className="mt-1.5 flex items-center gap-2 text-xs text-muted-foreground">
-                            <PatientAvatar patient={{ name: alert.patientName }} size={18} />
-                            {alert.patientName}
-                          </span>
-                        </button>
-                      </li>
-                    );
-                  })}
+                <ul className="rise-in-stagger divide-y divide-hairline">
+                  {upcoming.map(({ patient, encounter }) => (
+                    <li key={`${patient.id}_${encounter.id}`} className="flex flex-wrap items-center gap-x-5 gap-y-3 px-5 py-4">
+                      <div className="w-16 shrink-0">
+                        <div className="data-mono text-lg leading-none text-ink">{formatTime(encounter.scheduledStart)}</div>
+                        <div className="data-mono mt-1 text-xs text-muted-foreground">{formatDate(encounter.scheduledStart)}</div>
+                      </div>
+                      <Link href={`/patients/${patient.id}?tab=consultation&encounterId=${encounter.id}`} className="flex min-w-0 flex-1 items-center gap-3">
+                        <PatientAvatar patient={patient} size={38} />
+                        <span className="min-w-0">
+                          <span className="block truncate font-display text-[1.15rem] leading-tight text-ink">{patientName(patient)}</span>
+                          <span className="block truncate text-sm text-muted-foreground">{encounterReason(encounter)}</span>
+                        </span>
+                      </Link>
+                      <div className="flex gap-2">
+                        <Button size="sm" variant="secondary" iconLeft={<Eye />} onClick={() => setSelectedPatientForData(patient)}>Prepare</Button>
+                        <Button size="sm" iconLeft={<Play weight="fill" />} onClick={() => router.push(`/patients/${patient.id}?tab=consultation&encounterId=${encounter.id}&autoStartTranscription=true`)}>Start</Button>
+                      </div>
+                    </li>
+                  ))}
                 </ul>
               )}
-            </aside>
+            </section>
+
+            {past.length > 0 ? (
+              <section className="rounded-[var(--radius-lg)] border border-hairline bg-card shadow-card">
+                <SectionHeading className="px-5 pb-2 pt-5" count={pastCount}>Past Consultations</SectionHeading>
+                <ul className="rise-in-stagger px-2 pb-2">
+                  {past.map(({ patient, encounter }) => (
+                    <li key={`${patient.id}_${encounter.id}`}>
+                      <Link
+                        href={`/patients/${patient.id}?tab=consultation&encounterId=${encounter.id}`}
+                        className="group grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-4 rounded-xl px-3 py-3 transition-colors hover:bg-well"
+                      >
+                        <PatientAvatar patient={patient} size={34} />
+                        <span className="min-w-0">
+                          <span className="block truncate text-[0.9375rem] font-medium text-ink">{encounterReason(encounter)}</span>
+                          <span className="mt-0.5 flex items-center gap-2 truncate text-sm text-muted-foreground">
+                            <span className="truncate">{patientName(patient)}</span>
+                            <span className="h-1 w-1 shrink-0 rounded-full bg-input/50" aria-hidden />
+                            <span className="data-mono shrink-0 text-xs">{formatDate(encounterWhen(encounter))}</span>
+                          </span>
+                        </span>
+                        <span className="flex items-center gap-3">
+                          {encounter.reasonCode ? (
+                            <span className="data-mono hidden rounded-md bg-well px-2 py-0.5 text-xs text-ink-2 ring-1 ring-hairline sm:inline">{encounter.reasonCode}</span>
+                          ) : null}
+                          <CaretRight size={14} className="text-muted-foreground transition-transform group-hover:translate-x-0.5" aria-hidden />
+                        </span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            ) : null}
           </div>
-        </>
+
+          <aside className="rise-in-stagger order-first grid grid-cols-2 gap-3 self-start lg:order-none lg:grid-cols-1">
+            <button
+              type="button"
+              onClick={() => setShowNewConsultModal(true)}
+              className="group relative isolate col-span-2 flex min-h-[8.5rem] flex-col justify-between overflow-hidden rounded-[var(--radius-lg)] bg-iris p-5 text-left text-white shadow-[0_14px_32px_-14px_hsl(var(--blue)/0.7)] transition-transform hover:-translate-y-0.5 lg:col-span-1 lg:min-h-[11rem]"
+            >
+              <MeterMotif />
+              <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-white/15 ring-1 ring-white/25">
+                <Stethoscope size={21} weight="bold" aria-hidden />
+              </span>
+              <span className="flex items-end justify-between gap-3">
+                <span className="font-display text-[1.45rem] leading-tight">New Consultation</span>
+                <ArrowRight size={18} className="mb-1 transition-transform group-hover:translate-x-1" aria-hidden />
+              </span>
+            </button>
+            <ActionTile icon={<ClipboardText size={20} aria-hidden />} label="Prior Authorization" onClick={() => setShowPriorAuthModal(true)} />
+            <ActionTile icon={<PaperPlaneTilt size={20} aria-hidden />} label="Referral" onClick={() => setShowReferralModal(true)} />
+          </aside>
+        </div>
       ) : null}
 
+      <AlertSidePanel isOpen={isAlertPanelOpen} onClose={() => setIsAlertPanelOpen(false)} alerts={allAlerts} onAlertClick={onAlertClick} />
       <NewConsultationModal
         open={showNewConsultModal}
         onOpenChange={setShowNewConsultModal}
         draggable={false}
         allowDragging={false}
-        draggableConfig={{ id: 'new-consultation-dashboard', title: 'Start a consultation', persistent: false }}
+        draggableConfig={{ id: 'new-consultation-dashboard', title: 'Start New Consultation', persistent: false }}
       />
       <FormCreationModal open={showPriorAuthModal} onOpenChange={setShowPriorAuthModal} formType="priorAuth" />
       <FormCreationModal open={showReferralModal} onOpenChange={setShowReferralModal} formType="referral" />
-      <PatientDataModal
-        isOpen={!!selectedPatientForData}
-        onClose={() => setSelectedPatientForData(null)}
-        patient={selectedPatientForData}
-      />
+      <PatientDataModal isOpen={!!selectedPatientForData} onClose={() => setSelectedPatientForData(null)} patient={selectedPatientForData} />
 
       {demoStage === 'introModal' && isDemoModalOpen ? (
         <Dialog open={isDemoModalOpen} onOpenChange={setDemoModalOpen}>
-          <DialogContent className="max-w-[40rem] gap-0 p-0 sm:min-w-0">
-            <div className="flex items-center gap-4 border-b border-border px-6 py-5 sm:px-8">
-              <MarkLoader size={40} className="text-ink" />
-              <p className="label-caps">Guided demo · about two minutes</p>
+          <DialogContent
+            className="intro-dialog max-w-[34rem] gap-0 overflow-hidden p-0 sm:min-w-0 sm:p-0"
+            onOpenAutoFocus={(e) => { e.preventDefault(); startButtonRef.current?.focus(); }}
+          >
+            <div className="relative isolate flex h-56 items-center justify-center overflow-hidden bg-rail">
+              <WaveField />
+              <span className="relative inline-flex h-20 w-20 items-center justify-center rounded-[1.4rem] bg-white/[0.08] ring-1 ring-white/15">
+                <MarkLoader size={44} className="text-white" />
+              </span>
             </div>
-            <div className="px-6 py-6 sm:px-8">
-              <DialogHeader className="space-y-3">
-                <DialogTitle className="text-[1.875rem] leading-[1.12] sm:text-[2.125rem]">See a consultation turn into a note</DialogTitle>
-                <DialogDescription className="text-[0.9375rem] leading-relaxed text-ink-2">
-                  {PRODUCT_NAME} listens to a visit with Dorothy Robinson, a synthetic patient, writes the transcript as
-                  the two of them speak, then drafts the differential, the diagnosis, the plan and the note.
-                </DialogDescription>
+            <div className="px-7 pb-7 pt-6">
+              <DialogHeader>
+                <DialogTitle className="text-center text-[1.9rem] leading-[1.15]">See {PRODUCT_NAME} in Action</DialogTitle>
               </DialogHeader>
-              <ol className="mt-6 grid gap-x-6 gap-y-3 border-t border-border pt-5 sm:grid-cols-2">
-                {[
-                  ['Transcript', 'Clinician and patient, turn by turn'],
-                  ['Differential', 'Ranked by likelihood, with the evidence'],
-                  ['Plan and note', 'Diagnosis, treatment and a SOAP note'],
-                  ['Flags', 'Interactions and gaps, as they come up'],
-                ].map(([title, line], i) => (
-                  <li key={title} className="flex gap-3">
-                    <span className="data-mono pt-px text-xs text-muted-foreground">{String(i + 1).padStart(2, '0')}</span>
-                    <span>
-                      <span className="block text-sm font-medium text-ink">{title}</span>
-                      <span className="block text-sm text-muted-foreground">{line}</span>
-                    </span>
-                  </li>
-                ))}
-              </ol>
+              <DialogFooter className="mt-7 flex-col-reverse gap-2 sm:flex-row sm:justify-center">
+                <Button variant="secondary" size="lg" onClick={skipDemo} className="sm:min-w-[8rem]">Skip</Button>
+                <Button ref={startButtonRef} size="lg" onClick={startDemo} iconLeft={<Play weight="fill" />} className="sm:min-w-[10rem]">Start Demo</Button>
+              </DialogFooter>
             </div>
-            <DialogFooter className="border-t border-border px-6 py-4 sm:px-8">
-              <Button variant="ghost" onClick={skipDemo}>Skip</Button>
-              <Button onClick={startDemo} iconLeft={<Play />}>Start the demo</Button>
-            </DialogFooter>
           </DialogContent>
         </Dialog>
       ) : null}
@@ -286,12 +214,48 @@ export default function DashboardView({ onAlertClick, allAlerts }: DashboardView
   );
 }
 
-function Stat({ label, value, tone }: { label: string; value: number; tone?: 'flag' }) {
+function ActionTile({ icon, label, onClick }: { icon: React.ReactNode; label: string; onClick: () => void }) {
   return (
-    <div className="relative border-b border-r border-border px-4 py-3 last:border-r-0 sm:border-b-0 [&:nth-child(2)]:border-r-0 sm:[&:nth-child(2)]:border-r">
-      <span className={cn('absolute inset-x-0 top-0 h-[2px]', tone === 'flag' ? 'bg-flag-line' : 'bg-transparent')} aria-hidden />
-      <dt className="label-caps">{label}</dt>
-      <dd className={cn('mt-1 font-display text-[2rem] leading-none', tone === 'flag' ? 'text-flag' : 'text-ink')}>{value}</dd>
+    <button
+      type="button"
+      onClick={onClick}
+      className="group flex min-w-0 flex-col items-start gap-3 rounded-[var(--radius-lg)] border border-hairline bg-card p-4 text-left shadow-card transition-[transform,box-shadow] hover:-translate-y-0.5 hover:shadow-float lg:flex-row lg:items-center lg:gap-4"
+    >
+      <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-iris-soft text-iris ring-1 ring-iris-line">{icon}</span>
+      <span className="min-w-0 flex-1 text-[0.9375rem] font-medium leading-snug text-ink">{label}</span>
+      <ArrowRight size={16} className="hidden text-muted-foreground transition-transform group-hover:translate-x-1 lg:block" aria-hidden />
+    </button>
+  );
+}
+
+/** The mark's level meter, large and faint, behind the New Consultation tile. */
+function MeterMotif() {
+  const bars = [0.35, 0.6, 0.9, 0.55, 1, 0.7, 0.4, 0.8, 0.5, 0.3];
+  return (
+    <svg className="pointer-events-none absolute -right-6 bottom-0 -z-10 h-full w-48 opacity-[0.16]" viewBox="0 0 200 160" preserveAspectRatio="xMaxYMax meet" aria-hidden>
+      {bars.map((h, i) => (
+        <rect key={i} x={i * 20 + 4} y={160 - h * 150} width={11} height={h * 150} rx={5.5} fill="white" />
+      ))}
+    </svg>
+  );
+}
+
+/** Behind the intro's mark: a field of bars rising and falling, like voices in a room. */
+function WaveField() {
+  const n = 34;
+  return (
+    <div className="absolute inset-0 -z-10 flex items-center justify-center gap-[7px]" aria-hidden>
+      {Array.from({ length: n }, (_, i) => {
+        const d = Math.abs(i - (n - 1) / 2) / ((n - 1) / 2);
+        const h = 18 + (1 - d) * 120 * (0.55 + 0.45 * Math.sin(i * 1.7));
+        return (
+          <span
+            key={i}
+            className="wave-bar w-[5px] rounded-full bg-gradient-to-b from-[hsl(245_90%_78%)] to-[hsl(245_66%_55%)]"
+            style={{ height: `${Math.max(10, h)}px`, animationDelay: `${(i % 9) * -0.17}s`, opacity: 0.18 + (1 - d) * 0.5 }}
+          />
+        );
+      })}
     </div>
   );
 }

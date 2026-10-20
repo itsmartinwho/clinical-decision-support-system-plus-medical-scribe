@@ -151,7 +151,7 @@ export default function PriorAuthorizationForm({
     <Card>
       <CardHeader>
         <CardTitle className="text-xl font-semibold text-foreground flex items-center justify-between">
-          Prior authorization
+          Prior Authorization
           <div className="flex items-center gap-2">
             {isFormValid ? (
               <CheckCircle className="h-5 w-5 text-ok" />

@@ -37,6 +37,7 @@ import { AudioWaveform } from '@/components/ui/AudioWaveform';
 import { openDeepgramSocket, TranscriptionUnavailableError } from '@/lib/deepgram';
 import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
 import TranscriptView from '@/components/transcript/TranscriptView';
+import TranscriptModeToggle from '@/components/transcript/TranscriptModeToggle';
 
 interface ConsolidatedConsultationTabProps {
   patient: Patient | null;
@@ -443,7 +444,7 @@ export default function ConsolidatedConsultationTab({
       <div className="rounded-[var(--radius-lg)] border border-border bg-card p-5 space-y-4 sm:p-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="font-display text-xl text-ink">
-            Consultation
+            Consultation Details
           </h2>
           <span className="data-mono break-all text-xs text-muted-foreground">
             {selectedEncounter.encounterIdentifier}
@@ -516,22 +517,10 @@ export default function ConsolidatedConsultationTab({
       <Card>
         <CardHeader>
           <CardTitle className="flex flex-wrap items-center justify-between gap-3">
-            Transcript
+            Live Transcription
             <div className="flex flex-wrap items-center gap-2 font-sans text-sm">
               {!isTranscribing && transcriptText ? (
-                <div role="group" aria-label="Transcript view" className="inline-flex rounded-md border border-input p-0.5 text-[0.8125rem]">
-                  {(['conversation', 'edit'] as const).map((v) => (
-                    <button
-                      key={v}
-                      type="button"
-                      aria-pressed={transcriptMode === v}
-                      onClick={() => setTranscriptMode(v)}
-                      className={transcriptMode === v ? 'rounded-[5px] bg-ink px-2.5 py-1 text-paper' : 'rounded-[5px] px-2.5 py-1 text-ink-2 hover:bg-well'}
-                    >
-                      {v === 'conversation' ? 'Conversation' : 'Edit'}
-                    </button>
-                  ))}
-                </div>
+                <TranscriptModeToggle mode={transcriptMode} onChange={setTranscriptMode} />
               ) : null}
               <Button
                 variant={isTranscribing ? "destructive" : "default"}
@@ -540,7 +529,7 @@ export default function ConsolidatedConsultationTab({
                 disabled={isPaused}
                 iconLeft={isTranscribing ? <StopIcon /> : <PlayIcon />}
               >
-                {isTranscribing ? 'Stop and save' : 'Start recording'}
+                {isTranscribing ? 'Stop & Save' : 'Start Recording'}
               </Button>
               {transcriptText && (
                 <Button
@@ -549,7 +538,7 @@ export default function ConsolidatedConsultationTab({
                   onClick={() => setShowTranscriptModal(true)}
                   iconLeft={<Eye />}
                 >
-                  Full screen
+                  View Full Transcript
                 </Button>
               )}
             </div>
@@ -572,7 +561,7 @@ export default function ConsolidatedConsultationTab({
               ref={richTextEditorRef}
               content={transcriptText}
               onContentChange={(content) => setTranscriptText(content)}
-              placeholder="Start recording to transcribe the consultation, or type notes here."
+              placeholder="Start recording to begin live transcription, or type your consultation notes here..."
               disabled={isTranscribing}
               showToolbar={!isTranscribing}
               minHeight="200px"
@@ -664,7 +653,7 @@ export default function ConsolidatedConsultationTab({
           
           {/* Differential Diagnoses Section */}
           <div className="pt-6 border-t border-border/50">
-             <h3 className="label-caps mb-3">Differential diagnoses</h3>
+             
              {differentialDiagnosesError ? (
                <div className="text-sm text-critical bg-critical-soft p-3 rounded-md mb-4">
                  Error loading differential diagnoses: {differentialDiagnosesError}
@@ -901,7 +890,7 @@ export default function ConsolidatedConsultationTab({
 
       {/* Danger Zone */}
       <div className="space-y-4 pt-6 mt-6 border-t border-destructive/20">
-        <h2 className="label-caps !text-critical">Delete this consultation</h2>
+        <h2 className="font-display text-lg text-critical">Danger Zone</h2>
         <div className="bg-destructive/10 border border-destructive/30 hover:bg-destructive/20 transition-colors rounded-lg p-4">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>

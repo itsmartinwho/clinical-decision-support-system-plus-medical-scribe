@@ -6,8 +6,7 @@ interface ContentSurfaceProps extends React.HTMLAttributes<HTMLDivElement> {
   fullBleed?: boolean;
 }
 
-// The page column every route sits in: one width, one gutter, no surface of
-// its own. Sections inside it draw their own hairlines.
+// The page column every route sits in: one width, one gutter.
 export default function ContentSurface({ children, className, fullBleed = false, ...rest }: ContentSurfaceProps) {
   if (fullBleed) {
     return (
@@ -17,7 +16,7 @@ export default function ContentSurface({ children, className, fullBleed = false,
     );
   }
   return (
-    <div className={cn('mx-auto w-full max-w-[1320px] px-4 pb-16 pt-5 sm:px-6 sm:pt-7 lg:px-8', className)} {...rest}>
+    <div className={cn('rise-in mx-auto w-full max-w-[1280px] px-4 pb-20 pt-6 sm:px-6 lg:px-10 lg:pt-4', className)} {...rest}>
       {children}
     </div>
   );

@@ -1,7 +1,7 @@
 'use client';
 import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { Button } from "@/components/ui/button";
-import { CaretLeft, Plus } from '@phosphor-icons/react';
+import { CaretLeft, Plus, ClipboardText, PaperPlaneTilt, WarningCircle } from '@phosphor-icons/react';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { supabaseDataService } from "@/lib/supabaseDataService";
 import type { Patient, Encounter, EncounterDetailsWrapper } from "@/lib/types";
@@ -375,30 +375,26 @@ export default function PatientWorkspaceViewModern({ patient: initialPatientStub
   }), [patient.id]);
 
   if (loading) {
-    return <LoadingState label="Loading the chart" />;
+    return <LoadingState />;
   }
 
   if (error || !patient) {
     return (
       <ContentSurface>
         <BackLink onBack={onBack} />
-        <ErrorState
-          title="The chart did not load"
-          message={error || 'Patient not found'}
-          onRetry={() => loadPatientData(true)}
-        />
+        <ErrorState message={error || 'Patient not found'} onRetry={() => loadPatientData(true)} />
       </ContentSurface>
     );
   }
 
   const age = ageFrom(patient.dateOfBirth);
-  const facts: Array<[string, React.ReactNode]> = [
-    ['Born', <><span className="data-mono">{formatDate(patient.dateOfBirth)}</span>{age !== null ? <span className="text-muted-foreground"> · {age} y</span> : null}</>],
-    ['Sex', sexLabel(patient.gender)],
-    ...(patient.language ? [['Language', patient.language] as [string, React.ReactNode]] : []),
-    ...(patient.race ? [['Race', patient.race] as [string, React.ReactNode]] : []),
+  const facts: Array<[string, React.ReactNode, boolean?]> = [
+    ['Date of Birth', formatDate(patient.dateOfBirth), true],
+    ['Age', age ?? '—', true],
+    ['Gender', sexLabel(patient.gender)],
     ...(patient.ethnicity ? [['Ethnicity', patient.ethnicity] as [string, React.ReactNode]] : []),
-    ['ID', <span key="id" className="data-mono break-all">{patient.id}</span>],
+    ...(patient.race ? [['Race', patient.race] as [string, React.ReactNode]] : []),
+    ['Patient ID', patient.id, true],
   ];
   const sortedEncounters = [...activeEncounterDetails].sort(
     (a, b) => new Date(b.encounter.scheduledStart).getTime() - new Date(a.encounter.scheduledStart).getTime(),
@@ -408,64 +404,66 @@ export default function PatientWorkspaceViewModern({ patient: initialPatientStub
     <ContentSurface className="relative">
       <BackLink onBack={onBack} />
 
-      <header className="flex flex-wrap items-start justify-between gap-x-6 gap-y-4 border-b border-ink/70 pb-5">
-        <div className="flex min-w-0 items-start gap-4">
-          <PatientAvatar patient={patient} size={52} className="mt-1 hidden sm:inline-flex" />
-          <div className="min-w-0">
-            <p className="label-caps">Patient</p>
-            <h1 className="title-display mt-1 text-[2rem] sm:text-[2.5rem]">{patientName(patient)}</h1>
-            <dl className="mt-3 flex flex-wrap gap-x-5 gap-y-1.5 text-sm">
-              {facts.map(([label, value]) => (
-                <div key={label} className="flex min-w-0 items-baseline gap-1.5">
-                  <dt className="text-muted-foreground">{label}</dt>
-                  <dd className="min-w-0 text-ink">{value}</dd>
-                </div>
-              ))}
-            </dl>
+      <section className="overflow-hidden rounded-[1.25rem] border border-hairline bg-card shadow-card">
+        <div className="relative isolate flex flex-wrap items-start justify-between gap-x-8 gap-y-5 p-5 sm:p-7">
+          <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-28 bg-gradient-to-b from-iris-soft/70 to-transparent" aria-hidden />
+          <div className="flex min-w-0 items-center gap-4 sm:gap-5">
+            <PatientAvatar patient={patient} size={64} className="ring-4 ring-card" />
+            <h1 className="title-display min-w-0 text-[2rem] sm:text-[2.6rem]">{patientName(patient)}</h1>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              iconLeft={<Plus weight="bold" />}
+              onClick={() => {
+                // Keep the current selection to restore if the new consultation is discarded.
+                previousEncounterRef.current = selectedEncounterForConsultation;
+                setSelectedEncounterForConsultation(null);
+                setShowConsultationPanel(true);
+              }}
+            >
+              New Consultation
+            </Button>
+            <Button variant="secondary" aria-label="Prior Auth" className="max-sm:w-9 max-sm:px-0" onClick={() => setShowPriorAuthModal(true)}>
+              <ClipboardText aria-hidden /><span className="max-sm:sr-only">Prior Auth</span>
+            </Button>
+            <Button variant="secondary" aria-label="Referral" className="max-sm:w-9 max-sm:px-0" onClick={() => setShowReferralModal(true)}>
+              <PaperPlaneTilt aria-hidden /><span className="max-sm:sr-only">Referral</span>
+            </Button>
           </div>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <Button
-            iconLeft={<Plus />}
-            onClick={() => {
-              // Keep the current selection to restore if the new consultation is discarded.
-              previousEncounterRef.current = selectedEncounterForConsultation;
-              setSelectedEncounterForConsultation(null);
-              setShowConsultationPanel(true);
-            }}
-          >
-            New consultation
-          </Button>
-          <Button variant="secondary" onClick={() => setShowPriorAuthModal(true)}>Prior auth</Button>
-          <Button variant="secondary" onClick={() => setShowReferralModal(true)}>Referral</Button>
-        </div>
-      </header>
 
-      {patient.alerts && patient.alerts.length > 0 ? (
-        <ul className="mt-4 space-y-2" aria-label="Flags on this chart">
-          {patient.alerts.map((alert) => {
-            const tone = severityTone(alert.severity, alert.likelihood);
-            return (
-              <li
-                key={alert.id}
-                className={cn(
-                  'rounded-md border border-l-[3px] bg-card px-4 py-2.5',
-                  tone === 'critical' ? 'border-critical-line border-l-critical' : tone === 'flag' ? 'border-flag-line border-l-flag' : 'border-border border-l-info',
-                )}
-              >
-                <span className={cn('label-caps mr-2', tone === 'critical' ? '!text-critical' : tone === 'flag' ? '!text-flag' : '!text-info')}>
-                  Flag{alert.severity ? ` · ${alert.severity}` : ''}
-                </span>
-                <span className="text-sm text-ink">{alert.msg}</span>
-              </li>
-            );
-          })}
-        </ul>
-      ) : null}
+        <dl className="flex flex-wrap gap-x-10 gap-y-4 border-t border-hairline px-5 py-4 sm:px-7">
+          {facts.map(([label, value, mono]) => (
+            <div key={label} className={cn('min-w-0', label === 'Patient ID' && 'basis-full sm:basis-auto')}>
+              <dt className="text-xs text-muted-foreground">{label}</dt>
+              <dd className={cn('mt-0.5 text-[0.9375rem] text-ink', mono && 'data-mono break-all text-sm')}>{value}</dd>
+            </div>
+          ))}
+        </dl>
 
-      <div className="mt-6 flex flex-col gap-3 border-b border-border sm:flex-row sm:items-end sm:justify-between">
-        <div role="tablist" aria-label="Chart views" className="-mb-px flex">
-          {([['consultation', 'Consultation'], ['allData', 'All data']] as const).map(([k, label]) => (
+        {patient.alerts && patient.alerts.length > 0 ? (
+          <ul className="space-y-px border-t border-hairline bg-well/60">
+            {patient.alerts.map((alert) => {
+              const tone = severityTone(alert.severity, alert.likelihood);
+              return (
+                <li key={alert.id} className="flex items-start gap-3 px-5 py-3 sm:px-7">
+                  <WarningCircle
+                    size={18}
+                    weight="fill"
+                    className={cn('mt-px shrink-0', tone === 'critical' ? 'text-critical' : tone === 'flag' ? 'text-flag-line' : 'text-iris')}
+                    aria-label={alert.severity ?? undefined}
+                  />
+                  <span className="text-sm text-ink-2">{alert.msg}</span>
+                </li>
+              );
+            })}
+          </ul>
+        ) : null}
+      </section>
+
+      <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div role="tablist" aria-label="Chart" className="inline-flex h-11 w-fit items-center gap-1 rounded-xl border border-hairline bg-well p-1">
+          {([['consultation', 'Consultation'], ['allData', 'All Data']] as const).map(([k, label]) => (
             <button
               key={k}
               role="tab"
@@ -473,8 +471,8 @@ export default function PatientWorkspaceViewModern({ patient: initialPatientStub
               aria-selected={activeTab === k}
               onClick={() => setActiveTab(k)}
               className={cn(
-                'h-10 border-b-2 px-3 text-sm font-medium transition-colors',
-                activeTab === k ? 'border-ink text-ink' : 'border-transparent text-muted-foreground hover:text-ink',
+                'h-9 rounded-lg px-4 text-sm font-medium transition-[background-color,color,box-shadow] duration-150',
+                activeTab === k ? 'bg-card text-ink shadow-card' : 'text-muted-foreground hover:text-ink',
               )}
             >
               {label}
@@ -482,7 +480,7 @@ export default function PatientWorkspaceViewModern({ patient: initialPatientStub
           ))}
         </div>
         {activeTab === 'consultation' && sortedEncounters.length > 0 ? (
-          <div className="pb-2 sm:w-[22rem]">
+          <div className="sm:w-[22rem]">
             <Select
               value={selectedEncounterForConsultation?.id || ""}
               onValueChange={(value) => {
@@ -491,14 +489,14 @@ export default function PatientWorkspaceViewModern({ patient: initialPatientStub
               }}
               disabled={showDeleteConfirmation}
             >
-              <SelectTrigger aria-label="Consultation">
-                <SelectValue placeholder="Choose a consultation" />
+              <SelectTrigger aria-label="Consultation" className="h-11 rounded-xl">
+                <SelectValue placeholder="Select consultation..." />
               </SelectTrigger>
               <SelectContent className="max-w-[calc(100vw-2rem)]">
                 {sortedEncounters.map((ew) => (
                   <SelectItem key={ew.encounter.id} value={ew.encounter.id}>
                     <span className="data-mono text-muted-foreground">{formatDate(ew.encounter.scheduledStart)}</span>
-                    <span className="ml-2">{ew.encounter.reasonDisplayText || ew.encounter.reasonCode || 'Consultation'}</span>
+                    <span className="ml-2">{ew.encounter.reasonDisplayText || ew.encounter.reasonCode || 'Encounter'}</span>
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -527,7 +525,7 @@ export default function PatientWorkspaceViewModern({ patient: initialPatientStub
         <AlertDialog open={showDeleteConfirmation} onOpenChange={setShowDeleteConfirmation}>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Delete this consultation?</AlertDialogTitle>
+              <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
               <AlertDialogDescription>
                 Are you sure you want to delete this encounter? This action cannot be undone immediately, but encounters can be restored by an admin.
                 <br /> <br />
@@ -538,7 +536,7 @@ export default function PatientWorkspaceViewModern({ patient: initialPatientStub
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel onClick={handleCancelDelete}>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={handleDeleteEncounter} className={buttonVariants({ variant: "destructive" })}>Delete consultation</AlertDialogAction>
+              <AlertDialogAction onClick={handleDeleteEncounter} className={buttonVariants({ variant: "destructive" })}>Delete Encounter</AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
@@ -617,9 +615,10 @@ function BackLink({ onBack }: { onBack: () => void }) {
     <button
       type="button"
       onClick={onBack}
-      className="mb-3 inline-flex items-center gap-1 rounded-sm text-sm text-muted-foreground hover:text-ink"
+      aria-label="Back to Patients"
+      className="mb-4 inline-flex h-9 w-9 items-center justify-center rounded-full border border-hairline bg-card text-ink shadow-card transition-colors hover:bg-well"
     >
-      <CaretLeft size={14} aria-hidden /> Patients
+      <CaretLeft size={16} weight="bold" aria-hidden />
     </button>
   );
 }

@@ -79,13 +79,13 @@ export default function SpecialtyDropdown({
           size="sm"
           disabled={disabled}
           className={cn(
-            "flex items-center gap-2 h-8 px-3 bg-card border-border hover:bg-well",
+            "flex items-center gap-2 h-8 rounded-lg px-2.5 bg-card border-hairline hover:bg-well",
             "transition-all duration-200",
             className
           )}
         >
           <Stethoscope className="h-4 w-4 text-ink-2" />
-          <span className="text-sm font-medium truncate max-w-32">
+          <span className="hidden text-sm font-medium truncate max-w-32 sm:inline">
             {selectedCategory?.displayName || 'Select Specialty'}
           </span>
           {selectedCategory && selectedCategory.guidelineCount > 0 && (

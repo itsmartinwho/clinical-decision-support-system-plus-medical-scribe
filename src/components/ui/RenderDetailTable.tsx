@@ -24,34 +24,34 @@ export default function RenderDetailTable({ title, dataArray, headers, columnAcc
   };
 
   return (
-    <section className="mt-4">
-      <h4 className="label-caps mb-1 flex items-center gap-2 !text-ink">
+    <section className="mt-5">
+      {title ? <h4 className="mb-2 flex items-center gap-2 text-sm font-medium text-ink">
         {title}
-        <span className="data-mono rounded border border-border px-1.5 text-[0.6875rem] font-medium tracking-normal text-muted-foreground">{rows.length}</span>
-      </h4>
+        <span className="data-mono inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-well px-1.5 text-[0.6875rem] text-muted-foreground ring-1 ring-hairline">{rows.length}</span>
+      </h4> : null}
       {rows.length === 0 ? (
-        <p className="border-t border-border py-2 text-sm text-muted-foreground">None recorded.</p>
+        <p className="py-2 text-sm text-muted-foreground">No {title.toLowerCase()} data available</p>
       ) : (
         <>
-          <table className="hidden w-full border-collapse text-sm sm:table">
+          <div className="hidden overflow-hidden rounded-xl border border-hairline sm:block"><table className="w-full border-collapse text-sm">
             <thead>
-              <tr className="border-b border-ink/50">
-                {headers.map(h => <th key={h} scope="col" className="label-caps px-2 pb-1.5 pt-1 text-left">{h}</th>)}
+              <tr className="border-b border-hairline bg-well/70">
+                {headers.map(h => <th key={h} scope="col" className="label-caps px-3 py-2 text-left">{h}</th>)}
               </tr>
             </thead>
             <tbody>
               {rows.map((item, index) => (
-                <tr key={index} className="border-b border-border align-top">
+                <tr key={index} className="border-b border-hairline align-top last:border-0">
                   {accessors.map((a) => (
-                    <td key={a} className={cn('px-2 py-2 text-ink', MONO.has(a) && 'data-mono text-[0.8125rem]')}>{show(item[a], a)}</td>
+                    <td key={a} className={cn('px-3 py-2.5 text-ink', MONO.has(a) && 'data-mono text-[0.8125rem]')}>{show(item[a], a)}</td>
                   ))}
                 </tr>
               ))}
             </tbody>
-          </table>
-          <ul className="divide-y divide-border border-t border-border sm:hidden">
+          </table></div>
+          <ul className="divide-y divide-hairline overflow-hidden rounded-xl border border-hairline sm:hidden">
             {rows.map((item, index) => (
-              <li key={index} className="py-2">
+              <li key={index} className="px-3 py-2.5">
                 <dl className="grid grid-cols-[6.5rem_minmax(0,1fr)] gap-x-3 gap-y-0.5 text-sm">
                   {accessors.map((a, i) => (
                     <React.Fragment key={a}>

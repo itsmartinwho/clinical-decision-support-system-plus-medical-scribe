@@ -177,13 +177,13 @@ function getNodeClassName(type: 'condition' | 'action' | 'outcome'): string {
   
   switch (type) {
     case 'condition':
-      return `${baseClass} border-l-yellow-500 bg-flag-soft text-flag`;
+      return `${baseClass} border-l-flag-line bg-flag-soft text-flag`;
     case 'action':
-      return `${baseClass} border-l-blue-500 bg-info-soft text-info`;
+      return `${baseClass} border-l-iris/50 bg-info-soft text-info`;
     case 'outcome':
-      return `${baseClass} border-l-green-500 bg-ok-soft text-ok`;
+      return `${baseClass} border-l-ok-line bg-ok-soft text-ok`;
     default:
-      return `${baseClass} border-l-gray-500 bg-well/50 text-ink`;
+      return `${baseClass} border-l-input bg-well/50 text-ink`;
   }
 }
 

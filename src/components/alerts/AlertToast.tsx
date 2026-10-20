@@ -50,13 +50,13 @@ export const AlertToast: React.FC<AlertToastProps> = ({
   const getSeverityColor = (severity: AlertSeverity) => {
     switch (severity) {
       case AlertSeverity.CRITICAL:
-        return 'border-critical-line bg-critical-soft';
+        return 'border-l-critical';
       case AlertSeverity.WARNING:
-        return 'border-flag-line bg-flag-soft';
+        return 'border-l-flag-line';
       case AlertSeverity.INFO:
-        return 'border-info/30 bg-info-soft';
+        return 'border-l-iris';
       default:
-        return 'border-input bg-well/50';
+        return 'border-l-input';
     }
   };
 
@@ -145,7 +145,7 @@ export const AlertToast: React.FC<AlertToastProps> = ({
     <Card 
       className={`
         ${getSeverityColor(alert.severity)} 
-        border-l-4 shadow-lg cursor-pointer transition-all duration-300 min-w-80 max-w-96
+        border-l-[3px] bg-card shadow-float cursor-pointer transition-all duration-300 w-[min(24rem,calc(100vw-2rem))]
         ${isVisible ? 'animate-in slide-in-from-right' : 'animate-out slide-out-to-right'}
       `}
       style={toastStyle}
@@ -159,7 +159,7 @@ export const AlertToast: React.FC<AlertToastProps> = ({
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-2 flex-1">
             {getSeverityIcon(alert.severity)}
-            <CardTitle className="text-sm font-medium line-clamp-2">
+            <CardTitle className="font-sans text-sm font-semibold leading-snug line-clamp-2">
               {alert.title}
             </CardTitle>
           </div>
@@ -200,7 +200,7 @@ export const AlertToast: React.FC<AlertToastProps> = ({
         {/* Progress bar */}
         <div className="w-full bg-well rounded-full h-1 mt-3">
           <div 
-            className="bg-hairline h-1 rounded-full transition-all duration-75"
+            className="bg-iris/40 h-1 rounded-full transition-all duration-75"
             style={{ width: `${progress}%` }}
           />
         </div>

@@ -48,12 +48,9 @@ export default function PatientDataModal({ isOpen, onClose, patient }: PatientDa
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="h-[calc(100svh-2rem)] max-w-[min(72rem,calc(100vw-1.5rem))] grid-rows-[auto_1fr]">
         <DialogHeader className="flex flex-row items-end justify-between space-y-0 border-b border-border pb-4 pr-8">
-          <div>
-            <p className="label-caps">Prepare for the consultation</p>
-            <DialogTitle className="mt-1">
-              {patient?.name || `${patient?.firstName} ${patient?.lastName}`.trim()}
-            </DialogTitle>
-          </div>
+          <DialogTitle>
+            Prepare for Consultation: {patient?.name || `${patient?.firstName} ${patient?.lastName}`.trim()}
+          </DialogTitle>
           <Button
             variant="ghost"
             size="icon"
@@ -66,9 +63,9 @@ export default function PatientDataModal({ isOpen, onClose, patient }: PatientDa
         
         <div className="min-h-0 overflow-y-auto">
           {isLoading ? (
-            <LoadingState label="Loading the chart" />
+            <LoadingState />
           ) : failed || !detailedPatientData ? (
-            <ErrorState title="The chart did not load" message="The database may be unreachable." onRetry={loadPatientData} />
+            <ErrorState onRetry={loadPatientData} />
           ) : detailedPatientData ? (
             <AllDataViewTab 
               detailedPatientData={detailedPatientData}

@@ -21,15 +21,23 @@
 }
 
 /* Floating surfaces (dialogs, menus) lift off the page by a soft shadow. */
+.glass,
+.glass-dense,
+.bg-glass,
+.table-glass {
+  box-shadow: var(--shadow-card);
+}
+
 .modal-glass,
 .demo-modal-glass {
-  box-shadow: 0 1px 0 hsl(var(--hairline)), 0 24px 48px -24px hsl(var(--ink) / 0.35);
+  box-shadow: var(--shadow-float);
 }
 
 /* Nested surfaces don't stack. */
 .glass .glass {
   background: transparent;
   border-color: transparent;
+  box-shadow: none;
 }
 
 .glass-backdrop {
@@ -38,7 +46,9 @@
 }
 
 .modal-overlay {
-  background: hsl(var(--ink) / 0.32);
+  background: hsl(var(--ink) / 0.36);
+  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px);
 }
 
 .row-hover:hover {

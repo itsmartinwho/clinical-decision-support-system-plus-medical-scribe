@@ -1,40 +1,54 @@
 // Demo Animation Service - Handles all demo animations and timings
-export const TRANSCRIPT_ANIMATION_INTERVAL = 400; 
+export const TRANSCRIPT_ANIMATION_INTERVAL = 110; // ms per tick
+export const TRANSCRIPT_WORDS_PER_TICK = 3; // words (each with its following space) per tick
+export const TRANSCRIPT_PAUSE_TICKS = 4; // ticks of silence between turns
 export const CLINICAL_PLAN_SIMULATION_DELAY = 200; 
 
 export class DemoAnimationService {
   private static transcriptIntervalId: NodeJS.Timeout | null = null;
   private static clinicalPlanTimeoutId: NodeJS.Timeout | null = null;
 
+  /**
+   * Plays the transcript back as live transcription arrives: a few words at a
+   * time, a pause between turns, so the conversation builds turn by turn
+   * rather than appearing as a block. A scripted replay: no microphone, no
+   * transcription service, no keys.
+   */
   static startTranscriptAnimation(
     transcriptLines: string[],
     onLineUpdate: (animatedTranscript: string) => void,
     onComplete: () => void
   ): void {
     if (transcriptLines.length === 0) {
-      console.warn("No transcript lines to animate");
       onComplete();
       return;
     }
-
-    console.log(`Starting transcript animation with ${transcriptLines.length} lines`);
     this.clearTranscriptAnimation();
-    
-    let currentIndex = 1;
-    let animatedText = transcriptLines[0] || '';
-    console.log(`Animation line 0/${transcriptLines.length}: "${animatedText.substring(0, 50)}..."`);
-    onLineUpdate(animatedText);
+
+    const reduced = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    let line = 0;
+    let word = 0;
+    let done: string[] = [];
+    let pauseTicks = 0;
+    const words = transcriptLines.map((l) => l.split(/(\s+)/).filter((w) => w.length));
 
     this.transcriptIntervalId = setInterval(() => {
-      if (currentIndex < transcriptLines.length) {
-        animatedText += '\n' + transcriptLines[currentIndex];
-        console.log(`Animation line ${currentIndex}/${transcriptLines.length}: "${transcriptLines[currentIndex].substring(0, 50)}..."`);
-        onLineUpdate(animatedText);
-        currentIndex++;
-      } else {
-        console.log('Transcript animation completed');
+      if (pauseTicks > 0) { pauseTicks--; return; }
+      if (line >= words.length) {
         this.clearTranscriptAnimation();
         onComplete();
+        return;
+      }
+      const current = words[line];
+      // A whole line at once with reduced motion; otherwise a short phrase per tick.
+      word = reduced ? current.length : Math.min(current.length, word + TRANSCRIPT_WORDS_PER_TICK * 2);
+      const partial = current.slice(0, word).join('');
+      onLineUpdate([...done, partial].join('\n'));
+      if (word >= current.length) {
+        done = [...done, partial];
+        line++;
+        word = 0;
+        pauseTicks = TRANSCRIPT_PAUSE_TICKS;
       }
     }, TRANSCRIPT_ANIMATION_INTERVAL);
   }

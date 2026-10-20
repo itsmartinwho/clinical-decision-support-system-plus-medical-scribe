@@ -32,6 +32,7 @@ import { ModalDragAndMinimizeConfig } from '@/types/modal';
 import { saveConsultationDraft, loadConsultationDraft, clearConsultationDraft } from '@/lib/consultationDraftStore';
 import { DemoDataService } from '@/services/demo/DemoDataService';
 import TranscriptView from '@/components/transcript/TranscriptView';
+import TranscriptModeToggle from '@/components/transcript/TranscriptModeToggle';
 
 interface ConsultationPanelProps {
   /** Controls open state from parent */
@@ -1410,7 +1411,7 @@ export default function ConsultationPanel({
     <>
       <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 border-b border-border px-6 pb-3 pt-2 text-sm">
         <span className="font-display text-lg text-ink">{patient.name || `${patient.firstName} ${patient.lastName}`}</span>
-        <span className="data-mono text-xs text-muted-foreground">{isDemoMode ? 'Guided demo · synthetic patient' : (encounter?.id ?? 'Creating the consultation')}</span>
+        {!isDemoMode && encounter?.id ? <span className="data-mono text-xs text-muted-foreground">{encounter.id}</span> : null}
       </div>
       <div className="flex-1 overflow-hidden flex flex-col">
         {(!encounter && !isCreating && !isDemoMode) ? (
@@ -1447,22 +1448,10 @@ export default function ConsultationPanel({
                       {/* Transcript Panel */}
                       <div className="flex-1 flex flex-col space-y-4 min-h-0">
                         <div className="flex items-center justify-between">
-                          <h3 className="label-caps !text-ink">Transcript</h3>
+                          <h3 className="font-display text-lg text-ink">Consultation Transcript</h3>
                           <div className="flex flex-wrap items-center gap-2">
                             {!isDemoMode && !isTranscribing ? (
-                              <div role="group" aria-label="Transcript view" className="inline-flex rounded-md border border-input p-0.5 text-[0.8125rem]">
-                                {(['conversation', 'edit'] as const).map((v) => (
-                                  <button
-                                    key={v}
-                                    type="button"
-                                    aria-pressed={transcriptMode === v}
-                                    onClick={() => setTranscriptMode(v)}
-                                    className={transcriptMode === v ? 'rounded-[5px] bg-ink px-2.5 py-1 text-paper' : 'rounded-[5px] px-2.5 py-1 text-ink-2 hover:bg-well'}
-                                  >
-                                    {v === 'conversation' ? 'Conversation' : 'Edit'}
-                                  </button>
-                                ))}
-                              </div>
+                              <TranscriptModeToggle mode={transcriptMode} onChange={setTranscriptMode} />
                             ) : null}
                             {/* Real-time Alerts Button */}
                             {started && (
@@ -1509,7 +1498,7 @@ export default function ConsultationPanel({
                                 disabled={isGeneratingPlan || isDemoGeneratingPlan || transcriptText.length < 10}
                                 className="gap-2"
                               >
-                                {(isGeneratingPlan || isDemoGeneratingPlan) ? <><CircleNotch className="h-4 w-4 animate-spin" /> Analysing</> : <><Brain className="h-4 w-4" /> Clinical plan</>}
+                                {(isGeneratingPlan || isDemoGeneratingPlan) ? <><CircleNotch className="h-4 w-4 animate-spin" /> Analyzing...</> : <><Brain className="h-4 w-4" /> Clinical Plan</>}
                               </Button>
                             )}
                           </div>
@@ -1521,7 +1510,7 @@ export default function ConsultationPanel({
                               transcript={transcriptText}
                               live={isDemoMode ? !planGenerated : isTranscribing}
                               followNewest
-                              emptyText="Start recording, or switch to Edit to type the consultation."
+                              emptyText="Transcription will appear here..."
                             />
                           ) : (
                           <div
@@ -1672,7 +1661,7 @@ export default function ConsultationPanel({
       onClose={handleCloseRequest}
       config={mergedDraggableConfig}
       allowDragging={allowDragging}
-      className="w-[95%] max-w-6xl max-h-[90vh]"
+      className="w-[95%] max-w-6xl max-h-[calc(100svh-9rem)]"
       showCloseButton={!isSaving}
     >
       {modalContent}
@@ -1693,7 +1682,7 @@ export default function ConsultationPanel({
           <X className="h-4 w-4" />
         </Button>
         <div className="pt-8">
-          <h2 className="px-6 pb-2 font-display text-2xl">New consultation</h2>
+          <h2 className="px-6 pb-2 font-display text-2xl">New Consultation</h2>
           {modalContent}
         </div>
       </div>

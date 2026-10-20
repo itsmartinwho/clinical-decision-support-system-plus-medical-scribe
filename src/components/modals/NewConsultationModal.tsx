@@ -121,7 +121,7 @@ export default function NewConsultationModal({ open, onOpenChange, onConsultatio
           }
           setAllPatients(supabaseDataService.getAllPatients());
         } catch (e) {
-          setLoadError(`The patient list did not load: ${e instanceof Error ? e.message : String(e)}`);
+          setLoadError(e instanceof Error ? e.message : String(e));
         }
         // Removed the creation logic from here, it's handled by handleCreate
       }
@@ -242,7 +242,7 @@ export default function NewConsultationModal({ open, onOpenChange, onConsultatio
           draggableConfig={stableDraggableConfig}
         >
           <DialogHeader>
-            <DialogTitle>Start a consultation</DialogTitle>
+            <DialogTitle>Start New Consultation</DialogTitle>
             {loadError ? <p role="alert" className="text-sm text-critical">{loadError}</p> : null}
           </DialogHeader>
           <Tabs value={tab} onValueChange={(v) => setTab(v as any)} className="w-full">
@@ -476,7 +476,7 @@ export default function NewConsultationModal({ open, onOpenChange, onConsultatio
           className={`max-w-2xl max-h-[calc(100svh-2rem)] overflow-auto pb-4 ${shake ? 'animate-shake' : ''}`}
         >
           <DialogHeader>
-            <DialogTitle>Start a consultation</DialogTitle>
+            <DialogTitle>Start New Consultation</DialogTitle>
             {loadError ? <p role="alert" className="text-sm text-critical">{loadError}</p> : null}
           </DialogHeader>
           <Tabs value={tab} onValueChange={(v) => setTab(v as any)} className="w-full">

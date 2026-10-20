@@ -1,36 +1,32 @@
 'use client';
 import * as React from 'react';
-import { ArrowClockwise } from '@phosphor-icons/react';
+import { ArrowClockwise, WarningCircle } from '@phosphor-icons/react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import MarkLoader from '@/components/brand/MarkLoader';
+import Mark from '@/components/brand/Mark';
 
-// The three states every view that loads data shows: loading, failed (with a
-// way to try again) and empty. Quiet by design: a line of type, never a
-// full-screen takeover.
+// The three states of anything that loads: the mark listening while it
+// loads, the error with a way to try again, and empty. No new words: the
+// loader and icons carry the state, and messages come from the data.
 
-export function LoadingState({ label = 'Loading', className, inline = false }: { label?: string; className?: string; inline?: boolean }) {
+export function LoadingState({ className, inline = false }: { label?: string; className?: string; inline?: boolean }) {
   return (
     <div
       role="status"
-      aria-live="polite"
-      className={cn(
-        'flex items-center gap-3 text-muted-foreground',
-        inline ? 'py-3' : 'min-h-[40vh] flex-col justify-center',
-        className,
-      )}
+      aria-label="Loading"
+      className={cn('flex items-center justify-center text-ink', inline ? 'py-3' : 'min-h-[50vh]', className)}
     >
-      <MarkLoader size={inline ? 20 : 32} className="text-ink" />
-      <span className="label-caps">{label}</span>
+      <span className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-card shadow-card ring-1 ring-hairline">
+        <MarkLoader size={inline ? 20 : 28} className="text-iris" />
+      </span>
     </div>
   );
 }
 
 export function ErrorState({
-  title = 'Something went wrong',
   message,
   onRetry,
-  retryLabel = 'Try again',
   className,
 }: {
   title?: string;
@@ -40,40 +36,46 @@ export function ErrorState({
   className?: string;
 }) {
   return (
-    <div role="alert" className={cn('rounded-[var(--radius-lg)] border border-critical-line border-l-[3px] border-l-critical bg-card p-5', className)}>
-      <p className="label-caps !text-critical">Could not load</p>
-      <p className="mt-1 font-display text-xl text-ink">{title}</p>
-      {message ? <p className="mt-1 max-w-prose text-sm text-ink-2">{message}</p> : null}
+    <div role="alert" className={cn('flex flex-col items-center justify-center gap-4 py-16 text-center', className)}>
+      <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-critical-soft text-critical ring-1 ring-critical-line">
+        <WarningCircle size={24} weight="fill" aria-hidden />
+      </span>
+      <div>
+        <p className="font-display text-xl text-ink">An Error Occurred</p>
+        {message ? <p className="mt-1 max-w-md text-sm text-muted-foreground">{message}</p> : null}
+      </div>
       {onRetry ? (
-        <Button variant="secondary" size="sm" className="mt-4" onClick={onRetry} iconLeft={<ArrowClockwise />}>
-          {retryLabel}
+        <Button variant="secondary" size="icon" className="rounded-full" onClick={onRetry} aria-label="Retry">
+          <ArrowClockwise />
         </Button>
       ) : null}
     </div>
   );
 }
 
+/** Empty: the mark, faint, and the sentence the view has always used. */
 export function EmptyState({
   title,
   message,
   action,
   className,
 }: {
-  title: string;
+  title?: string;
   message?: React.ReactNode;
   action?: React.ReactNode;
   className?: string;
 }) {
   return (
-    <div className={cn('flex flex-col items-start gap-1 border-t border-border py-6', className)}>
-      <p className="text-sm font-medium text-ink">{title}</p>
-      {message ? <p className="max-w-prose text-sm text-muted-foreground">{message}</p> : null}
-      {action ? <div className="mt-3">{action}</div> : null}
+    <div className={cn('flex flex-col items-center justify-center gap-3 px-6 py-14 text-center', className)}>
+      <Mark size={28} className="text-hairline" />
+      {title ? <p className="text-sm text-muted-foreground">{title}</p> : null}
+      {message ? <p className="max-w-md text-sm text-muted-foreground">{message}</p> : null}
+      {action ? <div className="mt-1">{action}</div> : null}
     </div>
   );
 }
 
-/** A section heading: small capitals, an optional count, an optional action at the right. */
+/** A card's heading row: a title in the editorial face, an optional count, an action at the right. */
 export function SectionHeading({
   children,
   count,
@@ -90,11 +92,11 @@ export function SectionHeading({
   id?: string;
 }) {
   return (
-    <div className={cn('flex items-center justify-between gap-3 border-b border-ink/70 pb-2', className)}>
-      <Tag id={id} className="label-caps flex items-center gap-2 !text-ink">
+    <div className={cn('flex items-center justify-between gap-3', className)}>
+      <Tag id={id} className="flex items-center gap-2.5 font-display text-[1.35rem] leading-tight text-ink">
         {children}
         {typeof count === 'number' ? (
-          <span className="data-mono rounded border border-border bg-card px-1.5 text-[0.6875rem] font-medium tracking-normal text-muted-foreground">
+          <span className="data-mono inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-well px-2 text-xs font-medium text-muted-foreground ring-1 ring-hairline">
             {count}
           </span>
         ) : null}

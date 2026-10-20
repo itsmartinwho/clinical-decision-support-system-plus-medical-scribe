@@ -1,50 +1,61 @@
 :root {
   /* ------------------------------------------------------------------
-     The palette: chart paper and ink, hairlines for structure,
-     and three semantic colours a clinician reads at a glance:
+     The palette. A warm grey canvas, white surfaces lifted by a soft
+     shadow, near-black ink, and one accent, iris, for everything that can
+     be pressed, selected or focused. Three semantic colours carry state:
        sage    done, normal, within range
        amber   flagged, needs a look
        red     critical
-     Blue is the one interactive colour: links, focus, the selected row.
-     Every text pairing below is WCAG AA (4.5:1) or better on paper and on
-     its own tint; --input-border is 3:1 against the card for UI edges.
+     The navigation rail is ink. Every text pairing is WCAG AA or better.
      ------------------------------------------------------------------ */
-  --paper: 43 28% 95%;        /* #F6F4EF  the page */
-  --card: 45 40% 98%;         /* #FCFBF8  raised surfaces */
-  --well: 42 23% 91%;         /* #EEEBE4  wells, hover, selected */
-  --ink: 156 8% 12%;          /* #1C211F  text, primary actions (14.9:1) */
-  --ink-2: 150 5% 24%;        /* #3A403D  secondary text */
-  --muted-ink: 108 3% 37%;    /* #5E625D  labels, meta (5.6:1) */
-  --hairline: 43 17% 84%;     /* #DDD9CF  rules and card edges */
-  --input-border: 44 6% 53%;  /* #8E8A7F  form edges (3:1) */
+  --paper: 48 17% 94%;        /* #F3F2EE  the canvas */
+  --card: 0 0% 100%;          /* #FFFFFF  surfaces */
+  --well: 45 18% 96%;         /* #F6F5F2  wells, hover */
+  --ink: 223 14% 10%;         /* #15171C  text (16:1 on the canvas) */
+  --ink-2: 225 9% 26%;        /* #3D4049 */
+  --muted-ink: 222 6% 43%;    /* #666A73  secondary text (4.8:1) */
+  --hairline: 40 12% 89%;     /* #E7E4DF  rules, card edges */
+  --input-border: 42 5% 53%;  /* #8E8A81  form edges (3:1) */
 
-  --blue: 204 61% 32%;        /* #1F5A82  links, focus (6.7:1) */
-  --blue-soft: 207 47% 93%;   /* #E3EDF5 */
+  /* The accent, iris: actions, selection, focus */
+  --blue: 245 66% 55%;        /* #4F42D8  (6.8:1 on white) */
+  --blue-soft: 244 71% 96%;   /* #EEEDFC */
+  --blue-line: 245 70% 86%;   /* #CCC7F5 */
 
-  --sage: 153 40% 30%;        /* #2D6A4F */
-  --sage-soft: 140 29% 92%;   /* #E4F0E8 */
-  --sage-line: 149 32% 75%;   /* #A9D3BD */
+  --sage: 151 55% 30%;        /* #23774F */
+  --sage-soft: 148 35% 93%;   /* #E6F3EC */
+  --sage-line: 148 33% 78%;   /* #B5DCC5 */
 
-  --amber: 37 78% 28%;        /* #7F5410 */
-  --amber-soft: 41 73% 90%;   /* #F8ECD2 */
-  --amber-line: 38 75% 64%;   /* #E8B65E */
+  --amber: 34 88% 30%;        /* #8F5609 */
+  --amber-soft: 38 83% 93%;   /* #FCF1DE */
+  --amber-line: 38 74% 74%;   /* #EFCB8A */
 
-  --red: 4 60% 39%;           /* #9E2F27 */
-  --red-soft: 10 60% 92%;     /* #F7E3DF */
-  --red-line: 7 55% 76%;      /* #E3A79F */
+  --red: 6 67% 45%;           /* #BE3426 */
+  --red-soft: 8 79% 94%;      /* #FCE8E5 */
+  --red-line: 8 71% 82%;      /* #F1B8AF */
 
-  /* Legacy names, kept so older components resolve to the new palette */
+  /* The navigation rail */
+  --rail: 223 15% 9%;         /* #14161B */
+  --rail-ink: 223 10% 73%;    /* #B4B8C2 */
+  --rail-muted: 222 8% 57%;   /* #8A8F9B */
+
+  /* Depth: surfaces sit on the canvas by a soft shadow, floating ones higher */
+  --shadow-card: 0 1px 2px hsl(223 14% 10% / 0.04), 0 4px 14px -6px hsl(223 14% 10% / 0.08);
+  --shadow-float: 0 2px 6px hsl(223 14% 10% / 0.06), 0 24px 48px -16px hsl(223 14% 10% / 0.22);
+
+  /* Older names, resolved to the palette */
   --custom-blue-teal: var(--blue);
   --neon-teal: var(--blue);
   --surface-0: var(--card);
   --surface-1: var(--card);
   --surface-2: var(--well);
   --surface-3: var(--hairline);
-  --shadow: 156 8% 12%;
+  --shadow: 223 14% 10%;
 
-  --radius-lg: 0.875rem;
+  --radius-lg: 1rem;
 
   --motion-fast: 120ms;
-  --motion-medium: 180ms;
-  --motion-slow: 260ms;
+  --motion-medium: 200ms;
+  --motion-slow: 320ms;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
 }

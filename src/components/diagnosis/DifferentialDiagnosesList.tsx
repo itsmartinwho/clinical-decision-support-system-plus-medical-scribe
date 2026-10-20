@@ -159,7 +159,7 @@ export default function DifferentialDiagnosesList({
         <div className="space-y-4 pr-2">
           {/* Add new diagnosis form */}
           {isAddingNew && (
-            <Card className="w-full border-l-4 border-l-green-500 bg-ok-soft/50">
+            <Card className="w-full border-l-[3px] border-l-ok-line bg-ok-soft/50">
               <CardHeader className="pb-3">
                 <div className="flex items-center gap-3">
                   <div className="flex items-center justify-center w-8 h-8 bg-ok-soft text-ok rounded-full text-sm font-semibold">

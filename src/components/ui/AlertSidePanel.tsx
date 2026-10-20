@@ -1,10 +1,10 @@
 'use client';
 import React from 'react';
-import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { X } from '@phosphor-icons/react';
-import LikelihoodBadge from "@/components/ui/LikelihoodBadge";
+import { X, WarningCircle } from '@phosphor-icons/react';
 import type { ComplexCaseAlert } from "@/lib/types";
+import PatientAvatar from '@/components/ui/PatientAvatar';
+import { severityTone } from '@/lib/format';
+import { cn } from '@/lib/utils';
 
 interface AlertSidePanelProps {
   isOpen: boolean;
@@ -13,55 +13,58 @@ interface AlertSidePanelProps {
   onAlertClick: (patientId: string) => void;
 }
 
+const TONE = {
+  critical: 'bg-critical-soft text-critical ring-critical-line',
+  flag: 'bg-flag-soft text-flag ring-flag-line',
+  info: 'bg-iris-soft text-iris ring-iris-line',
+} as const;
+
+// The chart flags across patients, in a sheet from the right.
 export default function AlertSidePanel({ isOpen, onClose, alerts, onAlertClick }: AlertSidePanelProps) {
-  const highPriorityAlerts = alerts.filter(alert => alert.likelihood !== undefined && alert.likelihood >= 4);
-  
+  const sorted = [...alerts].sort((a, b) => (b.likelihood ?? 0) - (a.likelihood ?? 0));
   return (
-    <div 
-      className={`fixed top-0 right-0 h-full bg-card w-80 shadow-lg z-50 transform transition-transform duration-300 ease-in-out ${
-        isOpen ? 'translate-x-0' : 'translate-x-full'
-      }`}
-    >
-      <div className="flex items-center justify-between p-4 border-b">
-        <h3 className="font-semibold">High Priority Alerts</h3>
-        <Button size="icon" variant="ghost" onClick={onClose}>
-          <X className="h-4 w-4" />
-        </Button>
-      </div>
-      
-      <div className="p-4 overflow-auto max-h-[calc(100vh-64px)]">
-        {highPriorityAlerts.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No high-priority alerts at this time.</p>
-        ) : (
-          <div className="space-y-3">
-            {highPriorityAlerts.map((alert) => (
-              <div 
-                key={alert.id} 
-                className="flex items-center space-x-3 p-3 border rounded-md shadow-sm hover:shadow-md transition-shadow cursor-pointer"
-                onClick={() => {
-                  onAlertClick(alert.patientId);
-                  onClose();
-                }}
-              >
-                <LikelihoodBadge likelihood={alert.likelihood} />
-                <div className="flex-grow">
-                  <p className="text-sm font-medium text-ink truncate">
-                    {alert.patientName}
-                  </p>
-                  {alert.conditionType && (
-                    <p className="text-xs text-ink-2 truncate">
-                      {alert.conditionType}
-                    </p>
-                  )}
-                </div>
-                <div className="text-xs text-muted-foreground whitespace-nowrap">
-                  {alert.date || ''}
-                </div>
-              </div>
-            ))}
-          </div>
+    <>
+      <div className={cn('fixed inset-0 z-40 bg-ink/20 transition-opacity', isOpen ? 'opacity-100' : 'pointer-events-none opacity-0')} onClick={onClose} aria-hidden />
+      <aside
+        role="dialog"
+        aria-label="Alerts"
+        className={cn(
+          'fixed inset-y-2 right-2 z-50 flex w-[min(24rem,calc(100vw-1rem))] flex-col rounded-2xl border border-hairline bg-card shadow-float transition-transform duration-300 ease-[cubic-bezier(.22,1,.36,1)]',
+          isOpen ? 'translate-x-0' : 'translate-x-[110%]',
         )}
-      </div>
-    </div>
+      >
+        <div className="flex items-center justify-between px-5 pb-3 pt-4">
+          <h3 className="font-display text-xl">Alerts</h3>
+          <button type="button" onClick={onClose} className="inline-flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground hover:bg-well hover:text-ink" aria-label="Close">
+            <X size={16} />
+          </button>
+        </div>
+        <ul className="flex-1 space-y-2 overflow-y-auto px-3 pb-4">
+          {sorted.map((alert) => {
+            const tone = severityTone(alert.severity, alert.likelihood);
+            return (
+              <li key={alert.id}>
+                <button
+                  type="button"
+                  onClick={() => { onAlertClick(alert.patientId); onClose(); }}
+                  className="flex w-full gap-3 rounded-xl p-3 text-left transition-colors hover:bg-well"
+                >
+                  <span className={cn('mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ring-1', TONE[tone])}>
+                    <WarningCircle size={17} weight="fill" aria-hidden />
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block text-sm leading-snug text-ink">{alert.msg}</span>
+                    <span className="mt-1.5 flex items-center gap-2 text-xs text-muted-foreground">
+                      <PatientAvatar patient={{ name: alert.patientName }} size={18} />
+                      {alert.patientName}
+                    </span>
+                  </span>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      </aside>
+    </>
   );
-} 
+}

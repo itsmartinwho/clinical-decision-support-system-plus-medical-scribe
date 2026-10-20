@@ -237,7 +237,7 @@ export default function EditableDifferentialDiagnosisCard({
   );
 
   return (
-    <Card className={cn("w-full border-l-4 border-l-blue-500", className)}>
+    <Card className={cn("w-full border-l-[3px] border-l-iris/50", className)}>
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3 flex-1">
