@@ -15,10 +15,10 @@ The demo system is built around three core services that handle different aspect
 #### 1. DemoDataService (`src/services/demo/DemoDataService.ts`)
 
 Contains all demo data including:
-- **Dorothy Robinson Patient Data**: Real enriched patient profile with demographics, medical history, and conditions (updated June 2025)
-- **Encounter Data**: Real structured encounter information from Dorothy's latest hospitalization (May 17, 2025 - constipation case)
-- **Transcript Lines**: Real bilingual (Spanish/English) conversation transcript from actual clinical encounter
-- **Clinical Content**: Real diagnosis text and comprehensive treatment plan from enriched database records
+- **Dorothy Robinson Patient Data**: The synthetic seed patient's profile, with demographics, medical history, and conditions (updated June 2025)
+- **Encounter Data**: Her latest synthetic encounter (May 17, 2025 - constipation case)
+- **Transcript Lines**: A generated bilingual (Spanish/English) consultation transcript
+- **Clinical Content**: The diagnosis text and treatment plan from her seeded records
 
 **Key Methods:**
 - `getPatientData()`: Returns the demo patient (Dorothy Robinson)
@@ -159,7 +159,7 @@ window.location.reload();
 
 #### 4. Demo Patient Data
 
-The demo uses real enriched data for patient "Dorothy Robinson" with ID: `0681FA35-A794-4684-97BD-00B88370DB41`
+The demo uses the synthetic seed patient "Dorothy Robinson" (`supabase/seed.sql`), ID `0681FA35-A794-4684-97BD-00B88370DB41`
 
 Patient details:
 - Name: Dorothy Robinson

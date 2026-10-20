@@ -2,14 +2,8 @@
 
 import { useState, useCallback } from 'react';
 import { supabaseDataService } from '@/lib/supabaseDataService';
-import { createClient } from '@supabase/supabase-js';
+import { getSupabaseClient } from '@/lib/supabaseClient';
 import type { Encounter } from '@/lib/types';
-
-// Initialize Supabase client for direct database operations
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
 
 interface EditableFieldUpdate {
   reasonDisplayText?: string;
@@ -45,7 +39,7 @@ export function useEditableEncounterFields({
   const updateExtraData = useCallback(async (encounterUuid: string, updatedFields: EditableFieldUpdate) => {
     try {
       // Get current encounter data
-      const { data: currentEncounter, error: fetchError } = await supabase
+      const { data: currentEncounter, error: fetchError } = await getSupabaseClient()
         .from('encounters')
         .select('*')
         .eq('id', encounterUuid)
@@ -79,7 +73,7 @@ export function useEditableEncounterFields({
       };
 
       // Update extra_data field
-      const { error: updateError } = await supabase
+      const { error: updateError } = await getSupabaseClient()
         .from('encounters')
         .update({ 
           extra_data: extraData,
@@ -166,7 +160,7 @@ export function useEditableEncounterFields({
       updateData.updated_at = new Date().toISOString();
 
       // Update the encounter in the database
-      const { data, error } = await supabase
+      const { data, error } = await getSupabaseClient()
         .from('encounters')
         .update(updateData)
         .eq('id', encounterUuid)
@@ -279,7 +273,7 @@ export function useEditableEncounterFields({
       updateData.updated_at = new Date().toISOString();
 
       // Update the encounter in the database
-      const { data, error } = await supabase
+      const { data, error } = await getSupabaseClient()
         .from('encounters')
         .update(updateData)
         .eq('id', encounterUuid)

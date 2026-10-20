@@ -2,7 +2,7 @@
 -- Description: Adds patient, one enriched encounter, primary diagnosis, and a complex-case alert for Dorothy Robinson without touching existing records.
 -- NOTE: All inserts use existence checks to remain idempotent and avoid overwriting data.
 
-DO $$
+DO $seed$
 DECLARE
   v_patient_uuid UUID; -- Supabase internal UUID for Dorothy after insert/find
   v_encounter_uuid UUID; -- Will hold newly inserted encounter UUID (if needed)
@@ -140,4 +140,4 @@ O: Vital signs: BP 95/60 (orthostatic to 85/55), HR 88, Temp 98.6°F, RR 16. Gen
     );
   END IF;
 END;
-$$ LANGUAGE plpgsql; 
+$seed$ LANGUAGE plpgsql;

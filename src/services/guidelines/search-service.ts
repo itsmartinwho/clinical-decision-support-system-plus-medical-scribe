@@ -14,12 +14,15 @@ export interface CombinedSearchResult {
 }
 
 export class GuidelineSearchService {
-  private supabase;
-  private embeddingService: EmbeddingService;
+  private embeddingServiceInstance: EmbeddingService | null = null;
 
-  constructor() {
-    this.supabase = getSupabaseClient();
-    this.embeddingService = new EmbeddingService();
+  // Both are made on first use, so that building the app needs no keys.
+  private get supabase() {
+    return getSupabaseClient();
+  }
+
+  private get embeddingService(): EmbeddingService {
+    return (this.embeddingServiceInstance ??= new EmbeddingService());
   }
 
   /**

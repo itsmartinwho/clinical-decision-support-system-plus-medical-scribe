@@ -1,12 +1,10 @@
--- This script updates a patient's data in the database using a provided JSON object.
--- It's designed to be run in a PostgreSQL environment, like the Supabase SQL Editor.
+-- Seed: one synthetic patient, Dorothy Robinson, and four encounters.
+-- Her id comes from EMRBots' artificial 100-patient dataset; her name and all
+-- the clinical content were generated for this prototype. None of it is real.
 --
--- How to use:
--- 1. Copy the entire content of this file.
--- 2. Go to your Supabase project's SQL Editor.
--- 3. Paste the script into the editor.
--- 4. The script includes the enriched JSON data. You can replace it if you have a new one.
--- 5. Run the query. It will update the patient, their encounters, and related data.
+-- The Supabase CLI runs this after the migrations on `supabase db reset`. In the
+-- SQL editor, run it after the migrations: 20250227153000_insert_dorothy_robinson.sql
+-- makes the patient row this script fills in.
 --
 -- The script performs the following actions:
 -- 1. Updates the `patients` table with the new patient details.
@@ -839,9 +837,9 @@ BEGIN
             (encounter_json->'extra_data')::JSONB,
             NOW()
         )
-        ON CONFLICT (id) DO UPDATE SET
-            patient_supabase_id = EXCLUDED.patient_supabase_id,
-            encounter_id = EXCLUDED.encounter_id,
+        -- Match on the business id: the migration may already have made this
+        -- encounter under another uuid, and its children must point at that row.
+        ON CONFLICT ON CONSTRAINT encounters_patient_encounter_unique DO UPDATE SET
             encounter_type = EXCLUDED.encounter_type,
             status = EXCLUDED.status,
             scheduled_start_datetime = EXCLUDED.scheduled_start_datetime,
@@ -857,7 +855,8 @@ BEGIN
             prior_auth_justification = EXCLUDED.prior_auth_justification,
             insurance_status = EXCLUDED.insurance_status,
             extra_data = EXCLUDED.extra_data,
-            updated_at = NOW();
+            updated_at = NOW()
+        RETURNING id INTO encounter_uuid;
 
         -- Upsert conditions for the current encounter
         IF jsonb_typeof(encounter_json->'conditions') = 'array' THEN

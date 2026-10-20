@@ -5,12 +5,9 @@ import { searchGuidelines } from "@/services/guidelines/search-service";
 import { Specialty } from "@/types/guidelines";
 import { AIModelType } from "@/types/ai-models";
 
-// 1. Model routing (default to gpt-4.1-mini)
-// 2. Invoke chat-completions with streaming
-// 3. Client-side rendering (handled by client)
-// 4. Markdown fallback triggers
-// 5. streamMarkdownOnly implementation
-// 6. Security and recovery (DOMPurify on client, discard empty tool args)
+// The advisor: streams an answer from OpenAI's Responses API as server-sent
+// events, with Code Interpreter for charts and tables. The client renders the
+// Markdown (sanitised with DOMPurify) and fetches charts from ./image.
 
 // Enhanced system prompt for OpenAI Code Interpreter with Clinical Guidelines
 const baseSystemPrompt = `You are Foresight, an AI medical advisor for US physicians. Your responses should be comprehensive, empathetic, and formatted in clear, easy-to-read GitHub-flavored Markdown. Use headings, lists, bolding, and other Markdown features appropriately to structure your answer for optimal readability. Avoid overly technical jargon where simpler terms suffice, but maintain medical accuracy.
@@ -74,11 +71,9 @@ When responding to general medical queries:
 
 Remember: You are assisting qualified medical professionals, not providing direct patient care. Charts and tables you create will be automatically displayed to enhance clinical understanding.`;
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
-// Legacy Assistant API code removed - now using Responses API exclusively
-
-// Legacy function removed - now using Responses API for both think and non-think modes
+// Made on first request, so that building the app does not need the key.
+let openai: OpenAI | null = null;
+const getOpenAI = () => (openai ??= new OpenAI({ apiKey: process.env.OPENAI_API_KEY }));
 
 async function enrichWithGuidelines(query: string, patientData?: any, specialty?: Specialty): Promise<string> {
   try {
@@ -368,11 +363,10 @@ export async function GET(req: NextRequest) {
           return;
         }
 
-        // Determine whether to use advanced reasoning (o3) or faster processing (gpt-4.1-mini)
+        // Think mode uses the larger model
         const thinkParamRaw = url.searchParams.get("think");
         const thinkMode = thinkParamRaw === "true"; // treat any value other than explicit 'true' as false
 
-        // Choose model based on think mode - using models that support Assistants API with Code Interpreter
         const modelName = thinkMode ? AIModelType.GPT_4O : AIModelType.GPT_4O_MINI;
         console.log(`Advisor mode: ${thinkMode ? 'think' : 'non-think'}, using model: ${modelName}`);
 
@@ -417,115 +411,81 @@ plt.savefig('timeline.png')
 plt.show()
 \`\`\``;
 
-          // Create assistant with Code Interpreter tool
-          console.log('Creating assistant with Code Interpreter for model:', modelName);
-          const assistant = await openai.beta.assistants.create({
-            name: `Foresight Medical Advisor - ${thinkMode ? 'Think' : 'Standard'} Mode`,
-            instructions: enhancedSystemPrompt,
-            model: modelName,
-            tools: [{ type: "code_interpreter" }],
-          });
+          // One streamed request to the Responses API (OpenAI shut the Assistants
+          // API down on 2026-08-26). It sees the whole conversation, the patient
+          // context included, and runs Python in a container when a chart helps.
+          const send = (data: unknown) => {
+            if (isControllerClosedRef.value) return;
+            const payload = typeof data === "string" ? data : JSON.stringify(data);
+            controller.enqueue(encoder.encode(`data: ${payload}\n\n`));
+          };
 
-          console.log('Assistant created:', assistant.id);
+          const input = messagesFromClient.map((m) => ({ role: m.role, content: m.content }));
+          const containerIds = new Set<string>();
 
-          // Create thread
-          const thread = await openai.beta.threads.create();
-          console.log('Thread created:', thread.id);
+          const response = await getOpenAI().responses.create(
+            {
+              model: modelName,
+              instructions: enhancedSystemPrompt,
+              input,
+              tools: [{ type: "code_interpreter", container: { type: "auto" } }],
+              stream: true,
+            },
+            { signal: requestAbortController.signal }
+          );
 
-          // Add user message to thread
-          const userMessage = messagesFromClient[messagesFromClient.length - 1]?.content || "";
-          await openai.beta.threads.messages.create(thread.id, {
-            role: "user",
-            content: userMessage,
-          });
-
-          console.log('Message added to thread');
-
-          // Create and stream the run
-          const run = openai.beta.threads.runs.stream(thread.id, {
-            assistant_id: assistant.id,
-          });
-
-          // Process the Assistants API stream and forward events to the client
-          run
-            .on('textCreated', (text) => {
-              console.log('Text created event');
-            })
-            .on('textDelta', (textDelta, snapshot) => {
-              if (requestAbortController.signal.aborted) return;
-              
-              if (textDelta.value) {
-                const eventData = `data: ${JSON.stringify({ content: textDelta.value })}\n\n`;
-                controller.enqueue(encoder.encode(eventData));
-                console.log('Sent to client:', { content: textDelta.value });
-              }
-            })
-            .on('toolCallCreated', (toolCall) => {
-              console.log('Tool call created:', toolCall.type);
-            })
-            .on('toolCallDelta', (toolCallDelta, snapshot) => {
-              if (requestAbortController.signal.aborted) return;
-              
-              if (toolCallDelta.type === 'code_interpreter') {
-                if (toolCallDelta.code_interpreter?.input) {
-                  // Send code chunk to client
-                  const eventData = `data: ${JSON.stringify({ 
-                    type: 'tool_code_chunk',
-                    language: 'python',
-                    content: toolCallDelta.code_interpreter.input 
-                  })}\n\n`;
-                  controller.enqueue(encoder.encode(eventData));
-                  console.log('Sent code chunk to client');
+          for await (const event of response) {
+            if (requestAbortController.signal.aborted) break;
+            switch (event.type) {
+              case "response.output_text.delta":
+                send({ content: event.delta });
+                break;
+              case "response.code_interpreter_call_code.delta":
+                send({ type: "tool_code_chunk", language: "python", content: event.delta });
+                break;
+              case "response.output_item.done":
+                if (event.item.type === "code_interpreter_call" && event.item.container_id) {
+                  containerIds.add(event.item.container_id);
                 }
-                
-                if (toolCallDelta.code_interpreter?.outputs) {
-                  for (const output of toolCallDelta.code_interpreter.outputs) {
-                    if (output.type === 'image') {
-                      // Send image ID to client
-                      const imageData = {
-                        type: 'code_interpreter_image_id',
-                        file_id: output.image.file_id
-                      };
-                      const eventData = `data: ${JSON.stringify(imageData)}\n\n`;
-                      controller.enqueue(encoder.encode(eventData));
-                      console.log('Sent image to client:', output.image.file_id);
-                    }
-                  }
-                }
+                break;
+              case "response.failed":
+                throw new Error(event.response.error?.message || "The response failed");
+              case "error":
+                throw new Error(event.message || "The stream failed");
+            }
+          }
+
+          // A chart the code saved is a file in its container: pass on its id.
+          for (const containerId of containerIds) {
+            for await (const file of getOpenAI().containers.files.list(containerId)) {
+              if (/\.(png|jpe?g|gif|webp)$/i.test(file.path)) {
+                send({ type: "code_interpreter_image_id", file_id: file.id, container_id: containerId });
               }
-            })
-            .on('end', () => {
-              // Send done event
-              const doneData = `data: [DONE]\n\n`;
-              controller.enqueue(encoder.encode(doneData));
-              console.log('Sent to client: [DONE]');
-              
-              // Clean up assistant and thread
-              openai.beta.assistants.delete(assistant.id).catch(console.error);
-              openai.beta.threads.delete(thread.id).catch(console.error);
-            })
-            .on('error', (error) => {
-              console.error('Assistants API stream error:', error);
-              const errorData = `data: ${JSON.stringify({ 
-                error: `Assistant error: ${error.message || 'Unknown error'}` 
-              })}\n\n`;
-              controller.enqueue(encoder.encode(errorData));
-                         });          
+            }
+          }
+
+          send("[DONE]");
+          closeControllerOnce();
         } catch (error: any) {
-          console.error('Responses API error:', error);
-          console.error('Error details:', {
+          if (requestAbortController.signal.aborted) {
+            closeControllerOnce();
+            return;
+          }
+          console.error('Advisor error:', {
             message: error.message,
             status: error.status,
             code: error.code,
             type: error.type
           });
-          
+
           // Send error to client
-          const errorData = `data: ${JSON.stringify({ 
-            error: `API error: ${error.message || 'Failed to process request'}. Please try again.` 
-          })}\n\n`;
-          controller.enqueue(encoder.encode(errorData));
-          console.log('Sent to client:', { error: error.message });
+          if (!isControllerClosedRef.value) {
+            const errorData = `data: ${JSON.stringify({
+              error: `API error: ${error.message || 'Failed to process request'}. Please try again.`
+            })}\n\n`;
+            controller.enqueue(encoder.encode(errorData));
+          }
+          closeControllerOnce();
         }
       }
     });

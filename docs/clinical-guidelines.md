@@ -68,9 +68,6 @@ The system uses four main tables:
    OPENAI_API_KEY=your_openai_key
    NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
    SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
-   # Optional API keys
-   USPSTF_API_KEY=your_uspstf_key
-   NICE_API_KEY=your_nice_key
    ```
 
 2. **Database Migration**:
@@ -84,7 +81,7 @@ The system uses four main tables:
 Run the setup script to populate initial data:
 
 ```bash
-npm run setup:guidelines
+pnpm run setup:guidelines
 ```
 
 This script will:

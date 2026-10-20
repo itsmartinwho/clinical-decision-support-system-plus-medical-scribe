@@ -1,12 +1,15 @@
 // AI Model Integration Types
 // Defines types for integrating with OpenAI models for alert processing
 
+// Every OpenAI model the app calls. Each value must be unique: the configs
+// below are keyed by it. gpt-4o and gpt-4o-mini shut down on 2027-01-14
+// (OpenAI suggests gpt-6-luna); change them here when they do.
 export enum AIModelType {
   GPT_4O = 'gpt-4o',
   GPT_4O_MINI = 'gpt-4o-mini',
-  GPT_4_1_MINI = 'gpt-4o-mini', // For non-think mode (fast responses)
-  O3 = 'o1-preview', // For think mode (advanced reasoning)
-  O4_MINI = 'gpt-4o-mini'
+  // Post-consultation analysis. Was o1-preview, which OpenAI shut down on
+  // 2025-07-28; gpt-5.6-sol is the replacement it names for o1 and o3.
+  REASONING = 'gpt-5.6-sol'
 }
 
 export interface AIModelConfig {
@@ -151,7 +154,7 @@ export interface RealTimeAIConfig extends AIModelConfig {
 
 // Post-consultation specific configurations
 export interface PostConsultationAIConfig extends AIModelConfig {
-  model: AIModelType.O3;
+  model: AIModelType.REASONING;
   comprehensiveAnalysis: boolean;
   includeRealTimeAlerts: boolean;
   alertRefreshLogic: boolean;
@@ -232,43 +235,17 @@ export const AI_MODEL_CONFIGS: Record<AIModelType, AIModelConfig> = {
     ],
     description: 'Fast and cost-effective model for general tasks'
   },
-  [AIModelType.O3]: {
-    name: 'o1-preview',
-    displayName: 'o1-preview',
-    maxTokens: 200000,
-    costPer1000Tokens: 8.0,
+  [AIModelType.REASONING]: {
+    name: 'gpt-5.6-sol',
+    displayName: 'GPT-5.6 Sol',
+    maxTokens: 1050000,
+    costPer1000Tokens: 4.0,
     capabilities: [
       AIModelCapability.TEXT_GENERATION,
       AIModelCapability.REASONING,
       AIModelCapability.CODE_GENERATION
     ],
-    description: 'Advanced reasoning model for complex problem-solving - ideal for think mode'
-  },
-  [AIModelType.O4_MINI]: {
-    name: 'gpt-4o-mini',
-    displayName: 'GPT-4o Mini (O4)',
-    maxTokens: 128000,
-    costPer1000Tokens: 0.15,
-    capabilities: [
-      AIModelCapability.TEXT_GENERATION,
-      AIModelCapability.CODE_GENERATION,
-      AIModelCapability.MULTIMODAL,
-      AIModelCapability.FUNCTION_CALLING
-    ],
-    description: 'Fast and cost-effective model for general tasks'
-  },
-  [AIModelType.GPT_4_1_MINI]: {
-    name: 'gpt-4o-mini',
-    displayName: 'GPT-4o Mini (Non-think)',
-    maxTokens: 128000,
-    costPer1000Tokens: 0.15,
-    capabilities: [
-      AIModelCapability.TEXT_GENERATION,
-      AIModelCapability.CODE_GENERATION,
-      AIModelCapability.MULTIMODAL,
-      AIModelCapability.FUNCTION_CALLING
-    ],
-    description: 'Fast model for non-think mode advisor responses'
+    description: 'Reasoning model for the post-consultation analysis'
   }
 };
 

@@ -10,7 +10,7 @@ import {
   Any additional methods simply return empty data structures for now.
 */
 class SupabaseDataService {
-  private supabase = getSupabaseClient();
+  private get supabase() { return getSupabaseClient(); } // on first use, so the build needs no keys
   private isLoaded = false;
   private isLoading = false; // This will be managed by loadPromise
   private loadPromise: Promise<void> | null = null;

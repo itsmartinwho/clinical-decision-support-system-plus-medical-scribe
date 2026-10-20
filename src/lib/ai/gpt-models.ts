@@ -4,15 +4,13 @@ import { AIModelType, AIModelConfig, AI_MODEL_CONFIGS, AIModelCapability } from 
 // Export individual model types for easy import
 export const GPT_4O = AIModelType.GPT_4O;
 export const GPT_4O_MINI = AIModelType.GPT_4O_MINI;
-export const O3 = AIModelType.O3;
-export const O4_MINI = AIModelType.O4_MINI;
-export const GPT_4_1_MINI = AIModelType.GPT_4_1_MINI;
+export const REASONING = AIModelType.REASONING;
 
 // Default model for real-time alerts processing - using gpt-4o-mini for speed and efficiency
 export const DEFAULT_REALTIME_MODEL = GPT_4O_MINI;
 
-// Default model for post-consultation alerts processing - using o3 for reasoning capabilities
-export const DEFAULT_POST_CONSULTATION_MODEL = O3;
+// Default model for post-consultation alerts processing - a reasoning model
+export const DEFAULT_POST_CONSULTATION_MODEL = REASONING;
 
 // Use GPT-4o-mini as the generic low-cost fallback
 export const FALLBACK_ALERTS_MODEL = GPT_4O_MINI;
@@ -23,7 +21,7 @@ export const getModelForUseCase = (useCase: 'real-time' | 'post-consultation' | 
     case 'real-time':
       return DEFAULT_REALTIME_MODEL; // gpt-4o-mini for fast response
     case 'post-consultation':
-      return DEFAULT_POST_CONSULTATION_MODEL; // o3-2025-04-16 for reasoning
+      return DEFAULT_POST_CONSULTATION_MODEL; // reasoning model
     case 'demo':
       return GPT_4O_MINI; // Cost-effective for demos
     default:
@@ -94,7 +92,7 @@ export const MODEL_RECOMMENDATIONS = {
   REAL_TIME_ALERTS: DEFAULT_REALTIME_MODEL,
   POST_CONSULTATION_ANALYSIS: DEFAULT_POST_CONSULTATION_MODEL,
   COST_OPTIMIZATION: GPT_4O_MINI,
-  ADVANCED_REASONING: O3,
+  ADVANCED_REASONING: REASONING,
   MULTIMODAL_ANALYSIS: GPT_4O,
   FALLBACK: FALLBACK_ALERTS_MODEL
 } as const;
