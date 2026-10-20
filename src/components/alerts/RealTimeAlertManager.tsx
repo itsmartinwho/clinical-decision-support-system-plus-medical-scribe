@@ -2,86 +2,68 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { UnifiedAlert, AlertSeverity, AlertType, AlertStatus } from '@/types/alerts';
-import { AlertEngine } from '@/lib/alerts/alert-engine';
+import { useRealTimeAlerts } from '@/hooks/useRealTimeAlerts';
 import AlertToast from './AlertToast';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Play, Pause, Square, TestTube } from '@phosphor-icons/react';
+import { Play, TestTube } from '@phosphor-icons/react';
 
 interface RealTimeAlertManagerProps {
   isActive: boolean;
+  patientId?: string;
   consultationId?: string;
+  transcript?: string; // The consultation's transcript so far; each pass sends what is new in it
   onAlert?: (alert: UnifiedAlert) => void;
   maxToasts?: number;
 }
 
+// Runs the consultation's live alerts through useRealTimeAlerts: while it is
+// active, the hook sends what is new in the transcript to the server every 10 s
+// and the alerts that come back are shown as toasts.
 export const RealTimeAlertManager: React.FC<RealTimeAlertManagerProps> = ({
   isActive,
+  patientId,
   consultationId,
+  transcript = '',
   onAlert,
   maxToasts = 3
 }) => {
   const [alerts, setAlerts] = useState<UnifiedAlert[]>([]);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [processingId, setProcessingId] = useState<NodeJS.Timeout | null>(null);
-  const [alertEngine] = useState(() => new AlertEngine());
-  const [processingError, setProcessingError] = useState<string | null>(null);
+
+  const showAlert = useCallback((alert: UnifiedAlert) => {
+    setAlerts(prev => {
+      const filtered = prev.slice(-(maxToasts - 1)); // Keep space for new alert
+      return [...filtered, alert];
+    });
+    onAlert?.(alert);
+  }, [onAlert, maxToasts]);
+
+  const realTimeAlerts = useRealTimeAlerts({
+    enabled: isActive,
+    patientId,
+    encounterId: consultationId,
+    onAlert: showAlert,
+    maxToasts
+  });
+  const { startSession, endSession, updateTranscript, forceProcess } = realTimeAlerts;
 
   const removeAlert = useCallback((alertId: string) => {
     setAlerts(prev => prev.filter(alert => alert.id !== alertId));
   }, []);
 
-  const processRealTimeAlert = useCallback(async () => {
-    if (!isActive || !consultationId) return;
+  // The session runs while the consultation does
+  useEffect(() => {
+    if (!isActive || !patientId || !consultationId) return;
+    void startSession();
+    return () => {
+      void endSession();
+    };
+  }, [isActive, patientId, consultationId, startSession, endSession]);
 
-    try {
-      setIsProcessing(true);
-      setProcessingError(null);
-      
-      // Mock transcript for now - in real implementation this would come from the consultation
-      const mockTranscript = "Patient reports chest pain and shortness of breath. No previous cardiac history.";
-      
-      const newAlerts = await alertEngine.processRealTimeAlerts(consultationId, mockTranscript, 'test-patient');
-      
-      if (newAlerts.length > 0) {
-        newAlerts.forEach(alert => {
-          // Add to display queue
-          setAlerts(prev => {
-            const filtered = prev.slice(-(maxToasts - 1)); // Keep space for new alert
-            return [...filtered, alert];
-          });
-          
-          // Notify parent
-          onAlert?.(alert);
-        });
-      }
-    } catch (error) {
-      console.error('Error processing real-time alerts:', error);
-      setProcessingError(error instanceof Error ? error.message : 'Unknown error');
-      // Do not create fallback mock alerts - just log the error
-    } finally {
-      setIsProcessing(false);
-    }
-  }, [isActive, consultationId, alertEngine, onAlert, maxToasts]);
-
-  const startProcessing = useCallback(() => {
-    if (!isActive || !consultationId || processingId) return;
-    
-    // Process immediately
-    processRealTimeAlert();
-    
-    // Then process every minute (60000ms)
-    const id = setInterval(processRealTimeAlert, 60000);
-    setProcessingId(id);
-  }, [isActive, consultationId, processRealTimeAlert, processingId]);
-
-  const stopProcessing = useCallback(() => {
-    if (processingId) {
-      clearInterval(processingId);
-      setProcessingId(null);
-    }
-    setIsProcessing(false);
-  }, [processingId]);
+  // Give the hook the transcript, again whenever a session starts (ending one clears it)
+  useEffect(() => {
+    if (isActive) updateTranscript(transcript);
+  }, [isActive, patientId, consultationId, transcript, updateTranscript]);
 
   const simulateAlert = useCallback(() => {
     // Only for development/testing
@@ -90,7 +72,7 @@ export const RealTimeAlertManager: React.FC<RealTimeAlertManagerProps> = ({
     const mockAlert: UnifiedAlert = {
       id: `test-${Date.now()}`,
       encounterId: consultationId,
-      patientId: 'test-patient',
+      patientId: patientId || 'test-patient',
       alertType: AlertType.DRUG_INTERACTION,
       severity: AlertSeverity.WARNING,
       status: AlertStatus.ACTIVE,
@@ -105,34 +87,13 @@ export const RealTimeAlertManager: React.FC<RealTimeAlertManagerProps> = ({
       migratedFromPatientAlerts: false
     };
 
-    setAlerts(prev => {
-      const filtered = prev.slice(-(maxToasts - 1));
-      return [...filtered, mockAlert];
-    });
-
-    onAlert?.(mockAlert);
-  }, [consultationId, onAlert, maxToasts]);
-
-  // Auto-start when active and consultation ID is provided
-  useEffect(() => {
-    if (isActive && consultationId && !processingId) {
-      startProcessing();
-    } else if ((!isActive || !consultationId) && processingId) {
-      stopProcessing();
-    }
-
-    return () => {
-      if (processingId) {
-        clearInterval(processingId);
-      }
-    };
-  }, [isActive, consultationId, startProcessing, stopProcessing, processingId]);
+    showAlert(mockAlert);
+  }, [consultationId, patientId, showAlert]);
 
   // Clear alerts when inactive
   useEffect(() => {
     if (!isActive) {
       setAlerts([]);
-      setProcessingError(null);
     }
   }, [isActive]);
 
@@ -150,21 +111,11 @@ export const RealTimeAlertManager: React.FC<RealTimeAlertManagerProps> = ({
           <div className="flex items-center gap-2">
             <Button
               size="sm"
-              variant={processingId ? "destructive" : "default"}
-              onClick={processingId ? stopProcessing : startProcessing}
-              disabled={!consultationId || (!isActive && !processingId)}
+              onClick={() => void forceProcess()}
+              disabled={!realTimeAlerts.isSessionActive || realTimeAlerts.isProcessing}
             >
-              {processingId ? (
-                <>
-                  <Square className="h-3 w-3 mr-1" />
-                  Stop Processing
-                </>
-              ) : (
-                <>
-                  <Play className="h-3 w-3 mr-1" />
-                  Start Processing
-                </>
-              )}
+              <Play className="h-3 w-3 mr-1" />
+              Process Now
             </Button>
             
             <Button
@@ -180,11 +131,12 @@ export const RealTimeAlertManager: React.FC<RealTimeAlertManagerProps> = ({
 
           <div className="text-xs text-gray-500 space-y-1">
             <div>Status: {isActive ? 'Active' : 'Inactive'}</div>
-            <div>Processing: {isProcessing ? 'Running' : 'Stopped'}</div>
+            <div>Session: {realTimeAlerts.isSessionActive ? 'Running, checking every 10 s' : 'Not started'}</div>
             <div>Consultation: {consultationId || 'None'}</div>
+            <div>Transcript: {transcript.length} characters</div>
             <div>Active Toasts: {alerts.length}</div>
-            {processingError && (
-              <div className="text-red-500">Error: {processingError}</div>
+            {realTimeAlerts.error && (
+              <div className="text-red-500">Error: {realTimeAlerts.error}</div>
             )}
           </div>
         </CardContent>
@@ -215,4 +167,4 @@ export const RealTimeAlertManager: React.FC<RealTimeAlertManagerProps> = ({
   );
 };
 
-export default RealTimeAlertManager; 
+export default RealTimeAlertManager;
