@@ -1,11 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { getSupabaseServiceClient } from '@/lib/supabaseClient';
 import { supabaseDataService } from '@/lib/supabaseDataService';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
 // GET: Fetch differential diagnoses for a specific encounter
 export async function GET(request: NextRequest) {
@@ -31,7 +26,7 @@ export async function GET(request: NextRequest) {
 
       // Fallback: if cache not yet loaded or empty, query Supabase directly
       if (!filteredDiagnoses || filteredDiagnoses.length === 0) {
-        const { data: directDiffs, error: diffErr } = await supabase
+        const { data: directDiffs, error: diffErr } = await getSupabaseServiceClient()
           .from('differential_diagnoses')
           .select('*')
           .eq('encounter_id', encounterId);
@@ -132,7 +127,7 @@ export async function PUT(request: NextRequest) {
     if (keyFactors !== undefined) updateData.key_factors = keyFactors;
     if (rankOrder !== undefined) updateData.rank_order = rankOrder;
 
-    const { data: updatedDiagnosis, error } = await supabase
+    const { data: updatedDiagnosis, error } = await getSupabaseServiceClient()
       .from('differential_diagnoses')
       .update(updateData)
       .eq('id', id)
@@ -180,7 +175,7 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const { error } = await supabase
+    const { error } = await getSupabaseServiceClient()
       .from('differential_diagnoses')
       .delete()
       .eq('id', id);

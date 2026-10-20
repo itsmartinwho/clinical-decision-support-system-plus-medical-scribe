@@ -46,7 +46,7 @@ import { getDiagnosisPrompt, getTreatmentPrompt, getTreatmentGuidelinesPrompt } 
  * - FHIR-compliant linking and references
  */
 export class ClinicalEngineServiceV3 {
-  private supabase = getSupabaseClient();
+  private get supabase() { return getSupabaseClient(); } // on first use, so the build needs no keys
   private openai: OpenAI;
   private alertsService = new UnifiedAlertsService();
 

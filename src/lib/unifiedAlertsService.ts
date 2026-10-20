@@ -31,7 +31,7 @@ import { supabaseDataService } from '@/lib/supabaseDataService';
 export class UnifiedAlertsService {
   private isProcessing: boolean = false;
   private realTimeInterval: NodeJS.Timeout | null = null;
-  private supabase = getSupabaseClient();
+  private get supabase() { return getSupabaseClient(); } // on first use, so the build needs no keys
   
   // Transcript tracking for real-time processing
   private transcriptState: Map<string, {

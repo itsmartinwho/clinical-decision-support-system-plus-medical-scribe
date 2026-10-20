@@ -1,11 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { getSupabaseServiceClient } from '@/lib/supabaseClient';
 import { GuidelineBookmark } from '@/types/guidelines';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
 // GET - Fetch user's bookmarks
 export async function GET(request: NextRequest) {
@@ -48,7 +43,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate that the guideline exists
-    const { data: guideline, error: guidelineError } = await supabase
+    const { data: guideline, error: guidelineError } = await getSupabaseServiceClient()
       .from('guidelines_docs')
       .select('id')
       .eq('id', guidelineId)
