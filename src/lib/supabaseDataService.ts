@@ -1,4 +1,10 @@
 import { getSupabaseClient } from './supabaseClient';
+import { isDemoData } from './dataMode';
+
+// The schema has no `name` column (it is first_name and last_name); some
+// databases added one. Use it when it is there.
+const fullName = (row: any): string =>
+  (row.name as string) || [row.first_name, row.last_name].filter(Boolean).join(' ') || row.patient_id;
 import {
   Patient, Encounter, Diagnosis, LabResult, ComplexCaseAlert, Treatment,
   PatientDataPayload, DifferentialDiagnosisRecord, DifferentialDiagnosis // Import the new types
@@ -89,7 +95,7 @@ class SupabaseDataService {
         // Process patient demographics
         const patient: Patient = {
           id: patientRow.patient_id,
-          name: patientRow.name,
+          name: fullName(patientRow),
           firstName: patientRow.first_name,
           lastName: patientRow.last_name,
           gender: patientRow.gender,
@@ -316,7 +322,7 @@ class SupabaseDataService {
         const rawAlertsData = chosenRawAlerts;
         const patient: Patient = {
           id: row.patient_id,
-          name: row.name,
+          name: fullName(row),
           firstName: row.first_name,
           lastName: row.last_name,
           gender: row.gender,
@@ -1195,6 +1201,9 @@ class SupabaseDataService {
    * This prevents demo patients from appearing in upcoming consultations after demo ends
    */
   clearDemoPatientData(demoPatientId: string): void {
+    // On the bundled demo data the guided demo's patient is the whole patient
+    // list, and her records are the seed's: keep them.
+    if (isDemoData()) return;
     console.log(`SupabaseDataService: Clearing demo patient data for ${demoPatientId}`);
     
     // Remove patient from cache

@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getScheduler } from '@/services/guidelines/scheduler';
 import { GuidelineSource } from '@/types/guidelines';
+import { databaseRequiredResponse } from '@/lib/serverGuards';
 
 export async function GET() {
+  const noDatabase = await databaseRequiredResponse('The guideline refresh schedule');
+  if (noDatabase) return noDatabase;
   try {
     const scheduler = getScheduler();
     const status = await scheduler.getScheduleStatus();
@@ -27,6 +30,8 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
+  const noDatabase = await databaseRequiredResponse('The guideline refresh schedule');
+  if (noDatabase) return noDatabase;
   try {
     const body = await request.json();
     const { action, sources } = body;

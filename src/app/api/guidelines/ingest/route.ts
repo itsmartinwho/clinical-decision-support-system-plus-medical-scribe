@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { IngestionOrchestrator } from '@/services/guidelines/ingestion-orchestrator';
 import { GuidelineSource } from '@/types/guidelines';
+import { databaseRequiredResponse } from '@/lib/serverGuards';
 
 export async function POST(request: NextRequest) {
+  const noDatabase = await databaseRequiredResponse('Guideline ingestion');
+  if (noDatabase) return noDatabase;
   try {
     const body = await request.json();
     const { source } = body;
