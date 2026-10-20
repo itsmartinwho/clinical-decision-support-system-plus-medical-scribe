@@ -65,7 +65,9 @@ export async function POST(request: NextRequest) {
 
       case 'process':
       default:
-        // Process transcript segment for alerts
+        // One pass, asked for by the client (useRealTimeAlerts) about every
+        // 10 s. It needs nothing from an earlier request, so it works on
+        // serverless functions, where the sessions above may not survive.
         if (!transcriptSegment) {
           return NextResponse.json(
             { error: 'Missing transcriptSegment for processing' },

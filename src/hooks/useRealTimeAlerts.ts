@@ -1,8 +1,19 @@
 // Real-time Alert Hook
-// React hook for managing real-time alert subscriptions during consultations
+// React hook for managing real-time alert subscriptions during consultations.
+//
+// The passes are driven from here, not from a timer on the server: on
+// serverless functions the server's memory does not last between requests. The
+// hook keeps the transcript and how much of it has been sent, and every
+// `intervalMs` (10 s), once at least `minNewChars` (20) new characters have
+// arrived, it posts the new stretch with the whole transcript as action
+// 'process'. The alerts that come back go to `onAlert`.
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { UnifiedAlert } from '@/types/alerts';
+
+const ENDPOINT = '/api/alerts/real-time';
+const DEFAULT_INTERVAL_MS = 10_000;
+const DEFAULT_MIN_NEW_CHARS = 20;
 
 export interface UseRealTimeAlertsOptions {
   enabled: boolean;
@@ -11,6 +22,8 @@ export interface UseRealTimeAlertsOptions {
   onAlert?: (alert: UnifiedAlert) => void;
   onError?: (error: Error) => void;
   maxToasts?: number;
+  intervalMs?: number; // How often to look for new transcript
+  minNewChars?: number; // How much new transcript a pass waits for
 }
 
 export interface RealTimeAlertsState {
@@ -21,8 +34,15 @@ export interface RealTimeAlertsState {
   error: string | null;
   stats: {
     activeSessions: number;
-    isProcessing: boolean;
   } | null;
+}
+
+function post(body: Record<string, unknown>): Promise<Response> {
+  return fetch(ENDPOINT, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
 }
 
 export function useRealTimeAlerts(options: UseRealTimeAlertsOptions) {
@@ -32,7 +52,9 @@ export function useRealTimeAlerts(options: UseRealTimeAlertsOptions) {
     encounterId,
     onAlert,
     onError,
-    maxToasts = 3
+    maxToasts = 3,
+    intervalMs = DEFAULT_INTERVAL_MS,
+    minNewChars = DEFAULT_MIN_NEW_CHARS
   } = options;
 
   const [state, setState] = useState<RealTimeAlertsState>({
@@ -46,6 +68,19 @@ export function useRealTimeAlerts(options: UseRealTimeAlertsOptions) {
 
   const sessionStartedRef = useRef(false);
   const alertsRef = useRef<UnifiedAlert[]>([]);
+
+  // The transcript as last given, and how much of it a pass has sent
+  const transcriptRef = useRef('');
+  const sentLengthRef = useRef(0);
+  const passInFlightRef = useRef(false);
+  // Counts sessions, so a pass or a start still in flight when its session
+  // ends is dropped rather than reported into the next one
+  const sessionRef = useRef(0);
+  // A failing pass is retried every interval; its error is reported once
+  const failureReportedRef = useRef(false);
+  // The ids the session started with, so that an endSession held from an
+  // earlier render (before the encounter existed) still ends it
+  const sessionIdsRef = useRef<{ patientId: string; encounterId: string } | null>(null);
 
   // Update refs when state changes
   useEffect(() => {
@@ -64,33 +99,34 @@ export function useRealTimeAlerts(options: UseRealTimeAlertsOptions) {
     }
 
     console.log('[useRealTimeAlerts] Starting real-time alert session:', { patientId, encounterId });
+    const session = ++sessionRef.current;
 
     try {
       setState(prev => ({ ...prev, isProcessing: true, error: null }));
 
-      const response = await fetch('/api/alerts/real-time', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          patientId,
-          encounterId,
-          action: 'start_session'
-        })
-      });
+      const response = await post({ patientId, encounterId, action: 'start_session' });
 
       if (!response.ok) {
         throw new Error(`Failed to start session: ${response.statusText}`);
       }
 
       const result = await response.json();
-      
+      if (session !== sessionRef.current) {
+        // Ended while it started
+        setState(prev => ({ ...prev, isProcessing: false }));
+        return;
+      }
+
+      sentLengthRef.current = 0;
+      failureReportedRef.current = false;
+      sessionIdsRef.current = { patientId, encounterId };
       sessionStartedRef.current = true;
       setState(prev => ({
         ...prev,
         isSessionActive: true,
         sessionStarted: true,
         isProcessing: false,
-        stats: result.stats
+        stats: result.stats ?? null
       }));
 
       console.log('[useRealTimeAlerts] Real-time alert session started successfully:', result);
@@ -107,153 +143,148 @@ export function useRealTimeAlerts(options: UseRealTimeAlertsOptions) {
     }
   }, [patientId, encounterId, onError]);
 
-  // End real-time session
+  // End real-time session. The passes stop here and now, whatever the server
+  // answers: it is the client that runs them.
   const endSession = useCallback(async () => {
-    if (!patientId || !encounterId || !sessionStartedRef.current) {
+    const ids = sessionStartedRef.current ? sessionIdsRef.current : null;
+    sessionRef.current += 1;
+    sessionStartedRef.current = false;
+    sessionIdsRef.current = null;
+    transcriptRef.current = '';
+    sentLengthRef.current = 0;
+
+    if (!ids) {
       return;
     }
 
-    try {
-      setState(prev => ({ ...prev, isProcessing: true }));
+    setState(prev => ({
+      ...prev,
+      isSessionActive: false,
+      sessionStarted: false,
+      isProcessing: false,
+      alerts: [] // Clear alerts when session ends
+    }));
 
-      const response = await fetch('/api/alerts/real-time', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          patientId,
-          encounterId,
-          action: 'end_session'
-        })
-      });
+    try {
+      const response = await post({ ...ids, action: 'end_session' });
 
       if (!response.ok) {
         throw new Error(`Failed to end session: ${response.statusText}`);
       }
 
       const result = await response.json();
-      
-      sessionStartedRef.current = false;
-      setState(prev => ({
-        ...prev,
-        isSessionActive: false,
-        sessionStarted: false,
-        isProcessing: false,
-        alerts: [], // Clear alerts when session ends
-        stats: result.stats
-      }));
+      setState(prev => ({ ...prev, stats: result.stats ?? null }));
 
       console.log('Real-time alert session ended');
 
     } catch (error) {
       const err = error instanceof Error ? error : new Error('Unknown error');
-      setState(prev => ({ 
-        ...prev, 
-        error: err.message, 
-        isProcessing: false 
-      }));
-      onError?.(err);
-    }
-  }, [patientId, encounterId, onError]);
-
-  // Update transcript
-  const updateTranscript = useCallback(async (transcript: string) => {
-    if (!patientId || !encounterId || !sessionStartedRef.current) {
-      console.log('[useRealTimeAlerts] Update transcript skipped:', {
-        patientId: !!patientId,
-        encounterId: !!encounterId,
-        sessionStarted: sessionStartedRef.current
-      });
-      return;
-    }
-
-    console.log('[useRealTimeAlerts] Updating transcript:', {
-      patientId,
-      encounterId,
-      transcriptLength: transcript.length,
-      transcriptPreview: transcript.substring(0, 100) + '...'
-    });
-
-    try {
-      const response = await fetch('/api/alerts/real-time', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          patientId,
-          encounterId,
-          action: 'update_transcript',
-          fullTranscript: transcript
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to update transcript: ${response.statusText}`);
-      }
-
-      const result = await response.json();
-      console.log('[useRealTimeAlerts] Transcript update response:', result);
-
-      // Don't need to process the response for transcript updates
-    } catch (error) {
-      const err = error instanceof Error ? error : new Error('Unknown error');
-      console.error('[useRealTimeAlerts] Transcript update error:', err);
       setState(prev => ({ ...prev, error: err.message }));
       onError?.(err);
     }
-  }, [patientId, encounterId, onError]);
+  }, [onError]);
 
-  // Force process session (for testing/manual triggers)
-  const forceProcess = useCallback(async () => {
-    if (!patientId || !encounterId) {
+  // Keep the latest transcript; the next pass sends what is new in it
+  const updateTranscript = useCallback((transcript: string) => {
+    transcriptRef.current = transcript;
+  }, []);
+
+  // One pass: send what has arrived since the last one, if there is enough of it
+  const runPass = useCallback(async (minChars: number): Promise<UnifiedAlert[]> => {
+    if (!patientId || !encounterId || passInFlightRef.current) {
       return [];
     }
 
-    try {
-      setState(prev => ({ ...prev, isProcessing: true, error: null }));
+    const fullTranscript = transcriptRef.current;
+    if (fullTranscript.length < sentLengthRef.current) {
+      sentLengthRef.current = fullTranscript.length; // Edited shorter: only text after this is new
+    }
+    const transcriptSegment = fullTranscript.slice(sentLengthRef.current);
+    if (transcriptSegment.trim().length < minChars) {
+      return [];
+    }
 
-      const response = await fetch(
-        `/api/alerts/real-time?patientId=${patientId}&encounterId=${encounterId}&action=force_process`
-      );
+    const session = sessionRef.current;
+    passInFlightRef.current = true;
+
+    try {
+      const response = await post({
+        patientId,
+        encounterId,
+        action: 'process',
+        transcriptSegment,
+        fullTranscript
+      });
 
       if (!response.ok) {
-        throw new Error(`Failed to force process: ${response.statusText}`);
+        throw new Error(`Failed to process transcript: ${response.statusText}`);
       }
 
       const result = await response.json();
-      
-      if (result.success && result.alerts.length > 0) {
-        const newAlerts = result.alerts;
-        
-        setState(prev => {
-          const updatedAlerts = [...prev.alerts, ...newAlerts].slice(-maxToasts);
-          return {
-            ...prev,
-            alerts: updatedAlerts,
-            isProcessing: false
-          };
-        });
+      if (session !== sessionRef.current) return []; // The session ended meanwhile
 
-        // Trigger callbacks for new alerts
-        newAlerts.forEach((alert: UnifiedAlert) => onAlert?.(alert));
-        
-        return newAlerts;
-      }
+      sentLengthRef.current = fullTranscript.length;
+      failureReportedRef.current = false;
 
-      setState(prev => ({ ...prev, isProcessing: false }));
-      return [];
+      const newAlerts: UnifiedAlert[] = Array.isArray(result.alerts) ? result.alerts : [];
+      setState(prev => {
+        if (newAlerts.length === 0 && prev.error === null) return prev;
+        return {
+          ...prev,
+          error: null,
+          alerts: [...prev.alerts, ...newAlerts].slice(-maxToasts)
+        };
+      });
+      newAlerts.forEach(alert => onAlert?.(alert));
+
+      return newAlerts;
 
     } catch (error) {
+      if (session !== sessionRef.current) return [];
+
+      // The stretch stays unsent, so the next pass tries it again
       const err = error instanceof Error ? error : new Error('Unknown error');
-      setState(prev => ({ 
-        ...prev, 
-        error: err.message, 
-        isProcessing: false 
-      }));
-      onError?.(err);
+      console.error('[useRealTimeAlerts] Alert pass failed:', err);
+      setState(prev => ({ ...prev, error: err.message }));
+      if (!failureReportedRef.current) {
+        failureReportedRef.current = true;
+        onError?.(err);
+      }
       return [];
+
+    } finally {
+      passInFlightRef.current = false;
     }
   }, [patientId, encounterId, onAlert, onError, maxToasts]);
 
-  // Get session status
+  // The interval calls the latest pass, so it is not restarted when the
+  // caller's callbacks change from one render to the next
+  const runPassRef = useRef(runPass);
+  useEffect(() => {
+    runPassRef.current = runPass;
+  }, [runPass]);
+
+  useEffect(() => {
+    if (!state.sessionStarted) return;
+    const id = setInterval(() => {
+      void runPassRef.current(minNewChars);
+    }, intervalMs);
+    return () => clearInterval(id);
+  }, [state.sessionStarted, intervalMs, minNewChars]);
+
+  // Run a pass now, on whatever is new, without waiting for the interval
+  const forceProcess = useCallback(async () => {
+    setState(prev => ({ ...prev, isProcessing: true }));
+    try {
+      return await runPass(1);
+    } finally {
+      setState(prev => ({ ...prev, isProcessing: false }));
+    }
+  }, [runPass]);
+
+  // Get session status. It reads the server's memory, which on serverless
+  // functions may not hold the session, so it does not override this hook's
+  // own view of whether a session is on.
   const getStatus = useCallback(async () => {
     if (!patientId || !encounterId) {
       return null;
@@ -261,7 +292,7 @@ export function useRealTimeAlerts(options: UseRealTimeAlertsOptions) {
 
     try {
       const response = await fetch(
-        `/api/alerts/real-time?patientId=${patientId}&encounterId=${encounterId}&action=status`
+        `${ENDPOINT}?patientId=${patientId}&encounterId=${encounterId}&action=status`
       );
 
       if (!response.ok) {
@@ -272,8 +303,7 @@ export function useRealTimeAlerts(options: UseRealTimeAlertsOptions) {
       
       setState(prev => ({
         ...prev,
-        isSessionActive: result.sessionActive,
-        stats: result.processingStats
+        stats: result.processingStats ?? null
       }));
 
       return result;
@@ -312,4 +342,4 @@ export function useRealTimeAlerts(options: UseRealTimeAlertsOptions) {
     removeAlert,
     clearAlerts
   };
-} 
+}
